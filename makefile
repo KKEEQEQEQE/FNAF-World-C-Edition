@@ -4,8 +4,12 @@ cflags = -std=c17
 clean:
 	touch bin/temp.o
 	rm -r bin/*.o
+
 bin/input.o:
 	$(cc) -c $(cflags) src/input.c -o bin/input.o
+
+bin/JSON_Conversion.o:
+	$(cc) -c $(cflags) src/JSON_Conversion.c -o bin/JSON_Conversion.o
 
 bin/Background.o:
 	$(cc) -c $(cflags) src/Background.c -o bin/Background.o
@@ -26,5 +30,5 @@ bin/Particle.o:
 	$(cc) -c $(cflags) src/Particle.c -o bin/Particle.o
 
 
-build_win: clean bin/Animation.o bin/input.o bin/UI.o bin/Title_Screen.o bin/Background.o bin/Game_State.o bin/Particle.o
-	$(cc) -o FNAF_World_C.exe src/main.c bin/input.o bin/Animation.o bin/UI.o bin/Background.o bin/Game_State.o bin/Title_Screen.o bin/Particle.o -lraylib -lgdi32 -lwinmm -I include/ -L lib/
+build_win: clean bin/Animation.o bin/input.o bin/UI.o bin/Title_Screen.o bin/Background.o bin/Game_State.o bin/Particle.o bin/JSON_Conversion.o
+	$(cc) -o FNAF_World_C.exe src/main.c bin/input.o bin/Animation.o bin/UI.o bin/Background.o bin/Game_State.o bin/Title_Screen.o bin/Particle.o bin/JSON_Conversion.o Lib/cJSON.c -lraylib -lgdi32 -lwinmm -I include/ -L lib/

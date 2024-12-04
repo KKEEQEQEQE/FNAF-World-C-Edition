@@ -35,10 +35,10 @@ WORLDTileIndex WORLDFloorDictionary[]; // Note floor image is 12:6 (25px * 25px)
 uint8_t WORLDFloormap[WORLD_SIZE_Y][WORLD_SIZE_X] = {0};
 
 // Contains all types of tiles
-WORLDTileIndex WORLDTileDictionary[];
+WORLDTileIndex WORLDTileDictionary[]; // Note floor image is 12:6 (25px * 25px)
 
 // Refers index in tile dictionary
-uint8_t WORLDTitlemap[WORLD_SIZE_Y][WORLD_SIZE_X] = {0};
+uint16_t WORLDTitlemap[WORLD_SIZE_Y][WORLD_SIZE_X] = {0};
 
 
 Rectangle WorldCamera = {0};

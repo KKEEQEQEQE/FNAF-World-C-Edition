@@ -30,18 +30,35 @@
 #include "Game_State.h"
 #include <stdint.h>
 #include <stdio.h>
+#include <time.h>
+#include "JSON_Conversion.h"
 
+float Stopwatch(void)
+{
+    static float time = NAN;
+    if (time == NAN) 
+    {
+        time = clock() / (float) CLOCKS_PER_SEC;
+        return NAN;
+    }
 
+    float stop = clock() / (float) CLOCKS_PER_SEC - time;
+    time = NAN;
+    return stop;
+}
 
 int main(void)
 {
     const int screenWidth = 1280;
     const int screenHeight = 720;
-
     InitWindow(screenWidth, screenHeight, "FNAF World: C Edition");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(1280, 720); 
     InitAudioDevice();
+
+    Stopwatch();
+    CreateTilemap("Assets/Overworld/map.json");
+    printf("%f\n", Stopwatch());
     while (!WindowShouldClose())
     {
         BeginDrawing();

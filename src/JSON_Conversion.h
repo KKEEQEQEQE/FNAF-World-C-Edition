@@ -22,41 +22,13 @@
     SOFTWARE.
 */
 
-#pragma once
-
-#include "UI.h"
+#include "../Include/cJSON.h"
+#include "World.h"
+#include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 
-enum WORLDZONES 
-{
-    FAZBEARHILLS=1
-};
+#define LAYER_COLLIDABLE 1
+#define LAYER_INVISIBLE 2
 
-typedef struct WORLDTileIndex
-{
-    Texture2D texture;
-    uint8_t collidable: 1;
-
-} WORLDTileIndex;
-typedef uint16_t WORLDTile;
-typedef struct WORLDEntity 
-{
-    float x;
-    float y;
-    UITexture texture;
-    float scale;
-    void (*customCollision)(void);
-} WORLDEntity;
-
-typedef struct WORLDZone 
-{
-    enum WORLDZONES zoneID;
-    uint16_t ** ZONETitlemap;
-    uint16_t globalX;
-    uint16_t globalY;
-    WORLDEntity * ZONEEntities;
-    uint8_t * ZONECharacters;
-} WORLDZone;
-
-extern void RegisterZone(WORLDZone * zone);
-extern void UseShader(Shader shader);
+void CreateTilemap(const char * jsonPath);
