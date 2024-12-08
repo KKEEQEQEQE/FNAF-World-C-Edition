@@ -31,4 +31,4 @@
 #define LAYER_COLLIDABLE 1
 #define LAYER_INVISIBLE 2
 
-void CreateTilemap(const char * jsonPath);
+WORLDTilemap * CreateTilemap(const char * jsonPath);

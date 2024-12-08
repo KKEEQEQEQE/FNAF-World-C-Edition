@@ -27,25 +27,12 @@
 #include "UI.h"
 #include "input.h"
 #include "types.h"
+#include "World.h"
 #include "Game_State.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
-#include "JSON_Conversion.h"
-
-float Stopwatch(void)
-{
-    static float time = NAN;
-    if (time == NAN) 
-    {
-        time = clock() / (float) CLOCKS_PER_SEC;
-        return NAN;
-    }
-
-    float stop = clock() / (float) CLOCKS_PER_SEC - time;
-    time = NAN;
-    return stop;
-}
+#include "Tilemap_JSON_Conversion.h"
 
 int main(void)
 {
@@ -55,15 +42,14 @@ int main(void)
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(1280, 720); 
     InitAudioDevice();
-
-    Stopwatch();
-    CreateTilemap("Assets/Overworld/map.json");
-    printf("%f\n", Stopwatch());
+    clock_t start = clock();
+    LoadWorldTilemap();
+    clock_t stop = clock();
+    printf("%f\n", (stop - start) / (float) CLOCKS_PER_SEC);
     while (!WindowShouldClose())
     {
         BeginDrawing();
         ClearBackground(BLACK);
-        printf("%d\n", (int)(1./GetFrameTime()));
         
         switch (GetGameState()) 
         {
@@ -71,7 +57,7 @@ int main(void)
                 PutTitleScreen();
                 break;
             default:
-                RenderUIText("Unknown / Invalid Game State Entered. Please Restart Game\nTap to go back to title screen!", -0.95, 0, 0.06, LEFTMOST, (Font){0}, WHITE);
+                RenderUIText("Unknown / Invalid Game State Entered.\nTap to go back to title screen!", 0, 0, 0.06, CENTRE, (Font){0}, WHITE);
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SwapGameState(Title);
                 break;
         }

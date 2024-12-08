@@ -53,8 +53,7 @@ void FreeTitleScreen(void)
 void ButtonPlayPressed(UIButton * button)
 {
     printf("Play Button Pressed!\n");
-    SwapGameState(100);
-    return;
+    SwapGameState(Title);
 }
 
 UIButton UIPlay = {(UIElement){UIanimation,0}, ButtonPlayPressed, 0};

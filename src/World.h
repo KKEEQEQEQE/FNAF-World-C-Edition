@@ -35,28 +35,49 @@ enum WORLDZONES
 typedef struct WORLDTileIndex
 {
     Texture2D texture;
-    uint8_t collidable: 1;
-
 } WORLDTileIndex;
+
 typedef uint16_t WORLDTile;
+
 typedef struct WORLDEntity 
 {
-    float x;
-    float y;
+    Vector2 position;
+    Vector2 size;
+    Vector2 velocity;
     UITexture texture;
     float scale;
+    uint16_t collisionTargets;
     void (*customCollision)(void);
 } WORLDEntity;
 
-typedef struct WORLDZone 
-{
-    enum WORLDZONES zoneID;
-    uint16_t ** ZONETitlemap;
-    uint16_t globalX;
-    uint16_t globalY;
-    WORLDEntity * ZONEEntities;
-    uint8_t * ZONECharacters;
-} WORLDZone;
+#define LAYER_COLLIDABLE 1
+#define LAYER_INVISIBLE 2
+#define LAYER_SPAWN 4
 
-extern void RegisterZone(WORLDZone * zone);
-extern void UseShader(Shader shader);
+typedef struct tilemap_layer 
+{
+    // Transformation Variables
+
+    uint16_t offsetX;
+    uint16_t offsetY;
+    uint16_t sizeX;
+    uint16_t sizeY;
+
+    void * tiles; // WORLDTile 2D Array Pointer
+
+    // Flags
+
+    uint8_t FLAGS;
+} tilemap_layer;
+
+#define TILES_POINTER_TYPE(layer_pointer) WORLDTile (*)[layer_pointer->sizeY][layer_pointer->sizeX]
+
+typedef struct WORLDTilemap
+{
+    tilemap_layer * layers;
+    uint16_t amount;
+} WORLDTilemap;
+
+extern void LoadWorldTilemap(void);
+
+#define ACCESS_TILEMAP(x, y, tilemap) 

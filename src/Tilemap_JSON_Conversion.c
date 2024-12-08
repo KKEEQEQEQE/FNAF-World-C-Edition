@@ -29,36 +29,12 @@
 #include <stdio.h>
 #include <time.h>
 
-#define LAYER_COLLIDABLE 1
-#define LAYER_INVISIBLE 2
-
-typedef struct tilemap_layer 
-{
-    // Transformation Variables
-
-    uint16_t offsetX;
-    uint16_t offsetY;
-    uint16_t sizeX;
-    uint16_t sizeY;
-
-    void * tiles; // WORLDTile 2D Array Pointer
-
-    // Flags
-
-    uint8_t FLAGS;
-} tilemap_layer;
-
-typedef struct WORLDTilemap
-{
-    tilemap_layer * layers;
-} WORLDTilemap;
-
-typedef struct json_tile 
+typedef struct parsed_tile 
 {
     uint16_t x;
     uint16_t y;
     uint16_t textureID;
-} json_tile;
+} parsed_tile;
 
 uint16_t CurrentTilemapSizeX;
 uint16_t CurrentTilemapSizeY;
@@ -162,14 +138,14 @@ uint32_t strtou32(char * str)
 {
     uint32_t u32 = 0;
     while (*str >= '0' && *str <= '9') u32 += *str - '0', u32 *= 10, str++;
-    return u32;
+    return u32 / 10 - 1;
 }
 
-json_tile ParseJSONTile(const cJSON * layerJSON)
+parsed_tile ParseJSONTile(const cJSON * tileJSON)
 {
-    cJSON * jsonID = cJSON_GetObjectItemCaseSensitive(layerJSON, "id");
+    cJSON * jsonID = cJSON_GetObjectItem(tileJSON, "id");
     if (jsonID == NULL)
-    {
+    {   
         printf("Invalid JSON Tile!\n");
         exit(EXIT_FAILURE);
     }
@@ -178,7 +154,7 @@ json_tile ParseJSONTile(const cJSON * layerJSON)
     char * stringID = cJSON_GetStringValue(jsonID);
     uint32_t textureID = strtou32(stringID);
     
-    cJSON * jsonX = cJSON_GetObjectItemCaseSensitive(layerJSON, "x");
+    cJSON * jsonX = cJSON_GetObjectItem(tileJSON, "x");
     if (!jsonX)
     {
         printf("Invalid JSON Tile!\n");
@@ -186,18 +162,18 @@ json_tile ParseJSONTile(const cJSON * layerJSON)
     }
     uint16_t x = jsonX -> valueint;
 
-    cJSON * jsonY = cJSON_GetObjectItemCaseSensitive(layerJSON, "y");
+    cJSON * jsonY = cJSON_GetObjectItem(tileJSON, "y");
     if (!jsonY)
     {
         printf("Invalid JSON Tile!\n");
         exit(EXIT_FAILURE);
     }
-    uint16_t y = jsonX -> valueint;
+    uint16_t y = jsonY -> valueint;
 
     cJSON_free(jsonID);
     cJSON_free(jsonX);
     cJSON_free(jsonY);
-    return (json_tile) {x, y, textureID};
+    return (parsed_tile) {x, y, textureID};
 }
 
 void InitTitlemapLayer(tilemap_layer * dest, const cJSON * layerJSON)
@@ -209,39 +185,42 @@ void InitTitlemapLayer(tilemap_layer * dest, const cJSON * layerJSON)
 
     // Creating variables
 
-    uint32_t AmountOfTiles = cJSON_GetArraySize(layerJSON);
+    uint32_t AmountOfTiles = cJSON_GetArraySize(tiles);
 
     uint16_t OffsetX = UINT16_MAX;
     uint16_t OffsetY = UINT16_MAX;
 
-    uint16_t FurtherestX = 0;
-    uint16_t FurtherestY = 0;
+    uint16_t SizeX = 0;
+    uint16_t SizeY = 0;
+
+    parsed_tile * parsed_tiles = malloc(sizeof(parsed_tile) * AmountOfTiles);
+
+    if (!parsed_tiles) ConversionCrash(FMALLOC);
 
     // Getting layer dimensions
     for (uint16_t i = 0; i < AmountOfTiles; i++)
     {
         cJSON * TileJSON = cJSON_GetArrayItem(tiles, i);
-        json_tile CurrentTile = ParseJSONTile(TileJSON);
+        parsed_tiles[i] = ParseJSONTile(TileJSON);
+        //cJSON_free(TileJSON);
 
-        cJSON_free(TileJSON);
+        if (OffsetX > parsed_tiles[i].x) OffsetX = parsed_tiles[i].x;
+        if (SizeX < parsed_tiles[i].x) SizeX = parsed_tiles[i].x;
 
-        if (OffsetX > CurrentTile.x) OffsetX = CurrentTile.x;
-        else if (FurtherestX < CurrentTile.x) FurtherestX = CurrentTile.x;
-
-        if (OffsetY > CurrentTile.y) OffsetY = CurrentTile.y;
-        else if (FurtherestY < CurrentTile.y) FurtherestY = CurrentTile.y;
+        if (OffsetY > parsed_tiles[i].y) OffsetY = parsed_tiles[i].y;
+        if (SizeY < parsed_tiles[i].y) SizeY = parsed_tiles[i].y;
     }
 
-    FurtherestX -= OffsetX;
-    FurtherestY -= OffsetY;
-    
+    SizeX -= OffsetX - 1;
+    SizeY -= OffsetY - 1;
+    printf("    Offset: %u, %u | Size: %u, %u\n", OffsetX, OffsetY, SizeX, SizeY);
     // Creating 2D Map array
 
-    WORLDTile (*map)[FurtherestY][FurtherestX] = malloc(sizeof(WORLDTile) * FurtherestX * FurtherestY);
+    WORLDTile (*map)[SizeY][SizeX] = malloc(sizeof(WORLDTile) * SizeX * SizeY);
 
     if (!map) 
     {
-        printf("Failed to allocate %lluB in heap!", sizeof(WORLDTile) * FurtherestX * FurtherestY);
+        printf("Failed to allocate %lluB in heap!", sizeof(WORLDTile) * SizeX * SizeY);
         exit(EXIT_FAILURE);
     }
 
@@ -249,18 +228,10 @@ void InitTitlemapLayer(tilemap_layer * dest, const cJSON * layerJSON)
 
     for (uint16_t i = 0; i < AmountOfTiles; i++)
     {
-        cJSON * TileJSON = cJSON_GetArrayItem(tiles, i);
-        if (!TileJSON) 
-        {
-            printf("Failed to get layer element!\n");
-            exit(EXIT_FAILURE);
-        }
-
-        json_tile CurrentTile = ParseJSONTile(TileJSON);
-
-        cJSON_free(TileJSON);
-        (*map)[CurrentTile.y - OffsetY][CurrentTile.x - OffsetX] = CurrentTile.textureID + 1;
+        (*map)[parsed_tiles[i].y - OffsetY][parsed_tiles[i].x - OffsetX] = parsed_tiles[i].textureID + 1;
+        //printf("%u\n", (*map)[parsed_tiles[i].y - OffsetY][parsed_tiles[i].x - OffsetX]);
     }
+
     cJSON_free(tiles);
 
     // Setting flags
@@ -268,15 +239,15 @@ void InitTitlemapLayer(tilemap_layer * dest, const cJSON * layerJSON)
     dest -> tiles = map;
     dest -> offsetX = OffsetX;
     dest -> offsetY = OffsetY;
-    dest -> sizeX = FurtherestX;
-    dest -> sizeY = FurtherestY;
+    dest -> sizeX = SizeX;
+    dest -> sizeY = SizeY;
 
     InitLayerFlag(dest, layerJSON, "collider", LAYER_COLLIDABLE);
     InitLayerFlagFromName(dest, layerJSON, "inv_", LAYER_INVISIBLE);
-
+        
 }
 
-void CreateTilemap(const char * jsonPath)
+WORLDTilemap * CreateTilemap(const char * jsonPath)
 {
     cJSON * MainJSON = InitWorldJSON(jsonPath);
     if (!MainJSON)
@@ -284,11 +255,15 @@ void CreateTilemap(const char * jsonPath)
         printf("Invalid Path \"%s\"!\n", jsonPath);
         exit(EXIT_FAILURE);
     }
-    uint16_t TilemapLayers = GetWorldLayers(MainJSON);
-    WORLDTilemap * tilemap = malloc(sizeof(WORLDTilemap));
-    tilemap -> layers = malloc(sizeof(tilemap_layer));
     
     cJSON * LayersJSON = cJSON_GetObjectItemCaseSensitive(MainJSON, "layers");
+
+    uint16_t AmountOfLayers = cJSON_GetArraySize(LayersJSON);
+
+    WORLDTilemap * tilemap = malloc(sizeof(WORLDTilemap));
+    tilemap -> layers = malloc(sizeof(tilemap_layer) * AmountOfLayers);
+    tilemap -> amount = AmountOfLayers;
+    
 
     if (LayersJSON == NULL)
     {
@@ -296,9 +271,10 @@ void CreateTilemap(const char * jsonPath)
         exit(EXIT_FAILURE);
     }
 
-    for (uint16_t i = 0; i < TilemapLayers; i++)
+    for (uint16_t i = 0; i < AmountOfLayers; i++)
     {
-        cJSON_Print(cJSON_GetArrayItem(LayersJSON,i));
+        printf("%p, %s\n", cJSON_GetArrayItem(LayersJSON,i), cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(LayersJSON, i), "name")->valuestring);
         InitTitlemapLayer(tilemap -> layers + i, cJSON_GetArrayItem(LayersJSON,i));
     }
+    return tilemap;
 }

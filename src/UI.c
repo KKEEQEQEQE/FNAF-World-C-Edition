@@ -114,6 +114,7 @@ void RenderUIText(const char * text, float x, float y, float fontSize, enum UITe
     fontSize *= GetScreenHeight();
     Vector2 position = (Vector2) {SCREEN_POSITION_TO_PIXEL_X(x, 0, 1), SCREEN_POSITION_TO_PIXEL_Y(y, fontSize, 1)};
     Vector2 origin = {0}; 
+    if (!font.baseSize) font = GetFontDefault();
     Vector2 size = MeasureTextEx(font, text, fontSize, 1);
     switch (allignment) 
     {
@@ -121,7 +122,7 @@ void RenderUIText(const char * text, float x, float y, float fontSize, enum UITe
             origin = (Vector2){0, size.y/2};
             break;
         case CENTRE:
-
+            origin = (Vector2){size.x/2, size.y/2};
             break;
         case RIGHTMOST:
             origin = (Vector2){size.x, size.y/2};
