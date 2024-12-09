@@ -53,7 +53,7 @@ void FreeTitleScreen(void)
 void ButtonPlayPressed(UIButton * button)
 {
     printf("Play Button Pressed!\n");
-    SwapGameState(Title);
+    SwapGameState(World);
 }
 
 UIButton UIPlay = {(UIElement){UIanimation,0}, ButtonPlayPressed, 0};
@@ -97,7 +97,7 @@ void UninitTitleScreen(void)
     FlushParticles();
     DeleteParticle(ParticleStars);
     UnloadMusicStream(Theme);
-    UnloadFont(TitleScreenFont);
+    //UnloadFont(TitleScreenFont);
 }
 
 void ResetTitleScreen(void) 

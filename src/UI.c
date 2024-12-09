@@ -25,6 +25,7 @@
 #include "UI.h"
 #include "Animation.h"
 #include "input.h"
+#include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include "Particle.h"
@@ -36,9 +37,34 @@ float GetScreenRatio(void)
     return widthGreater ? (float) GetScreenWidth() / GetScreenHeight() : (float) GetScreenHeight() / GetScreenWidth();
 }
 
+static uint16_t gcd(uint16_t a, uint16_t b)
+{
+    uint16_t result = ((a < b) ? a : b);
+    while (result > 0) {
+        if (a % result == 0 && b % result == 0) {
+            break;
+        }
+        result--;
+    }
+    return result;
+}
+
+
+Vector2 GetAspectRatioFraction(uint16_t x, uint16_t y)
+{
+    uint16_t scale = gcd(x,y);
+    x /= scale;
+    y /= scale;
+    return (Vector2) {x, y};
+}
 float GetScreenScale(void)
 {
     return GetScreenHeight()/720.;
+}
+
+float GetScreenScaleW(void)
+{
+    return GetScreenWidth()/1280.;
 }
 
 void FreeUIElement(UIElement * element)
@@ -162,8 +188,8 @@ void UpdateUIButton(const UIButton * button)
     Vector2 * inputs = GetInputMouseTouch();
     for (uint8_t i = 0; inputs[i].x != NAN && inputs[i].y != NAN && i < MAX_INPUT_POINTS; i++) 
     {
-        inputX = (uint16_t)inputs[i].x;
-        inputY = (uint16_t)inputs[i].y;
+        inputX = (uint16_t) inputs[i].x;
+        inputY = (uint16_t) inputs[i].y;
 
         if ((inputX > buttonX &&  inputX <= buttonX + buttonW) &&
             (inputY > buttonY && inputY <= buttonY + buttonH) )
@@ -177,4 +203,9 @@ void PutUIButton(const UIButton * button)
 {
     UpdateUIButton(button);
     RenderUIButton(button);
+}
+
+float TileSpaceToScreenSpace(float n)
+{
+    return (n + 1)/2;
 }

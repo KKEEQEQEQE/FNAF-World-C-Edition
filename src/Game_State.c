@@ -24,6 +24,7 @@
 
 #include "Game_State.h"
 #include "Title_Screen.h"
+#include "World.h"
 
 enum GameStateTypes GameState = 1000;
 
@@ -38,6 +39,7 @@ void SwapGameState(enum GameStateTypes state)
         case Save:
         case Party:
         case World:
+            break;
         case Chips:
         case Bytes:
         case Battle:
@@ -48,6 +50,10 @@ void SwapGameState(enum GameStateTypes state)
         case Title:
             InitTitleScreen();
             ResetTitleScreen();
+            break;
+        case World:
+            InitWorld();
+            ResetWorld();
             break;
         default:
             break;

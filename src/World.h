@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "Animation.h"
 #include "UI.h"
 #include <stdint.h>
 
@@ -32,10 +33,16 @@ enum WORLDZONES
     FAZBEARHILLS=1
 };
 
-typedef struct WORLDTileIndex
+typedef struct WORLDTileDefinition
 {
-    Texture2D texture;
-} WORLDTileIndex;
+    enum UIType type;
+    union 
+    {
+        UITexture texture;
+        Animation animation;
+    };
+    
+} WORLDTileDefinition;
 
 typedef uint16_t WORLDTile;
 
@@ -81,3 +88,16 @@ typedef struct WORLDTilemap
 extern void LoadWorldTilemap(void);
 
 #define ACCESS_TILEMAP(x, y, tilemap) 
+
+extern void InitWorld(void);
+extern void ResetWorld(void);
+enum Corner 
+{
+    TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTONRIGHT
+};
+
+extern Vector2 GetEntityCorner(WORLDEntity * entity, enum Corner corner);
+extern WORLDTile AccessPositionInLayer(uint16_t x, uint16_t y, tilemap_layer * layer);
+extern void UpdateWorldEntity(WORLDEntity * entity);
+extern void RenderWorld(void);
+extern void PutWorld(void);

@@ -77,6 +77,8 @@ typedef struct UIButton
 
 extern float GetScreenRatio(void);
 extern float GetScreenScale(void);
+extern float GetScreenScaleW(void);
+extern Vector2 GetAspectRatioFraction(uint16_t x, uint16_t y);
 extern void FreeUIElement(UIElement * element);
 extern void RenderUITexture(UITexture texture, float x, float y, float scale);
 extern void RenderUITextureDebug(UITexture texture, float x, float y, float scale);
@@ -84,3 +86,4 @@ extern void RenderUIElement(const UIElement * element);
 extern void UpdateUIButton(const UIButton * button);
 extern void RenderUIText(const char * text, float x, float y, float fontSize, enum UITextAlignment allignment, Font font, Color color);
 extern void PutUIButton(const UIButton * button);
+extern float TileSpaceToScreenSpace(float n);

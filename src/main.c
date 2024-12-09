@@ -45,7 +45,6 @@ int main(void)
     clock_t start = clock();
     LoadWorldTilemap();
     clock_t stop = clock();
-    printf("%f\n", (stop - start) / (float) CLOCKS_PER_SEC);
     while (!WindowShouldClose())
     {
         BeginDrawing();
@@ -55,6 +54,9 @@ int main(void)
         {
             case Title:
                 PutTitleScreen();
+                break;
+            case World:
+                PutWorld();
                 break;
             default:
                 RenderUIText("Unknown / Invalid Game State Entered.\nTap to go back to title screen!", 0, 0, 0.06, CENTRE, (Font){0}, WHITE);

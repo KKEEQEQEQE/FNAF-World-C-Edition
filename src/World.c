@@ -31,22 +31,15 @@
 #define WORLD_SIZE_X 1000
 #define WORLD_SIZE_Y 1000
 
-// Contains all types of floor tiles
-WORLDTileIndex WORLDFloorDictionary[]; // Note floor image is 12:6 (25px * 25px)
-
-// Refers index in floor tile dictionary
-uint8_t WORLDFloormap[WORLD_SIZE_Y][WORLD_SIZE_X] = {0};
-
-// Contains all types of tiles
-WORLDTileIndex WORLDTileDictionary[]; // Note floor image is 12:6 (25px * 25px)
-
 // Refers index in tile dictionary
 WORLDTilemap * CurrentWorld = NULL;
 
+// Current tilemap spritesheet
+uint16_t CurrentTileSize = 50;
+UITexture CurrentWorldSpriteSheet = {0};
 
-Rectangle WorldCamera = {0};
+Camera2D WorldCamera = {0};
 WORLDEntity Freddy = {0};
-
 
 void LoadWorldTilemap(void)
 {
@@ -69,23 +62,33 @@ float GetFloorTileScale(void)
     return GetScreenWidth() > GetScreenHeight() ? 1280 / 25. : 720 / 25.;
 }
 
-enum Corner {
-    TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTONRIGHT
-};
+void SetWorldSpriteSheet(const char * path, uint16_t tileSize)
+{
+    if (CurrentWorldSpriteSheet.height)
+    {
+        UnloadTexture(CurrentWorldSpriteSheet);
+    }
+    CurrentWorldSpriteSheet = LoadTexture(path);
+}
 
 void InitWorld(void)
 {
     if (!CurrentWorld) LoadWorldTilemap();
 
+    SetWorldSpriteSheet("Assets/Overworld/Maps/Overworld/spritesheet.png", 50); 
+    
+}
+
+void ResetWorld(void)
+{
     Freddy.collisionTargets = LAYER_COLLIDABLE;
     Freddy.size = (Vector2) {40, 40};
     Freddy.position = (Vector2) {CurrentWorld -> layers[CurrentWorld -> amount - 2].offsetX, CurrentWorld -> layers[CurrentWorld -> amount - 2].offsetY};
-    
-    for (uint16_t i = 0; i < CurrentWorld -> amount; i++)
-    {
 
-    }
-    
+    WorldCamera.offset = (Vector2) {GetScreenWidth()/2., GetScreenHeight()/2.};
+    WorldCamera.target = Freddy.position;
+    WorldCamera.rotation = 0;
+    WorldCamera.zoom = 16 * GetScreenScaleW();
 }
 Vector2 GetEntityCorner(WORLDEntity * entity, enum Corner corner)
 {
@@ -121,7 +124,7 @@ Vector2 CheckCollisionTilemap(WORLDEntity * entity, tilemap_layer * layer)
             return (Vector2) {floorf(cornerPos.x), floorf(cornerPos.y)};
         }
     }
-    
+    return (Vector2){0};
 }
 
 void MoveOutsideWall(WORLDEntity * entity, tilemap_layer * layer)
@@ -153,31 +156,27 @@ void UpdateWorldEntity(WORLDEntity * entity)
     }
 }
 
-void RenderTileRow(uint16_t startX, uint16_t y,  uint8_t (* tilemap)[WORLD_SIZE_Y][WORLD_SIZE_X], WORLDTileIndex * dictionary)
+void RenderLayer(uint16_t n)
 {
-    float screenY = y / (WorldCamera.y + WorldCamera.height) * 2 - 1;
-    for (uint16_t x = startX; x < startX + WorldCamera.width; x++)
-        {
-            uint8_t tileIndex = (*tilemap)[y][x];
-            if (!tileIndex) continue;
-            float tileScale = 1280/25.;
-            RenderUITexture(dictionary[tileIndex].texture, x / (WorldCamera.x + WorldCamera.width) * 2 - 1, screenY, GetScreenScale() * GetFloorTileScale());
-    }
-}
+    if (CurrentWorld -> layers[n].FLAGS & LAYER_INVISIBLE) return;
+    Vector2 Aspect = (Vector2) {GetScreenWidth() / 50., GetScreenHeight() / 50.};
+    Rectangle CameraView = {Freddy.position.x - Aspect.x / 2, Freddy.position.y - Aspect.y / 2, Freddy.position.x + Aspect.x / 2, Freddy.position.y + Aspect.y / 2};
 
-void RenderFloor(void)
-{
-    uint16_t startX = WorldCamera.x > 0 ? WorldCamera.x : 0;
-    if (startX + WorldCamera.width >= WORLD_SIZE_X) startX = WORLD_SIZE_X - (uint16_t) WorldCamera.width;
-
-    uint16_t startY = WorldCamera.y > 0 ? WorldCamera.y : 0;
-    if (startY + WorldCamera.height >= WORLD_SIZE_Y) startY = WORLD_SIZE_Y - (uint16_t) WorldCamera.height;
-
-    for (uint16_t y = startY; y < startY + WorldCamera.height; y++)
+    for (uint16_t y = (uint16_t) CameraView.y; y <= (uint16_t) CameraView.height; y += 1)
     {
-        RenderTileRow(startX, y, &WORLDFloormap, WORLDFloorDictionary);
+        for (uint16_t x = (uint16_t) CameraView.x; x <= (uint16_t) CameraView.width; x += 1)
+        {
+            uint16_t id = AccessPositionInLayer(x, 0, &CurrentWorld->layers[n]);
+            if (!id) continue;
+            id--;
+
+            Rectangle sprite = {    (id * CurrentTileSize) % CurrentWorldSpriteSheet.width, 
+                                    (float) (id * CurrentTileSize) / CurrentWorldSpriteSheet.width,
+                                    CurrentTileSize,
+                                    CurrentTileSize};
+            DrawTextureRec(CurrentWorldSpriteSheet, sprite, GetScreenToWorld2D((Vector2) {x, y}, WorldCamera), WHITE);
+        }
     }
-    
 }
 
 void RenderWorld(void)
@@ -185,7 +184,14 @@ void RenderWorld(void)
 
     RenderTexture2D RenderedMap = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
     BeginTextureMode(RenderedMap);
-    RenderFloor();
+    BeginMode2D(WorldCamera);
+    for (uint16_t i = CurrentWorld->amount-1; i >= 0; i--) RenderLayer(i);
+    EndMode2D();
     EndTextureMode();
     DrawTexture(RenderedMap.texture, 0, 0, WHITE);
+}
+
+void PutWorld(void)
+{
+    RenderWorld();
 }
