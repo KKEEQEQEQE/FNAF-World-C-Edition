@@ -69,13 +69,13 @@ float GetScreenScaleW(void)
 
 void FreeUIElement(UIElement * element)
 {
-    switch (element -> type) 
+    switch (element -> visual.type) 
     {
         case UItexture:
-            UnloadTexture(element -> texture);
+            UnloadTexture(element -> visual.texture);
             break;
         case UIanimation:
-            FreeAnimation(&element -> animation);
+            FreeAnimation(&element -> visual.animation);
             break;
         default:
             break;
@@ -112,16 +112,16 @@ void RenderUITextureDebug(UITexture texture, float x, float y, float scale)
 void RenderUIElement(const UIElement * element) 
 {
     register float scale = element -> scale * GetScreenHeight() / 720.;
-    switch (element -> type) {
+    switch (element -> visual.type) {
 
         case UIanimation:
-            RenderAnimation(&element -> animation, 
+            RenderAnimation(&element -> visual.animation, 
                             element -> x, 
                             element -> y, 
                             scale, 0);
             return;
         case UItexture:
-            RenderUITexture(element -> texture, element -> x, element -> y, scale);
+            RenderUITexture(element -> visual.texture, element -> x, element -> y, scale);
             return;
         default:
         return;
@@ -130,10 +130,14 @@ void RenderUIElement(const UIElement * element)
 
 void RenderUIButton(const UIButton * button)
 {
-    RenderUIElement(&button->visual);
+    RenderUIElement(&button -> graphic);
 }
 
-
+void RenderUIVisual(float x, float y, UIVisual * visual, float scale)
+{
+    UIElement temp = (UIElement) {visual -> type, visual -> texture, x, y, scale};
+    RenderUIElement(&temp);
+}
 
 void RenderUIText(const char * text, float x, float y, float fontSize, enum UITextAlignment allignment, Font font, Color color)
 {
@@ -162,25 +166,25 @@ void UpdateUIButton(const UIButton * button)
     register uint16_t inputX = 0;
     register uint16_t inputY = 0;
 
-    register float scale = button -> visual.scale * GetScreenHeight() / 720.;
+    register float scale = button -> graphic.scale * GetScreenHeight() / 720.;
 
     UITexture buttonTexture = {0};
 
-    switch (button -> visual.type)
+    switch (button -> graphic.visual.type)
     {
         case UIanimation: 
-            uint16_t currentFrame = GetCurrentAnimationFrame(&button -> visual.animation);
-            buttonTexture = button -> visual.animation.Frames[currentFrame];
+            uint16_t currentFrame = GetCurrentAnimationFrame(&button -> graphic.visual.animation);
+            buttonTexture = button -> graphic.visual.animation.Frames[currentFrame];
             break;
         case UItexture:
-            buttonTexture = button -> visual.texture;
+            buttonTexture = button -> graphic.visual.texture;
             break;
         default:
         return;
     }
 
-    register uint16_t buttonX = SCREEN_POSITION_TO_PIXEL_X(button -> visual.x, buttonTexture.width, scale);
-    register uint16_t buttonY = SCREEN_POSITION_TO_PIXEL_Y(button -> visual.y, buttonTexture.height, scale);
+    register uint16_t buttonX = SCREEN_POSITION_TO_PIXEL_X(button -> graphic.x, buttonTexture.width, scale);
+    register uint16_t buttonY = SCREEN_POSITION_TO_PIXEL_Y(button -> graphic.y, buttonTexture.height, scale);
 
     register uint16_t buttonW = buttonTexture.width * scale;
     register uint16_t buttonH = buttonTexture.height * scale;

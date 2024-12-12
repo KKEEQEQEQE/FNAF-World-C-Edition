@@ -49,13 +49,20 @@ enum UITextAlignment
 
 typedef Texture2D UITexture;
 
-typedef struct UIElement 
+typedef struct UIVisual
 {
     enum UIType type;
-    union {
-        Animation animation;
+    union 
+    {
         UITexture texture;
+        Animation animation;
     };
+    Color tint;
+} UIVisual;
+
+typedef struct UIElement 
+{
+    UIVisual visual;
     float x;
     float y;
     float scale;
@@ -66,14 +73,17 @@ typedef struct UIFont
     Font font;
     float averageRatio;
 } UIFont;
+
 typedef struct UIButton 
 {
-    UIElement visual;
+    UIElement graphic;
     void (* press)(struct UIButton * button);
     void (* hover)(struct UIButton * hover);
     GamepadButton controllerBinding;
     
 } UIButton;
+
+
 
 extern float GetScreenRatio(void);
 extern float GetScreenScale(void);
@@ -83,7 +93,9 @@ extern void FreeUIElement(UIElement * element);
 extern void RenderUITexture(UITexture texture, float x, float y, float scale);
 extern void RenderUITextureDebug(UITexture texture, float x, float y, float scale);
 extern void RenderUIElement(const UIElement * element);
+extern void RenderUIVisual(float x, float y, UIVisual * visual, float scale);
 extern void UpdateUIButton(const UIButton * button);
 extern void RenderUIText(const char * text, float x, float y, float fontSize, enum UITextAlignment allignment, Font font, Color color);
 extern void PutUIButton(const UIButton * button);
 extern float TileSpaceToScreenSpace(float n);
+extern float GetRotatedSize(UITexture texture, float rotation);

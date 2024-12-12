@@ -22,22 +22,4 @@
     SOFTWARE.
 */
 
-#include "Background.h"
-#include <stdint.h>
-
-void RenderBackgroundPro(Texture2D background, float rotation)
-{
-    uint8_t widthGreater = (float) GetScreenWidth() / GetScreenHeight() >= (float) background.width / background.height;
-    float scaleFactor = widthGreater ? (float) GetScreenWidth() / background.width : (float) GetScreenHeight() / background.height;
-    Vector2 location = (Vector2) {widthGreater ? 0 : GetScreenWidth() / 2 - background.width * scaleFactor / 2, 
-                                        widthGreater ? GetScreenHeight() / 2 - background.height * scaleFactor / 2 : 0};
-    DrawTexturePro( background, (Rectangle) {0,0, background.width, background.height}, 
-                    (Rectangle) {location.x, location.y, background.width * scaleFactor, background.height * scaleFactor},
-                    (Vector2) {background.width * scaleFactor * 1.5, background.height*scaleFactor * 1.5}, 
-                    rotation, 
-                    WHITE);
-}
-void RenderBackground(Texture2D background)
-{
-    RenderBackgroundPro(background, 0);
-}
+_Bool MinimalPrinting = 0;

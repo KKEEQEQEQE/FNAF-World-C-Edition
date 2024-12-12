@@ -32,5 +32,8 @@ bin/Particle.o:
 bin/World.o:
 	$(cc) -c $(cflags) src/World.c -o bin/World.o
 
-build_win: clean bin/Animation.o bin/input.o bin/UI.o bin/Title_Screen.o bin/Background.o bin/Game_State.o bin/Particle.o bin/Tilemap_JSON_Conversion.o bin/World.o
-	$(cc) -o FNAF_World_C.exe src/main.c bin/input.o bin/Animation.o bin/UI.o bin/Background.o bin/Game_State.o bin/Title_Screen.o bin/Particle.o bin/Tilemap_JSON_Conversion.o  bin/World.o Lib/cJSON.c -lraylib -lgdi32 -lwinmm -I include/ -L lib/
+bin/Settings.o:
+	$(cc) -c $(cflags) src/Settings.c -o bin/Settings.o
+
+build_win: clean bin/Animation.o bin/input.o bin/UI.o bin/Title_Screen.o bin/Background.o bin/Game_State.o bin/Particle.o bin/Tilemap_JSON_Conversion.o bin/World.o bin/Settings.o
+	$(cc) -o FNAF_World_C.exe src/main.c bin/input.o bin/Animation.o bin/UI.o bin/Background.o bin/Game_State.o bin/Title_Screen.o bin/Particle.o bin/Tilemap_JSON_Conversion.o bin/World.o bin/Settings.o Lib/cJSON.c -lraylib -lgdi32 -lwinmm -I include/ -L lib/

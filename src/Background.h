@@ -27,3 +27,4 @@
 #pragma once
 
 extern void RenderBackground(Texture2D background);
+extern void RenderBackgroundPro(Texture2D background, float rotation);

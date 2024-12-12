@@ -33,16 +33,7 @@ enum WORLDZONES
     FAZBEARHILLS=1
 };
 
-typedef struct WORLDTileDefinition
-{
-    enum UIType type;
-    union 
-    {
-        UITexture texture;
-        Animation animation;
-    };
-    
-} WORLDTileDefinition;
+typedef UIVisual WORLDTileDefinition;
 
 typedef uint16_t WORLDTile;
 
@@ -51,11 +42,18 @@ typedef struct WORLDEntity
     Vector2 position;
     Vector2 size;
     Vector2 velocity;
-    UITexture texture;
+    UIVisual * visual;
     float scale;
     uint16_t collisionTargets;
     void (*customCollision)(void);
 } WORLDEntity;
+
+typedef struct WORLDCamera
+{
+    Vector2 position; // The position of the camera
+    Vector2 target; // Ranges from (-1.0, -1.0) to (1.0, 1.0)
+    float zoom; // The amount of tiles you can see on the Y axis
+} WORLDCamera;
 
 #define LAYER_COLLIDABLE 1
 #define LAYER_INVISIBLE 2

@@ -62,7 +62,7 @@ uint8_t ParticleStars = 0;
 
 void InitTitleScreen(void) 
 {
-    UITitleA.animation = CreateAnimation("Assets/Menu/Title_Screen/Animations/Title/", 10);
+    UITitleA.visual.animation = CreateAnimation("Assets/Menu/Title_Screen/Animations/Title/", 10);
     UITitleA.scale = 1.3;
 
     Theme = LoadMusicStream("Assets/Themes/theme.wav");
@@ -70,18 +70,18 @@ void InitTitleScreen(void)
 
     PlayMusicStream(Theme);
 
-    UIBackground.texture = LoadTexture("Assets/Menu/Title_Screen/Background.png");
-    SetTextureFilter(UIBackground.texture, TEXTURE_FILTER_BILINEAR);
-    UIParty.texture = LoadTexture("Assets/Menu/Title_Screen/Party.png");
-    SetTextureFilter(UIParty.texture, TEXTURE_FILTER_BILINEAR);
+    UIBackground.visual.texture = LoadTexture("Assets/Menu/Title_Screen/Background.png");
+    SetTextureFilter(UIBackground.visual.texture, TEXTURE_FILTER_BILINEAR);
+    UIParty.visual.texture = LoadTexture("Assets/Menu/Title_Screen/Party.png");
+    SetTextureFilter(UIParty.visual.texture, TEXTURE_FILTER_BILINEAR);
     UIParty.scale = 1.5;
 
-    UITitleT.texture = LoadTexture("Assets/Menu/Title_Screen/Title.png");
-    SetTextureFilter(UITitleT.texture, TEXTURE_FILTER_BILINEAR);
+    UITitleT.visual.texture = LoadTexture("Assets/Menu/Title_Screen/Title.png");
+    SetTextureFilter(UITitleT.visual.texture, TEXTURE_FILTER_BILINEAR);
     UITitleT.scale = 1.3;
 
-    UIPlay.visual.animation = CreateAnimation("Assets/Menu/Title_Screen/Buttons/Start/Animations/", 30);
-    UIPlay.visual.scale = 1.5;
+    UIPlay.graphic.visual.animation = CreateAnimation("Assets/Menu/Title_Screen/Buttons/Start/Animations/", 30);
+    UIPlay.graphic.scale = 1.5;
 
     ParticleStars = CreateParticleIndexA("Assets/Particles/titlestar/", 20,2);
     TitleScreenFont = LoadFont("Assets/Menu/Title_Screen/font.ttf");
@@ -93,7 +93,7 @@ void UninitTitleScreen(void)
     FreeUIElement(&UITitleT);
     FreeUIElement(&UIBackground);
     FreeUIElement(&UIParty);
-    FreeUIElement(&UIPlay.visual);
+    FreeUIElement(&UIPlay.graphic);
     FlushParticles();
     DeleteParticle(ParticleStars);
     UnloadMusicStream(Theme);
@@ -104,19 +104,19 @@ void ResetTitleScreen(void)
 {
     InitTitleScreen();
 
-    UITitleA.animation.Clock = StartTime;
+    UITitleA.visual.animation.Clock = StartTime;
 
-    UITitleA.x = GetOutsideWindowX(UITitleA.animation.Frames[0]);
+    UITitleA.x = GetOutsideWindowX(UITitleA.visual.animation.Frames[0]);
     UITitleA.y = -0.775;
 
     UITitleT.x = 0;
     UITitleT.y = -0.775;
 
     UIParty.x = 0;
-    UIParty.y = GetOutsideWindowY(UIParty.texture);
+    UIParty.y = GetOutsideWindowY(UIParty.visual.texture);
 
-    UIPlay.visual.x = 0;
-    UIPlay.visual.y = 0.8125;
+    UIPlay.graphic.x = 0;
+    UIPlay.graphic.y = 0.8125;
     PlayMusicStream(Theme);
     StartTime = clock();
 }
@@ -126,7 +126,7 @@ void RenderTitle(void)
     register float timeSinceStart = (float)(clock() - StartTime) / CLOCKS_PER_SEC;
     if (clock() - StartTime < 3 * CLOCKS_PER_SEC) 
     {
-        UITitleA.x = -GetOutsideWindowX(UITitleA.animation.Frames[0]) + timeSinceStart*(GetOutsideWindowX(UITitleA.animation.Frames[0]) / TITLE_SECONDS_TO_CENTRE);
+        UITitleA.x = -GetOutsideWindowX(UITitleA.visual.animation.Frames[0]) + timeSinceStart*(GetOutsideWindowX(UITitleA.visual.animation.Frames[0]) / TITLE_SECONDS_TO_CENTRE);
         RenderUIElement(&UITitleA);
     }
     else 
@@ -139,15 +139,15 @@ void RenderTitle(void)
 void UpdateParty(void) 
 {
     register float timeSinceStart = (float)(clock() - StartTime) / CLOCKS_PER_SEC;
-    UIParty.y = GetOutsideWindowY(UIParty.texture) + timeSinceStart * -(GetOutsideWindowY(UIParty.texture) / PARTY_SECONDS_TO_CENTRE);
+    UIParty.y = GetOutsideWindowY(UIParty.visual.texture) + timeSinceStart * -(GetOutsideWindowY(UIParty.visual.texture) / PARTY_SECONDS_TO_CENTRE);
     UIParty.y = UIParty.y <= 0.26 ? 0.26 : UIParty.y;
 }
 
 void UpdatePlay(void) 
 {
     register float timeSinceStart = (float)(clock() - StartTime) / CLOCKS_PER_SEC;
-    UIPlay.visual.x = GetOutsideWindowX(UIPlay.visual.texture) + timeSinceStart * -(GetOutsideWindowX(UIPlay.visual.texture) / START_SECONDS_TO_CENTRE);
-    UIPlay.visual.x = UIPlay.visual.x < 0 ? 0: UIPlay.visual.x;
+    UIPlay.graphic.x = GetOutsideWindowX(UIPlay.graphic.visual.texture) + timeSinceStart * -(GetOutsideWindowX(UIPlay.graphic.visual.texture) / START_SECONDS_TO_CENTRE);
+    UIPlay.graphic.x = UIPlay.graphic.x < 0 ? 0: UIPlay.graphic.x;
 }
 
 void CreateTitlestars(void)
@@ -163,7 +163,7 @@ void CreateTitlestars(void)
 
 void PutTitleScreen(void) 
 {
-    RenderBackground(UIBackground.texture);
+    RenderBackground(UIBackground.visual.texture);
     UpdateMusicStream(Theme);
     RenderTitle();
     UpdateParty();

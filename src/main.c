@@ -36,20 +36,19 @@
 
 int main(void)
 {
-    const int screenWidth = 1280;
-    const int screenHeight = 720;
-    InitWindow(screenWidth, screenHeight, "FNAF World: C Edition");
+    InitWindow(1280, 720, "FNAF World: C Edition");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(1280, 720); 
     InitAudioDevice();
     clock_t start = clock();
     LoadWorldTilemap();
     clock_t stop = clock();
+    SwapGameState(World);
+    //SetTargetFPS(1000);
     while (!WindowShouldClose())
     {
         BeginDrawing();
         ClearBackground(BLACK);
-        
         switch (GetGameState()) 
         {
             case Title:
@@ -63,6 +62,7 @@ int main(void)
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SwapGameState(Title);
                 break;
         }
+        DrawFPS(10, 10);
         EndDrawing();
     }
     CloseAudioDevice();
