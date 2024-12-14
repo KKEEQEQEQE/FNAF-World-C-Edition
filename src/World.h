@@ -42,6 +42,7 @@ typedef struct WORLDEntity
     Vector2 position;
     Vector2 size;
     Vector2 velocity;
+    Vector2 visualOffset;
     UIVisual * visual;
     float scale;
     uint16_t collisionTargets;

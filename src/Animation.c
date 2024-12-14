@@ -102,9 +102,10 @@ Animation CreateAnimation(const char * path, const uint8_t targetFPS)
     {
         if (previousFileHandle) fclose(previousFileHandle);
         testPath[pathLength] = '\0';
-        strcpy(testPath+pathLength, uintstr(frameNumber));
+        strcpy(testPath + pathLength, uintstr(frameNumber));
         strcat(testPath, ".png");
         animationPlaceholder.Frames[frameNumber] = LoadTexture(testPath);
+        printf("%d, %d\n", animationPlaceholder.Frames[frameNumber].width, animationPlaceholder.Frames[frameNumber].height);
         SetTextureFilter(animationPlaceholder.Frames[frameNumber], TEXTURE_FILTER_BILINEAR);
         frameNumber++;
 
@@ -123,11 +124,11 @@ clock_t ClockSeconds(clock_t time) {
 }
 
 float GetOutsideWindowX(Texture2D texture) {
-    return 1+(float)(texture.width)/(GetScreenWidth());
+    return 1 + (float)(texture.width)/(GetScreenWidth());
 }
 
 float GetOutsideWindowY(Texture2D texture) {
-    return 1+(float)(texture.height)/(GetScreenHeight());
+    return 1 + (float)(texture.height)/(GetScreenHeight());
 }
 
 void RenderAnimation(const Animation * animation, float x, float y, float scale, clock_t timeOverride) 

@@ -22,4 +22,4 @@
     SOFTWARE.
 */
 
-_Bool MinimalPrinting = 0;
+_Bool MinimalPrinting = 1;

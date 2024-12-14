@@ -43,7 +43,7 @@ int main(void)
     clock_t start = clock();
     LoadWorldTilemap();
     clock_t stop = clock();
-    SwapGameState(World);
+    SwapGameState(100000);
     //SetTargetFPS(1000);
     while (!WindowShouldClose())
     {

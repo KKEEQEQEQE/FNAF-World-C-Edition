@@ -25,6 +25,7 @@
 #include "Animation.h"
 #include "Background.h"
 #include "Particle.h"
+#include <string.h>
 #include "UI.h"
 #include "Tilemap_JSON_Conversion.h"
 #include <math.h>
@@ -51,19 +52,59 @@ UITexture SunHeader = {0};
 UIVisual LegacyZoneEffect = {0};
 WORLDCamera WorldCamera = {0};
 
+WORLDEntity WorldBuildings_After[5] = {0}; // World Buildings rendered after Freddy
+WORLDEntity WorldBuildings_Pre[5] = {0}; // World Buildings rendered before Freddy
+
 WORLDEntity Freddy = {0};
 
 UIVisual FreddyIdle = {0};
 
 UIVisual FreddyWLeft = {0};
 UIVisual FreddyWUp = {0};
-UIVisual FreddyWLRight = {0};
+UIVisual FreddyWRight = {0};
 UIVisual FreddyWDown = {0};
+
+UITexture ZoneHeader[2];
 char * ZoneNames[] = {"Fazbear Hills", "Choppy's Woods"};
 
 // Particles
 
 uint8_t BirdParticle = 0;
+
+UIVisual * CreateUIVisualTexture(const char * path, Color tint)
+{
+    UIVisual * visual = malloc(sizeof(UIVisual));
+    if (!visual) exit(EXIT_FAILURE);
+
+    visual -> type = UItexture; 
+    visual -> texture = LoadTexture(path);
+    visual -> tint = tint;
+    return visual;
+}
+
+UIVisual * CreateUIVisualAnimation(const char * path, Color tint, const uint8_t targetFPS)
+{
+    UIVisual * visual = malloc(sizeof(UIVisual));
+    if (!visual) exit(EXIT_FAILURE);
+
+    visual -> type = UIanimation; 
+    visual -> animation = CreateAnimation(path, targetFPS);
+    visual -> tint = tint;
+    return visual;
+
+}
+
+WORLDEntity CreateWorldEntity(Vector2 position, Vector2 size, Vector2 velocity, UIVisual * visual, float scale, uint16_t collisionTargets, void (*customCollision)(void))
+{
+    WORLDEntity entity = {0};
+    entity.position = position;
+    entity.size = size;
+    entity.velocity = velocity;
+    entity.visual = visual;
+    entity.scale = scale;
+    entity.customCollision = customCollision;
+    return entity;
+}
 
 void LoadWorldTilemap(void)
 {
@@ -114,16 +155,50 @@ void InitWorld(void)
     SetTextureFilter(SunHeader, TEXTURE_FILTER_BILINEAR);
 
     FreddyIdle.type = UItexture;
-    FreddyIdle.texture = LoadTexture("Assets/Overworld/Freddy_Overworld/idle.png");
+    FreddyIdle.texture = LoadTexture("Assets/Overworld/Freddy_Overworld/idle.png"); 
     FreddyIdle.tint = WHITE;
+
+    SetTextureFilter(FreddyIdle.texture, TEXTURE_FILTER_BILINEAR);
+
+    
+    FreddyWUp.type = UIanimation;
+    FreddyWUp.animation = CreateAnimation("Assets/Overworld/Freddy_Overworld/walking_north/", 30); 
+    FreddyWUp.tint = WHITE;
+
+    FreddyWLeft.type = UIanimation;
+    FreddyWLeft.animation = CreateAnimation("Assets/Overworld/Freddy_Overworld/walking_west/", 30); 
+    FreddyWLeft.tint = WHITE;
+
+    FreddyWRight.type = UIanimation;
+    FreddyWRight.animation = CreateAnimation("Assets/Overworld/Freddy_Overworld/walking_east/", 30); 
+    FreddyWRight.tint = WHITE;
+
+    FreddyWDown.type = UIanimation;
+    FreddyWDown.animation = CreateAnimation("Assets/Overworld/Freddy_Overworld/walking_south/", 30); 
+    FreddyWDown.tint = WHITE;
+
     Freddy.visual = &FreddyIdle;
+    Freddy.scale = 0.95;
+
+    WorldBuildings_Pre[0] = CreateWorldEntity((Vector2) {10.8, 11}, (Vector2) {0,0}, (Vector2) {0,0}, CreateUIVisualTexture("Assets/Overworld/Buildings/Blue_Castle.png", WHITE), 1, 0, NULL);
+    WorldBuildings_Pre[1] = CreateWorldEntity((Vector2) {14.5, 10.5}, (Vector2) {0,0}, (Vector2) {0,0}, CreateUIVisualTexture("Assets/Overworld/Buildings/Red_Castle.png", WHITE), 1, 0, NULL);
+    WorldBuildings_Pre[2] = CreateWorldEntity((Vector2) {13.5, 15.5}, (Vector2) {0,0}, (Vector2) {0,0}, CreateUIVisualTexture("Assets/Overworld/Buildings/Gear_House.png", WHITE), 1, 0, NULL);
+    WorldBuildings_Pre[3] = CreateWorldEntity((Vector2) {19.5, 12}, (Vector2) {0,0}, (Vector2) {0,0}, CreateUIVisualTexture("Assets/Overworld/Buildings/Lumber_House.png", WHITE), 1, 0, NULL);
+    WorldBuildings_After[0] = CreateWorldEntity((Vector2) {8.5, 17}, (Vector2) {0,0}, (Vector2) {0,0}, CreateUIVisualAnimation("Assets/Overworld/Buildings/Windmill/", WHITE, 30), 1, 0, NULL);
+
+    ZoneHeader[0] = LoadTexture("Assets/Overworld/UI/Zone_Names/1.png"); 
+    ZoneHeader[1] = LoadTexture("Assets/Overworld/UI/Zone_Names/2.png"); 
+    HideCursor();
 }
 
 void ResetWorld(void)
 {
     Freddy.collisionTargets = LAYER_COLLIDABLE;
-    Freddy.size = (Vector2) {0.8, 0.8};
-    Freddy.position = (Vector2){CurrentWorld->layers[7].offsetX, CurrentWorld->layers[7].offsetY};
+    Freddy.size = (Vector2) {0.8, 0.3};
+    Freddy.scale = 0.95;
+    Freddy.visualOffset = (Vector2) {0, 0.5};
+    Freddy.position = (Vector2) {15, 21};
+    Freddy.customCollision = NULL;
 
     WorldCamera.target = (Vector2) {0, 0};
     WorldCamera.position = (Vector2) {Freddy.position.x + Freddy.size.x / 2, Freddy.position.y + Freddy.size.y / 2};
@@ -156,48 +231,68 @@ WORLDTile AccessPositionInLayer(uint16_t x, uint16_t y, tilemap_layer * layer)
     return (*tiles)[y][x];
 }
 
-Vector2 CheckCollisionTilemap(WORLDEntity * entity, tilemap_layer * layer)
+uint8_t CheckCollisionTilemap(WORLDEntity * entity, tilemap_layer * layer)
 {
-    if (!(entity -> collisionTargets & layer -> FLAGS)) return (Vector2){NAN, NAN};
-    register WORLDTile (*tiles)[layer -> sizeY][layer -> sizeX] = layer -> tiles;
-    for (uint8_t corner = 0; corner < 4; corner++)
+    if (!(entity -> collisionTargets & layer -> FLAGS)) return 0;
+    
+    Vector2 cornerPos = entity -> position;
+
+    if (AccessPositionInLayer((uint16_t) cornerPos.x, (uint16_t)cornerPos.y, layer))
     {
-        Vector2 cornerPos = GetEntityCorner(entity, corner);
-        if (AccessPositionInLayer((uint16_t)cornerPos.x, (uint16_t)cornerPos.y, layer))
-        {
-            if (entity -> customCollision) entity -> customCollision();
-            return (Vector2) {floorf(cornerPos.x), floorf(cornerPos.y)};
-        }
+        return 1;
     }
-    return (Vector2){0};
+
+    cornerPos = (Vector2) {entity -> position.x + entity -> size.x, entity -> position.y};
+
+    if (AccessPositionInLayer((uint16_t) cornerPos.x, (uint16_t)cornerPos.y, layer))
+    {
+        return 1;
+    }
+
+    cornerPos = (Vector2) {entity -> position.x, entity -> position.y + entity -> size.y};
+
+    if (AccessPositionInLayer((uint16_t) cornerPos.x, (uint16_t)cornerPos.y, layer))
+    {
+        return 1;
+    }
+
+    cornerPos = (Vector2) {entity -> position.x + entity -> size.x, entity -> position.y + entity -> size.y};
+
+    if (AccessPositionInLayer((uint16_t) cornerPos.x, (uint16_t)cornerPos.y, layer))
+    {
+        return 1;
+    }
+
+    return 0;
 }
 
-void MoveOutsideWall(WORLDEntity * entity, tilemap_layer * layer)
-{
-    Vector2 check = CheckCollisionTilemap(entity, layer);
-    if (check.x != NAN)
-    {
-        if ((uint16_t) entity -> position.x == (uint16_t)check.x)
-        {
-            entity -> position.x -= (float) ((int16_t) entity -> velocity.x / abs((int16_t) entity -> velocity.x));
-        }
 
-        if ((uint16_t) entity -> position.y == (uint16_t)check.y)
-        {
-            entity -> position.y -= (float) ((int16_t) entity -> velocity.y / abs((int16_t) entity -> velocity.y));
-        }
-
-        check = CheckCollisionTilemap(entity, layer);
-    }
-}
 void UpdateWorldEntity(WORLDEntity * entity)
 {
-    if (entity -> velocity.x == 0 && entity -> velocity.y == 0) return;
+    if ((int16_t) entity -> velocity.x == 0 && (int16_t) entity -> velocity.y == 0) return;
+
     entity -> position.x += entity -> velocity.x * GetFrameTime();
-    entity -> position.y += entity -> velocity.y * GetFrameTime();
+
     for (uint16_t i = 1; i < CurrentWorld -> amount; i++)
     {
-        //MoveOutsideWall(entity, &CurrentWorld -> layers[i]);
+        uint8_t check = CheckCollisionTilemap(entity, &CurrentWorld->layers[i]);
+        if (check)
+        {
+            entity -> position.x -= entity -> velocity.x * GetFrameTime();
+            break;
+        }
+    }
+
+    entity -> position.y += entity -> velocity.y * GetFrameTime();
+
+    for (uint16_t i = 1; i < CurrentWorld -> amount; i++)
+    {
+        uint8_t check = CheckCollisionTilemap(entity, &CurrentWorld->layers[i]);
+        if (check)
+        {
+            entity -> position.y -= entity -> velocity.y * GetFrameTime();
+            break;
+        }
     }
 }
 
@@ -210,8 +305,8 @@ void RenderLayer(uint16_t n, Vector2 CameraMinorOffset)
     } 
     Rectangle CameraView = {WorldCamera.position.x - WorldCamera.zoom * ((float) GetScreenWidth() / GetScreenHeight()) / 2, 
                             WorldCamera.position.y - WorldCamera.zoom / 2, 
-                            WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()), 
-                            WorldCamera.zoom};
+                            WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()) + 2, 
+                            WorldCamera.zoom + 2};
     
     if (CameraView.x < 0) CameraView.width -= CameraView.x, CameraView.x = 0;
     if (CameraView.y < 0) CameraView.height -= CameraView.y, CameraView.y = 0;
@@ -227,11 +322,11 @@ void RenderLayer(uint16_t n, Vector2 CameraMinorOffset)
                                     (uint16_t) (id * CurrentTileSize) / CurrentWorldSpriteSheet.width * CurrentTileSize,
                                     CurrentTileSize,
                                     CurrentTileSize};
-            Vector2 screen_pos = (Vector2) {(x - (uint16_t) CameraView.x) * CurrentTileSize * 2 - (uint16_t) CameraMinorOffset.x, 
-                                            (y - (uint16_t) CameraView.y) * CurrentTileSize * 2 - (uint16_t) CameraMinorOffset.y};
+            Vector2 screen_pos = (Vector2) {(x - (uint16_t) CameraView.x) * CurrentTileSize, 
+                                            (y - (uint16_t) CameraView.y) * CurrentTileSize};
             DrawTexturePro( CurrentWorldSpriteSheet, 
                             sprite, 
-                            (Rectangle) {screen_pos.x, screen_pos.y, CurrentTileSize * 2, CurrentTileSize * 2}, 
+                            (Rectangle) {screen_pos.x, screen_pos.y, CurrentTileSize, CurrentTileSize}, 
                             (Vector2) {0,0}, 
                             0, 
                             WHITE);
@@ -239,45 +334,57 @@ void RenderLayer(uint16_t n, Vector2 CameraMinorOffset)
     }
 }
 
-void RenderWorldTexture(Texture2D * texture, Vector2 position, Vector2 size)
+void RenderWorldTexture(Texture2D * texture, Vector2 position, Vector2 offset, float scale)
 {
     Rectangle CameraView = {WorldCamera.position.x - WorldCamera.zoom * ((float) GetScreenWidth() / GetScreenHeight()) / 2, 
                             WorldCamera.position.y - WorldCamera.zoom / 2, 
-                            WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()), 
-                            WorldCamera.zoom};
+                            WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()) + 2, 
+                            WorldCamera.zoom + 2};
 
+    if (CameraView.x < 0) CameraView.x = 0;
+    if (CameraView.y < 0) CameraView.x = 0;
 
-    Vector2 screen_pos = (Vector2) {position.x * 50 - CameraView.x * 50., 
-                                    position.y * 50 - CameraView.y * 50.};
-
+    Vector2 screen_pos = (Vector2) {(position.x - (uint16_t)CameraView.x) * 50., 
+                                    (position.y - (uint16_t)CameraView.y) * 50.};
     DrawTexturePro( *texture, 
                     (Rectangle) {0, 0, texture -> width, texture -> height},
                     (Rectangle) {screen_pos.x, screen_pos.y,
-                                 size.x * CurrentTileSize, size.y * CurrentTileSize},
-                    (Vector2) {0, 0},
+                                 texture -> width * scale, texture -> height * scale},
+                    (Vector2) {texture -> width * scale * ((offset.x) + 1) / 2, texture -> height * scale * (offset.y + 1) / 2 },
                     0,
                     WHITE);
 }
 
-void RenderWorldAnimation(Animation * animation, Vector2 position, Vector2 size)
-{
-    uint16_t frame = GetCurrentAnimationFrame(animation);
-    RenderWorldTexture(animation->Frames +frame, position, size);
-}
-
 void RenderWorldEntity(WORLDEntity * entity)
 {
+    Vector2 position = (Vector2) {entity -> position.x + entity -> size.x / 2, entity -> position.y + entity -> size.y / 2};
     switch (entity-> visual -> type) {
         case UIanimation:
-            RenderWorldAnimation(&entity -> visual -> animation, entity -> position, entity -> size);
+            uint16_t i = GetCurrentAnimationFrame(&entity -> visual -> animation);
+            Texture2D * frame = entity -> visual -> animation.Frames + i;
+            RenderWorldTexture( frame, 
+                                position, 
+                                entity -> visualOffset,
+                                entity -> scale);
         case UItexture:
-            RenderWorldTexture(&entity -> visual -> texture, entity -> position, entity -> size);
+            Texture2D * texture = &entity -> visual -> texture;
+            RenderWorldTexture( texture, 
+                                position, 
+                                entity -> visualOffset,
+                                entity -> scale);
             break;
         default:
             break;
     }
 }
 
+void RenderBuildings(WORLDEntity * Buildings)
+{
+    for (uint16_t i = 0; Buildings[i].visual != NULL; i++)
+    {
+        RenderWorldEntity(Buildings + i);
+    }
+}
 void SpawnBirds(void)
 {
     static clock_t timeSinceLastParticle = 0;
@@ -300,23 +407,23 @@ void SpawnBirds(void)
     }
 }
 
-void RenderZoneEffect_Zone1(void)
+void RenderZoneEffect_Zone1(Vector2 offset)
 {
     float screenRatio = (float) GetScreenWidth() / GetScreenHeight();
-    int vWidth = (WorldCamera.zoom * CurrentTileSize) * screenRatio * 2;
-    int vHeight = WorldCamera.zoom * CurrentTileSize * 2;
+    int vWidth = (WorldCamera.zoom * CurrentTileSize) * screenRatio;
+    int vHeight = WorldCamera.zoom * CurrentTileSize;
 
     BeginBlendMode(BLEND_ADDITIVE);
 
     DrawTexturePro( SunHeader, 
                     (Rectangle) {0, 0, SunHeader.width, SunHeader.height}, 
-                    (Rectangle) {0, 0, vWidth, vHeight / 3}, 
+                    (Rectangle) {offset.x, offset.y, vWidth, vHeight / 3}, 
                     (Vector2) {0, 0}, 0, 
                     SKYBLUE);
 
     DrawTexturePro( LegacyZoneEffect.texture, 
                     (Rectangle) {0, 0, LegacyZoneEffect.texture.width, LegacyZoneEffect.texture.height}, 
-                    (Rectangle) {0, 0, vWidth, vHeight}, 
+                    (Rectangle) {offset.x, offset.y, vWidth, vHeight}, 
                     (Vector2) {0, 0}, 0, 
                     LegacyZoneEffect.tint);
 
@@ -326,33 +433,46 @@ void RenderZoneEffect_Zone1(void)
 uint8_t GetZone(void)
 {
     Vector2 ZoneCheck = (Vector2) {Freddy.position.x + Freddy.size.x / 2, Freddy.position.y + Freddy.size.y / 2};
-    uint16_t zone = AccessPositionInLayer((uint16_t) ZoneCheck.x, (uint16_t) ZoneCheck.y, CurrentWorld->layers + 0) - 31;
-    if (zone < 3) zone = 1;
-    return zone;
+    uint16_t zone = AccessPositionInLayer((uint16_t) ZoneCheck.x, (uint16_t) ZoneCheck.y, CurrentWorld->layers + 0) - 37;
+    if (zone > 3) return 0xff;
+    return zone - 1;
 }
 void RenderZoneEffect(void)
 {
     uint16_t zone = GetZone();
+    Rectangle CameraView = {WorldCamera.position.x - WorldCamera.zoom * ((float) GetScreenWidth() / GetScreenHeight()) / 2, 
+                            WorldCamera.position.y - WorldCamera.zoom / 2, 
+                            WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()), 
+                            WorldCamera.zoom};
+
+    if (CameraView.x < 0) CameraView.x = 0;
+    if (CameraView.y < 0) CameraView.x = 0;
+
+    Vector2 CameraMinorOffset = (Vector2) { (float) (CameraView.x - (uint16_t) CameraView.x) * CurrentTileSize,
+                                            (float) (CameraView.y - (uint16_t) CameraView.y) * CurrentTileSize};
     switch (zone) {
         case 1:
         case 2:
         default:
-            RenderZoneEffect_Zone1();
+            RenderZoneEffect_Zone1(CameraMinorOffset);
             break;
     }
 }
 
 void RenderZoneName(void)
 {
-    RenderUIText(ZoneNames[GetZone() - 1], -0.95, -0.9, 0.03, LEFTMOST, (Font) {0}, WHITE);
+    uint8_t zone = GetZone();
+    if (zone == 0xff) RenderUIText("Unknown Zone", -0.95, -0.9, 0.03, LEFTMOST, (Font) {0}, WHITE);
+    float scale = (float) ZoneHeader[zone].height / GetScreenHeight();
+    DrawTextureEx(ZoneHeader[zone], (Vector2) {25. * GetScreenHeight() / 720, 25. * GetScreenHeight() / 720}, 0, 0.025/scale, WHITE);
 }
 
 void RenderWorld(void)
 {
     float screenRatio = (float) GetScreenWidth() / GetScreenHeight();
 
-    int vWidth = (WorldCamera.zoom * CurrentTileSize) * screenRatio * 2;
-    int vHeight = WorldCamera.zoom * CurrentTileSize * 2;
+    int vWidth = (WorldCamera.zoom * CurrentTileSize) * screenRatio + CurrentTileSize;
+    int vHeight = WorldCamera.zoom * CurrentTileSize + CurrentTileSize;
     if (!WorldVirtualScreen.id) WorldVirtualScreen = LoadRenderTexture(vWidth,vHeight);
 
 
@@ -367,12 +487,21 @@ void RenderWorld(void)
                             WorldCamera.position.y - WorldCamera.zoom / 2, 
                             WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()), 
                             WorldCamera.zoom};
+    if (CameraView.x < 0) CameraView.x = 0;
+    if (CameraView.y < 0) CameraView.x = 0;
 
-    Vector2 CameraMinorOffset = (Vector2) { (float) (CameraView.x - (uint16_t) CameraView.x) * CurrentTileSize * 2,
-                                            (float) (CameraView.y - (uint16_t) CameraView.y) * CurrentTileSize * 2};
+    Vector2 CameraMinorOffset = (Vector2) { (float) (CameraView.x - (uint16_t) CameraView.x) * (GetScreenHeight() / WorldCamera.zoom),
+                                            (float) (CameraView.y - (uint16_t) CameraView.y) * (GetScreenHeight() / WorldCamera.zoom)};
     BeginTextureMode(WorldVirtualScreen);
     ClearBackground(BLACK);
     for (uint16_t i = CurrentWorld -> amount; i > 0; i--) RenderLayer(i, CameraMinorOffset);
+    
+    RenderBuildings(WorldBuildings_Pre);
+
+    RenderWorldEntity(&Freddy);
+
+    RenderBuildings(WorldBuildings_After);
+
     RenderZoneEffect();
 
     EndTextureMode();
@@ -382,7 +511,7 @@ void RenderWorld(void)
 
     DrawTexturePro( WorldVirtualScreen.texture, 
                     (Rectangle) {0, -vHeight, (float) vWidth, (float) -vHeight}, 
-                    (Rectangle) { 0, 0, GetScreenWidth(), GetScreenHeight()},
+                    (Rectangle) { -CameraMinorOffset.x, -CameraMinorOffset.y, GetScreenWidth() + (GetScreenHeight() / WorldCamera.zoom), GetScreenHeight() + (GetScreenHeight() / WorldCamera.zoom)},
                     (Vector2) {0,0},
                     0,
                     WHITE);
@@ -390,13 +519,44 @@ void RenderWorld(void)
 
 void UpdateFreddy(void)
 {
-    if (IsKeyDown(KEY_W)) WorldCamera.position.y -= 2*GetFrameTime();
-    else if (IsKeyDown(KEY_S)) WorldCamera.position.y += 2*GetFrameTime();
+    static uint8_t lastDirection = 0;
+
+    uint8_t CurrentDirection = 0;
+
+    if (IsKeyDown(KEY_W)) Freddy.velocity.y = -2, CurrentDirection = 1;
+    else if (IsKeyDown(KEY_S)) Freddy.velocity.y = 2, CurrentDirection = 4;
     else Freddy.velocity.y = 0;
 
-    if (IsKeyDown(KEY_A)) WorldCamera.position.x -= 2 * GetFrameTime();
-    else if (IsKeyDown(KEY_D)) WorldCamera.position.x += 2 * GetFrameTime();
+    if (IsKeyDown(KEY_A)) Freddy.velocity.x = -2, CurrentDirection = 2;
+    else if (IsKeyDown(KEY_D)) Freddy.velocity.x = 2, CurrentDirection = 3;
     else Freddy.velocity.x = 0;
+
+    if (lastDirection != CurrentDirection)
+    {
+        switch (CurrentDirection) {
+            case 0:
+                Freddy.visual = &FreddyIdle;
+                break;
+            case 1:
+                Freddy.visual = &FreddyWUp;
+                break;
+            case 2:
+                Freddy.visual = &FreddyWLeft;
+                break;
+            case 3:
+                Freddy.visual = &FreddyWRight;
+                break;
+            case 4:
+                Freddy.visual = &FreddyWDown;
+                break;
+
+        }
+        lastDirection = CurrentDirection;
+    }
+
+    UpdateWorldEntity(&Freddy);
+
+    WorldCamera.position = (Vector2) {Freddy.position.x + Freddy.size.x / 2, Freddy.position.y + Freddy.size.y / 2};
 }
 
 void PutWorld(void)
