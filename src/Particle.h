@@ -45,26 +45,32 @@ typedef struct UIParticle
     float velocityY;
     clock_t startTime;
 } UIParticle;
-// Returns the index for an animated particle
+
+// Creates a Particle type with an UIanimation
 extern uint8_t CreateParticleIndexA(const char * path, const uint8_t targetFPS, float scale);
 
-// Returns the index for a non-animated particle
-extern uint8_t CreateParticleIndexT(const char * path, float scale);
-
-extern void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY);
-
-// Returns the index for an animated particle using UIanimationV2
+// Creates a Particle type with an UIanimationV2
 extern uint8_t CreateParticleIndexA_V2(const char * path, const uint8_t targetFPS, uint16_t amount, Vector2 spriteSize, float scale);
 
+// Creates a Particle type with an UItexture
+extern uint8_t CreateParticleIndexT(const char * path, float scale);
+
+// Creates a Particle instance
+extern void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY);
+
+// Removes a particle type
 extern void RemoveParticleIndex(uint16_t id);
 
+// Deletes a Particle instance
 extern void DeleteParticle(uint16_t id);
 
+// Deletes all Particle instance
 extern void FlushParticles(void);
 
+// Updates a UIParticle position with its velocity
 void UpdateUIParticle(uint16_t id);
 
-// Renders all particles on screen
+// Scales and Renders all particles on screen
 void RenderUIParticles(void);
 
 // Updates all particles on screen

@@ -38,7 +38,7 @@ float absf(float x)
     return x;
 }
 
-// Returns the index for an animated particle
+// Creates a Particle type with an UIanimation
 uint8_t CreateParticleIndexA(const char * path, const uint8_t targetFPS, float scale)
 {
     uint8_t id = 0;
@@ -53,6 +53,7 @@ uint8_t CreateParticleIndexA(const char * path, const uint8_t targetFPS, float s
     return id;
 }
 
+// Creates a Particle type with an UIanimationV2
 uint8_t CreateParticleIndexA_V2(const char * path, const uint8_t targetFPS, uint16_t amount, Vector2 spriteSize, float scale)
 {
     uint8_t id = 0;
@@ -67,7 +68,7 @@ uint8_t CreateParticleIndexA_V2(const char * path, const uint8_t targetFPS, uint
     return id;
 }
 
-// Returns the index for a non-animated particle
+// Creates a Particle type with an UItexture
 uint8_t CreateParticleIndexT(const char * path, float scale)
 {
     uint8_t id = 0;
@@ -81,6 +82,22 @@ uint8_t CreateParticleIndexT(const char * path, float scale)
 
     return id;
 }
+
+// Creates a Particle instance
+void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY)
+{
+    uint8_t id = 0;
+    for (; AllParticles[id].startTime != 0; id++); // Gets the an avaliable index id
+    if (id >= MAX_PARTICLES) id = MAX_PARTICLES-1;
+    AllParticles[id].textureID = textureID;
+    AllParticles[id].x = x;
+    AllParticles[id].y = y;
+    AllParticles[id].velocityX = velocityX;
+    AllParticles[id].velocityY = velocityY;
+    AllParticles[id].startTime = clock();
+}
+
+// Removes a particle type
 void RemoveParticleIndex(uint16_t id)
 {
     if (ParticlesIndex[id].visual.type == UInotype) return;
@@ -96,26 +113,19 @@ void RemoveParticleIndex(uint16_t id)
         default:
             break;
     }
+    
+    // Marks Particle type to be overwriten
+
+    ParticlesIndex[id].visual.type = UInotype; 
 }
 
-void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY)
-{
-    uint8_t id = 0;
-    for (; AllParticles[id].startTime != 0; id++); // Gets the an avaliable index id
-    if (id >= MAX_PARTICLES) id = MAX_PARTICLES-1;
-    AllParticles[id].textureID = textureID;
-    AllParticles[id].x = x;
-    AllParticles[id].y = y;
-    AllParticles[id].velocityX = velocityX;
-    AllParticles[id].velocityY = velocityY;
-    AllParticles[id].startTime = clock();
-}
-
+// Deletes a Particle instance
 void DeleteParticle(uint16_t id)
 {
     AllParticles[id].startTime = 0;
 }
 
+// Deletes all Particle instance
 void FlushParticles(void)
 {
     for (uint16_t i = 0; i < MAX_PARTICLES; i++) DeleteParticle(i);
@@ -152,6 +162,7 @@ void UpdateUIParticle(uint16_t id)
     }
 }
 
+// Renders a Particle instance
 void RenderUIParticle(uint16_t id, register float screenScale)
 {
     uint8_t indexID = AllParticles[id].textureID;
@@ -180,16 +191,7 @@ void RenderUIParticle(uint16_t id, register float screenScale)
     }  
 }
 
-// Renders all particles on screen
-void UpdateUIParticles(void)
-{
-    for (int id = 0; id < MAX_PARTICLES; id++) 
-    {
-        if (AllParticles[id].startTime == 0) continue;
-        UpdateUIParticle(id);
-    }
-}
-
+// Scales and Renders all particles on screen
 void RenderUIParticles(void)
 {
     register float screenScale = GetScreenHeight() / 720.;
@@ -200,6 +202,17 @@ void RenderUIParticles(void)
     }
 }
 
+// Updates all particles on screen
+void UpdateUIParticles(void)
+{
+    for (int id = 0; id < MAX_PARTICLES; id++) 
+    {
+        if (AllParticles[id].startTime == 0) continue;
+        UpdateUIParticle(id);
+    }
+}
+
+// Updates and Renders all particles on screen
 void PutUIParticles(void) {
     UpdateUIParticles();
     RenderUIParticles();

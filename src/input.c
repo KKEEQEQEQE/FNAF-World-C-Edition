@@ -36,3 +36,13 @@ Vector2 * GetInputMouseTouch(void)
     Input_Points[iPoints] = (Vector2) {NAN, NAN};
     return Input_Points;
 }
+
+Vector2 * GetInputTap(void) 
+{
+    static Vector2 Input_Points[MAX_INPUT_POINTS + 1] = {0};
+    int iPoints = GetTouchPointCount() + IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    if (iPoints >= MAX_INPUT_POINTS) iPoints = MAX_INPUT_POINTS;
+    for (uint8_t i = 0; i < iPoints; i++) Input_Points[i] = GetTouchPosition(i);
+    Input_Points[iPoints] = (Vector2) {NAN, NAN};
+    return Input_Points;
+}

@@ -46,7 +46,7 @@ typedef struct WORLDEntity
     UIVisual * visual;
     float scale;
     uint16_t collisionTargets;
-    void (*customCollision)(void);
+    void (*customCollision)(struct WORLDEntity *);
 } WORLDEntity;
 
 typedef struct WORLDCamera

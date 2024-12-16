@@ -33,57 +33,44 @@
 #include "Particle.h"
 #include <stdint.h>
 
+// Gets the screen ratio
 float GetScreenRatio(void)
 {
     uint8_t widthGreater = (float) GetScreenWidth() / GetScreenHeight() >= 4/3.;
     return widthGreater ? (float) GetScreenWidth() / GetScreenHeight() : (float) GetScreenHeight() / GetScreenWidth();
 }
 
-static uint16_t gcd(uint16_t a, uint16_t b)
-{
-    uint16_t result = ((a < b) ? a : b);
-    while (result > 0) {
-        if (a % result == 0 && b % result == 0) {
-            break;
-        }
-        result--;
-    }
-    return result;
-}
-
-
-Vector2 GetAspectRatioFraction(uint16_t x, uint16_t y)
-{
-    uint16_t scale = gcd(x,y);
-    x /= scale;
-    y /= scale;
-    return (Vector2) {x, y};
-}
+// Gets the screen scale relative to the screen height
 float GetScreenScale(void)
 {
     return GetScreenHeight()/720.;
 }
 
+// Gets the screen scale relative to the screen width
 float GetScreenScaleW(void)
 {
     return GetScreenWidth()/1280.;
 }
 
+// Gets the position x needed for a texture to not be visible in UI space
 float GetOutsideWindowX_u16(uint16_t width) 
 {
     return 1 + (float)(width) / (GetScreenWidth());
 }
 
+// Gets the position y needed for a texture to not be visible in UI space
 float GetOutsideWindowY_u16(uint16_t height) 
 {
     return 1 + (float)(height) / (GetScreenWidth());
 }
 
+// Gets the position x needed for a texture to not be visible in UI space
 float GetOutsideWindowX(Texture2D texture) 
 {
     return 1 + (float)(texture.width) / (GetScreenWidth());
 }
 
+// Gets the position y needed for a texture to not be visible in UI space
 float GetOutsideWindowY(Texture2D texture) 
 {
     return 1 + (float)(texture.height) / (GetScreenHeight());
@@ -108,27 +95,19 @@ void FreeUIElement(UIElement * element)
     }
 }
 
+// Debugging DrawTextureEx wrapper which also prints position
 void DrawDebugTexture(Texture2D texture, Vector2 position, float rotation, float scale, Color tint)
 {
     printf("%f, %f\n", position.x, position.y);
     DrawTextureEx(texture, position, rotation, scale, tint);
 }
 
+// Scales and Renders a UITexture in UI Space
 void RenderUITexture(UITexture texture, float x, float y, float scale)
 {
     DrawTextureEx(  texture, 
                     (Vector2) { (float) SCREEN_POSITION_TO_PIXEL_X(x, texture.width, scale), 
-                                 (float)SCREEN_POSITION_TO_PIXEL_Y(y, texture.height, scale) },
-                    0, 
-                    scale, 
-                    WHITE);
-}
-
-void RenderUITextureDebug(UITexture texture, float x, float y, float scale)
-{
-    DrawTextureEx(  texture, 
-                    (Vector2) { (float) SCREEN_POSITION_TO_PIXEL_X(x, texture.width, scale), 
-                                 (float)SCREEN_POSITION_TO_PIXEL_Y(y, texture.height, scale) },
+                                 (float) SCREEN_POSITION_TO_PIXEL_Y(y, texture.height, scale) },
                     0, 
                     scale, 
                     WHITE);
@@ -142,6 +121,8 @@ UIVisual * UIVisual_Heap(UIVisual visual)
     *visual_heap = visual;
     return visual_heap;
 }
+
+// Creates a UIVisual of type UItexture via UItexture
 UIVisual CreateUIVisual_UITexture(UITexture texture, Color tint)
 {
     UIVisual temp = {0};
@@ -151,6 +132,17 @@ UIVisual CreateUIVisual_UITexture(UITexture texture, Color tint)
     return temp;
 }
 
+// Creates a UIVisual of type UItexture via path
+UIVisual CreateUIVisual_UITexture_P(const char * path, Color tint)
+{
+    UIVisual temp = {0};
+    temp.type = UItexture;
+    temp.texture = LoadTexture(path);
+    temp.tint = tint;
+    return temp;
+}
+
+// Creates a UIVisual of type UIanimation via path
 UIVisual CreateUIVisual_UIAnimation(const char * path, const uint8_t targetFPS, const Color tint)
 {
     UIVisual temp = {0};
@@ -160,6 +152,7 @@ UIVisual CreateUIVisual_UIAnimation(const char * path, const uint8_t targetFPS, 
     return temp;
 }
 
+// Creates a UIVisual of type UIanimationV2 via path
 UIVisual CreateUIVisual_UIAnimation_V2(const char * path, const uint8_t targetFPS, const uint8_t amount, Vector2 tileSize, Color tint)
 {
     UIVisual temp = {0};
@@ -179,6 +172,7 @@ UIElement CreateUIElement(UIVisual visual, float x, float y, float scale)
     return temp;
 }
 
+// Scales and Renders a UIElement
 void RenderUIElement(const UIElement * element) 
 {
     register float scale = element -> scale * GetScreenHeight() / 720.;
@@ -206,17 +200,20 @@ void RenderUIElement(const UIElement * element)
     }
 }
 
+// Scales and Renders a UIButton
 void RenderUIButton(const UIButton * button)
 {
     RenderUIElement(&button -> graphic);
 }
 
+// Scales and Renders a UIVisual at X, Y scaled
 void RenderUIVisual(float x, float y, UIVisual * visual, float scale)
 {
     UIElement temp = (UIElement) {visual -> type, visual -> texture, x, y, scale};
     RenderUIElement(&temp);
 }
 
+// Scales and Renders text in UI space
 void RenderUIText(const char * text, float x, float y, float fontSize, enum UITextAlignment allignment, Font font, Color color)
 {
     fontSize *= GetScreenHeight();
@@ -239,6 +236,7 @@ void RenderUIText(const char * text, float x, float y, float fontSize, enum UITe
     DrawTextPro(font, text, position, origin, 0, fontSize, 1, color);
 }
 
+// Checks and updates a button if it has been pressed
 void UpdateUIButton(const UIButton * button) 
 {
     register uint16_t inputX = 0;
@@ -281,22 +279,20 @@ void UpdateUIButton(const UIButton * button)
     }
 }
 
+// Updates and Renders a UIButton
 void PutUIButton(const UIButton * button)
 {
     UpdateUIButton(button);
     RenderUIButton(button);
 }
 
-float TileSpaceToScreenSpace(float n)
-{
-    return (n + 1)/2;
-}
-
+// Draws a Sprite from a UITexture Spritesheet
 void DrawUITextureSpritesheet(Texture2D atlas, int16_t x, int16_t y, uint16_t index, uint16_t tileSize)
 {
     DrawUITextureSpritesheetEx(atlas, x, y, index, (Vector2) {tileSize, tileSize}, 1, WHITE);
 }
 
+// Draws a Sprite from a UITexture Spritesheet with addition parameters
 void DrawUITextureSpritesheetEx(Texture2D atlas, int16_t x, int16_t y, uint16_t index, Vector2 tileSize, float scale, Color tint)
 {
     uint16_t adjustedWidth = atlas.width / (uint16_t) tileSize.x;
@@ -309,6 +305,7 @@ void DrawUITextureSpritesheetEx(Texture2D atlas, int16_t x, int16_t y, uint16_t 
     DrawTexturePro(atlas, source, dest, (Vector2) {0, 0}, 0, tint);
 }
 
+// Scales and Renders a Sprite from a UITexture Spritesheet in UI space
 void RenderUITextureSpritesheet(Texture2D atlas, float x, float y, uint16_t index, uint16_t tileSize)
 {
     DrawUITextureSpritesheetEx(   atlas, 
@@ -320,6 +317,7 @@ void RenderUITextureSpritesheet(Texture2D atlas, float x, float y, uint16_t inde
                                 WHITE);
 }
 
+// Scales and Renders a Sprite from a UITexture Spritesheet in UI space with addition parameters
 void RenderUITextureSpritesheetEx(Texture2D atlas, float x, float y, uint16_t index, Vector2 tileSize, float scale, Color tint)
 {
     scale *= GetScreenScale();

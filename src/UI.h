@@ -40,6 +40,7 @@ enum UIType
 {
     UInotype, UIanimation, UItexture, UIanimationV2
 };
+
 #include "Animation.h"
 
 
@@ -88,36 +89,75 @@ typedef struct UIButton
 } UIButton;
 
 
-
+// Gets the screen ratio
 extern float GetScreenRatio(void);
+
+// Gets the screen scale relative to the screen height
 extern float GetScreenScale(void);
+
+// Gets the screen scale relative to the screen width
 extern float GetScreenScaleW(void);
 
+// Gets the position x needed for a texture to not be visible in UI space
 extern float GetOutsideWindowX(Texture2D texture);
+
+// Gets the position y needed for a texture to not be visible in UI space
 extern float GetOutsideWindowY(Texture2D texture);
 
+// Gets the position x needed for a texture to not be visible in UI space
 extern float GetOutsideWindowX_u16(uint16_t width);
+
+// Gets the position y needed for a texture to not be visible in UI space
 extern float GetOutsideWindowY_u16(uint16_t height);
 
+// Creates a UIVisual of type UItexture via path
 extern UIVisual CreateUIVisual_UITexture(UITexture texture, Color tint);
+
+// Creates a UIVisual of type UIanimation via path
+extern UIVisual CreateUIVisual_UITexture_P(const char * path, Color tint);
+
+// Creates a UIVisual of type UIanimation via path
 extern UIVisual CreateUIVisual_UIAnimation(const char * path, const uint8_t targetFPS, const Color tint);
+
+// Creates a UIVisual of type UIanimationV2 via path
 extern UIVisual CreateUIVisual_UIAnimation_V2(const char * path, const uint8_t targetFPS, const uint8_t amount, Vector2 tileSize, Color tint);
+
 extern UIElement CreateUIElement(UIVisual visual, float x, float y, float scale);
 
+// Copies a UIVisual to the heap and returns the address
 extern UIVisual * UIVisual_Heap(UIVisual visual);
 
 extern void FreeUIElement(UIElement * element);
-extern void RenderUITexture(UITexture texture, float x, float y, float scale);
-extern void RenderUITextureDebug(UITexture texture, float x, float y, float scale);
-extern void RenderUIElement(const UIElement * element);
-extern void RenderUIVisual(float x, float y, UIVisual * visual, float scale);
-extern void UpdateUIButton(const UIButton * button);
-extern void RenderUIText(const char * text, float x, float y, float fontSize, enum UITextAlignment allignment, Font font, Color color);
-extern void PutUIButton(const UIButton * button);
-extern float TileSpaceToScreenSpace(float n);
-extern float GetRotatedSize(UITexture texture, float rotation);
 
+// Scales and Renders a UITexture in UI Space
+extern void RenderUITexture(UITexture texture, float x, float y, float scale);
+
+// Scales and Renders a UIElement
+extern void RenderUIElement(const UIElement * element);
+
+// Scales and Renders a UIVisual at X, Y scaled
+extern void RenderUIVisual(float x, float y, UIVisual * visual, float scale);
+
+// Scales and Renders text in UI space
+extern void RenderUIText(const char * text, float x, float y, float fontSize, enum UITextAlignment allignment, Font font, Color color);
+
+// Scales and Renders a UIButton
+extern void RenderUIButton(const UIButton * button);
+
+// Checks and updates a button if it has been pressed
+extern void UpdateUIButton(const UIButton * button);
+
+// Updates and Renders a UIButton
+extern void PutUIButton(const UIButton * button);
+
+// Draws a Sprite from a UITexture Spritesheet
 extern void DrawUITextureSpritesheet(Texture2D atlas, int16_t x, int16_t y, uint16_t index, uint16_t tileSize);
+
+// Draws a Sprite from a UITexture Spritesheet with addition parameters
 extern void DrawUITextureSpritesheetEx(Texture2D atlas, int16_t x, int16_t y, uint16_t index, Vector2 tileSize, float scale, Color tint);
+
+// Scales and Renders a Sprite from a UITexture Spritesheet in UI space
 extern void RenderUITextureSpritesheet(Texture2D atlas, float x, float y, uint16_t index, uint16_t tileSize);
+
+// Scales and Renders a Sprite from a UITexture Spritesheet in UI space with addition parameters
 extern void RenderUITextureSpritesheetEx(Texture2D atlas, float x, float y, uint16_t index, Vector2 tileSize, float scale, Color tint);

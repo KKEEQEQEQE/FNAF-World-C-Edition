@@ -22,4 +22,6 @@
     SOFTWARE.
 */
 
+#pragma once
+
 extern _Bool MinimalPrinting;

@@ -22,6 +22,8 @@
     SOFTWARE.
 */
 
+#pragma once
+
 #include "../Include/cJSON.h"
 #include "World.h"
 #include <stdlib.h>
@@ -31,5 +33,8 @@
 #define LAYER_COLLIDABLE 1
 #define LAYER_INVISIBLE 2
 
+// Returns the address of a parsed tilemap based on a Spritefusion map JSON
 extern WORLDTilemap * CreateTilemap(const char * jsonPath);
+
+// Prints a tilemap_layer (for debugging)
 extern void PrintLayer(tilemap_layer * layer);

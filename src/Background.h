@@ -22,9 +22,10 @@
     SOFTWARE.
 */
 
-#include "../Include/raylib.h"
-#include <stdint.h>
 #pragma once
 
+#include "../Include/raylib.h"
+#include <stdint.h>
+
+// Renders a background
 extern void RenderBackground(Texture2D background);
-extern void RenderBackgroundPro(Texture2D background, float rotation);

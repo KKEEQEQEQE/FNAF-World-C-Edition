@@ -86,7 +86,7 @@ uint16_t GetCurrentAnimationFrameC(clock_t startTime, uint16_t frames, uint8_t F
     return (uint16_t) currentFrame % frames;
 }
 
-// Returns created animation struct on stack
+// Returns created UIanimation struct on stack
 Animation CreateAnimation(const char * path, const uint8_t targetFPS) 
 {
     Animation animationPlaceholder = (Animation) { GetFrameAmount(path), targetFPS, 0, NULL};
@@ -113,17 +113,19 @@ Animation CreateAnimation(const char * path, const uint8_t targetFPS)
     return animationPlaceholder;
 }
 
+// Free a UIanimation's variables
 void FreeAnimation(Animation * animation)
 {
     for (uint16_t i = 0; i < animation -> Amount; i++) UnloadTexture(animation -> Frames[i]);
     free(animation -> Frames);
 }
 
-clock_t ClockSeconds(clock_t time) {
+// Returns a clock_t in seconds
+static clock_t ClockSeconds(clock_t time) {
     return (time / CLOCKS_PER_SEC);
 }
 
-
+// Scales and Renders a UIanimation
 void RenderAnimation(const Animation * animation, float x, float y, float scale, clock_t timeOverride) 
 {
     static uint16_t windowWidth = 0;
@@ -139,8 +141,9 @@ void RenderAnimation(const Animation * animation, float x, float y, float scale,
     RenderUITexture(animation -> Frames[(uint16_t)currentFrame], x, y, scale);
 }
 
-// Animation V2
+// Animation V2 functions
 
+// Returns created UIanimationV2 struct on stack
 Animation_V2 CreateAnimation_V2(const char * path, const uint8_t targetFPS, const uint16_t amount, const uint16_t tileSize_x, const uint16_t tileSize_y)
 {
     Animation_V2 animation = {0};
@@ -154,6 +157,7 @@ Animation_V2 CreateAnimation_V2(const char * path, const uint8_t targetFPS, cons
     return animation;
 }
 
+// Draws a UIanimationV2 in pixel space
 void DrawAnimation_V2(const Animation_V2 *animation, int16_t x, int16_t y, float scale, clock_t timeOverride)
 {
     uint16_t frame = timeOverride ? timeOverride : 
@@ -169,6 +173,7 @@ void DrawAnimation_V2(const Animation_V2 *animation, int16_t x, int16_t y, float
                                 WHITE   );
 }
 
+// Scales and Renders a UIanimationV2 in UI space
 void RenderAnimation_V2(const Animation_V2 *animation, float x, float y, float scale, clock_t timeOverride)
 {
     scale *= GetScreenScale();
@@ -178,6 +183,7 @@ void RenderAnimation_V2(const Animation_V2 *animation, float x, float y, float s
         scale, 0);
 }
 
+// Free a UIanimationV2's variables
 void FreeAnimation_V2(Animation_V2 * animation)
 {
     UnloadTexture(animation -> Atlas);

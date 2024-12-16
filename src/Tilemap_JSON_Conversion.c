@@ -31,20 +31,19 @@
 #include <stdio.h>
 #include <time.h>
 
-typedef struct parsed_tile 
+// The intermediate tile format used during the layer parsing process
+typedef struct intermediate_tile 
 {
     uint16_t x;
     uint16_t y;
     uint16_t textureID;
-} parsed_tile;
-
-uint16_t CurrentTilemapSizeX;
-uint16_t CurrentTilemapSizeY;
+} intermediate_tile;
 
 enum ConvertCrashID
 {
     BADPATH, BADOBJECT, FMALLOC
 };
+
 void ConversionCrash(enum ConvertCrashID id)
 {
     switch (id) 
@@ -73,6 +72,8 @@ uint8_t strstcmp(register const char * base, register const char * substring) {
     if (substring[i] == '\0') return 1;
     return 0;
 }
+
+// Checks if a layer has object (jsonFlag) and gets value, if 1, turns on (bitflag) at a tilemap_layer destination
 void InitLayerFlag(tilemap_layer * dest, const cJSON * layer, const char * jsonFlag, uint8_t bitflag)
 {
     uint8_t flag = bitflag;
@@ -89,6 +90,7 @@ void InitLayerFlag(tilemap_layer * dest, const cJSON * layer, const char * jsonF
     dest -> FLAGS |= flag;
 }
 
+// Checks if the name of a layer starts with (jsonFlag), if so, turns on (bitflag) at a tilemap_layer destination
 void InitLayerFlagFromName(tilemap_layer * dest, const cJSON * layer, const char * jsonFlag, uint8_t bitflag)
 {
     uint8_t flag = bitflag;
@@ -106,6 +108,7 @@ void InitLayerFlagFromName(tilemap_layer * dest, const cJSON * layer, const char
     dest -> FLAGS |= flag;
 }
 
+// Returns the cJSON of a path
 cJSON * InitWorldJSON(const char * path)
 {
     FILE * jsonFile = fopen(path, "r"); // Opens JSON file
@@ -132,6 +135,7 @@ cJSON * InitWorldJSON(const char * path)
     return jsonParsed;
 }
 
+// Gets number of layers in a Spritefusion map JSON
 uint32_t GetWorldLayers(const cJSON * json)
 {
     cJSON * layers = cJSON_GetObjectItemCaseSensitive(json,"layers"); 
@@ -139,53 +143,69 @@ uint32_t GetWorldLayers(const cJSON * json)
     cJSON_free(layers);
     return numberOfLayer;
 }
+
+// Converts a string to a unsigned 32-bit integer
 uint32_t strtou32(char * str)
 {
     uint32_t u32 = 0;
-    while (*str >= '0' && *str <= '9') u32 += *str - '0', u32 *= 10, str++;
-    return u32 / 10;
+    while (*str >= '0' && *str <= '9') u32 *= 10, u32 += *str - '0', str++;
+    return u32;
 }
 
-parsed_tile ParseJSONTile(const cJSON * tileJSON)
+// Parses a Spritefusion tile JSON and converts it to an intermediate_tile
+intermediate_tile ParseJSONTile(const cJSON * tileJSON)
 {
-    cJSON * jsonID = cJSON_GetObjectItem(tileJSON, "id");
+    // Gets all tile JSON parameters
+
+    cJSON * jsonID = cJSON_GetObjectItemCaseSensitive(tileJSON, "id");
+    cJSON * jsonX = cJSON_GetObjectItemCaseSensitive(tileJSON, "x");
+    cJSON * jsonY = cJSON_GetObjectItemCaseSensitive(tileJSON, "y");
+
+    // Checks if parameters are valid
+
     if (jsonID == NULL)
     {   
         printf("Invalid JSON Tile!\n");
         exit(EXIT_FAILURE);
     }
     
-
-    char * stringID = cJSON_GetStringValue(jsonID);
-    uint32_t textureID = strtou32(stringID);
-    
-    cJSON * jsonX = cJSON_GetObjectItem(tileJSON, "x");
     if (!jsonX)
     {
         printf("Invalid JSON Tile!\n");
         exit(EXIT_FAILURE);
     }
-    uint16_t x = jsonX -> valueint;
 
-    cJSON * jsonY = cJSON_GetObjectItem(tileJSON, "y");
     if (!jsonY)
     {
         printf("Invalid JSON Tile!\n");
         exit(EXIT_FAILURE);
     }
+
+    // Gets parameters values
+
+    char * stringID = cJSON_GetStringValue(jsonID);
+    uint32_t textureID = strtou32(stringID);
+    uint16_t x = jsonX -> valueint;
     uint16_t y = jsonY -> valueint;
+
+    // Frees JSON objects
 
     cJSON_free(jsonID);
     cJSON_free(jsonX);
     cJSON_free(jsonY);
-    return (parsed_tile) {x, y, textureID};
+
+    // Returns intermediate tile
+
+    return (intermediate_tile) {x, y, textureID};
 }
 
-void PrintParsedTile(parsed_tile tile)
+// Prints an intermediate_tile
+void PrintIntermediateTile(intermediate_tile tile)
 {
     printf("X = %u, Y = %u, ID = %u\n", tile.x, tile.y, tile.textureID);
 }
 
+// Prints a tilemap_layer (for debugging)
 void PrintLayer(tilemap_layer * layer)
 {
     register WORLDTile (*tiles)[layer -> sizeY][layer -> sizeX] = layer -> tiles;
@@ -200,6 +220,7 @@ void PrintLayer(tilemap_layer * layer)
     printf("\n\n");
 }
 
+// Parses a Spritefusion layer JSON to a tilemap_layer destination
 void InitTitlemapLayer(tilemap_layer * dest, const cJSON * layerJSON)
 {
     // Getting tile array
@@ -218,25 +239,29 @@ void InitTitlemapLayer(tilemap_layer * dest, const cJSON * layerJSON)
     uint16_t SizeX = 0;
     uint16_t SizeY = 0;
 
-    parsed_tile * parsed_tiles = malloc(sizeof(parsed_tile) * AmountOfTiles);
-    if (!parsed_tiles) ConversionCrash(FMALLOC);
+    intermediate_tile * intermediate_tiles = malloc(sizeof(intermediate_tile) * AmountOfTiles);
+    if (!intermediate_tiles) ConversionCrash(FMALLOC);
 
     // Getting layer dimensions
+
     for (uint16_t i = 0; i < AmountOfTiles; i++)
     {
         cJSON * TileJSON = cJSON_GetArrayItem(tiles, i);
-        parsed_tiles[i] = ParseJSONTile(TileJSON);
-        //cJSON_free(TileJSON);
+        intermediate_tiles[i] = ParseJSONTile(TileJSON);
+        //cJSON_free(TileJSON); Off due to freeing crash possibility (not sure why)
 
-        if (OffsetX > parsed_tiles[i].x) OffsetX = parsed_tiles[i].x;
-        if (SizeX < parsed_tiles[i].x) SizeX = parsed_tiles[i].x;
+        if (OffsetX > intermediate_tiles[i].x) OffsetX = intermediate_tiles[i].x;
+        if (SizeX < intermediate_tiles[i].x) SizeX = intermediate_tiles[i].x;
 
-        if (OffsetY > parsed_tiles[i].y) OffsetY = parsed_tiles[i].y;
-        if (SizeY < parsed_tiles[i].y) SizeY = parsed_tiles[i].y;
+        if (OffsetY > intermediate_tiles[i].y) OffsetY = intermediate_tiles[i].y;
+        if (SizeY < intermediate_tiles[i].y) SizeY = intermediate_tiles[i].y;
     }
+
+    // Offseting size
 
     SizeX -= OffsetX - 1;
     SizeY -= OffsetY - 1;
+
     if (!MinimalPrinting) printf("    Offset: %u, %u | Size: %u, %u\n", OffsetX, OffsetY, SizeX, SizeY);
     // Creating 2D Map array
 
@@ -253,9 +278,9 @@ void InitTitlemapLayer(tilemap_layer * dest, const cJSON * layerJSON)
 
     for (uint16_t i = 0; i < AmountOfTiles; i++)
     {
-        if (AmountOfTiles == 5) PrintParsedTile(parsed_tiles[i]);
+        if (AmountOfTiles == 5) PrintIntermediateTile(intermediate_tiles[i]);
 
-        (*map)[parsed_tiles[i].y - OffsetY][parsed_tiles[i].x - OffsetX] = parsed_tiles[i].textureID + 1;
+        (*map)[intermediate_tiles[i].y - OffsetY][intermediate_tiles[i].x - OffsetX] = intermediate_tiles[i].textureID + 1;
     }
 
     cJSON_free(tiles);
@@ -275,8 +300,11 @@ void InitTitlemapLayer(tilemap_layer * dest, const cJSON * layerJSON)
         
 }
 
+// Returns the address of a parsed tilemap based on a Spritefusion map JSON
 WORLDTilemap * CreateTilemap(const char * jsonPath)
 {
+    // Gets main cJSON object
+
     cJSON * MainJSON = InitWorldJSON(jsonPath);
     if (!MainJSON)
     {
@@ -284,14 +312,19 @@ WORLDTilemap * CreateTilemap(const char * jsonPath)
         exit(EXIT_FAILURE);
     }
     
+    // Gets layer JSON
+
     cJSON * LayersJSON = cJSON_GetObjectItemCaseSensitive(MainJSON, "layers");
 
     uint16_t AmountOfLayers = cJSON_GetArraySize(LayersJSON);
+
+    // Allocates tilemap struct and layer memory
 
     WORLDTilemap * tilemap = malloc(sizeof(WORLDTilemap));
     tilemap -> layers = malloc(sizeof(tilemap_layer) * AmountOfLayers);
     tilemap -> amount = AmountOfLayers;
     
+    // Gets if the layer object exists to test map JSON valitidy
 
     if (LayersJSON == NULL)
     {
@@ -299,6 +332,7 @@ WORLDTilemap * CreateTilemap(const char * jsonPath)
         exit(EXIT_FAILURE);
     }
 
+    // Parses all layers and converts them to 2D uint16_t arrays
     for (uint16_t i = 0; i < AmountOfLayers; i++)
     {
         if (!MinimalPrinting) printf("%p, %s\n", cJSON_GetArrayItem(LayersJSON,i), cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(LayersJSON, i), "name") -> valuestring);
@@ -306,4 +340,3 @@ WORLDTilemap * CreateTilemap(const char * jsonPath)
     }
     return tilemap;
 }
-
