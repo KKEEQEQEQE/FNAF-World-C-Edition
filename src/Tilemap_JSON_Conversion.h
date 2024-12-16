@@ -25,16 +25,42 @@
 #pragma once
 
 #include "../Include/cJSON.h"
-#include "World.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 
+typedef struct WORLDTilemapLayer 
+{
+    // Transformation Variables
+
+    uint16_t offsetX;
+    uint16_t offsetY;
+    uint16_t sizeX;
+    uint16_t sizeY;
+
+    void * tiles; // WORLDTile 2D Array Pointer
+
+    // Flags
+
+    uint8_t FLAGS;
+} WORLDTilemapLayer;
+
+#define TILES_POINTER_TYPE(layer_pointer) WORLDTile (*)[layer_pointer->sizeY][layer_pointer->sizeX]
+
+typedef struct WORLDTilemap
+{
+    WORLDTilemapLayer * layers;
+    uint16_t amount;
+} WORLDTilemap;
+
+// tilemap_layer FLAGS
+
 #define LAYER_COLLIDABLE 1
 #define LAYER_INVISIBLE 2
+#define LAYER_SPAWN 4
 
 // Returns the address of a parsed tilemap based on a Spritefusion map JSON
 extern WORLDTilemap * CreateTilemap(const char * jsonPath);
 
 // Prints a tilemap_layer (for debugging)
-extern void PrintLayer(tilemap_layer * layer);
+extern void PrintLayer(WORLDTilemapLayer * layer);

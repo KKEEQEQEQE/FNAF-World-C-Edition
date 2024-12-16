@@ -73,8 +73,8 @@ uint8_t strstcmp(register const char * base, register const char * substring) {
     return 0;
 }
 
-// Checks if a layer has object (jsonFlag) and gets value, if 1, turns on (bitflag) at a tilemap_layer destination
-void InitLayerFlag(tilemap_layer * dest, const cJSON * layer, const char * jsonFlag, uint8_t bitflag)
+// Checks if a layer has object (jsonFlag) and gets value, if 1, turns on (bitflag) at a WORLDTilemapLayer destination
+void InitLayerFlag(WORLDTilemapLayer * dest, const cJSON * layer, const char * jsonFlag, uint8_t bitflag)
 {
     uint8_t flag = bitflag;
 
@@ -90,8 +90,8 @@ void InitLayerFlag(tilemap_layer * dest, const cJSON * layer, const char * jsonF
     dest -> FLAGS |= flag;
 }
 
-// Checks if the name of a layer starts with (jsonFlag), if so, turns on (bitflag) at a tilemap_layer destination
-void InitLayerFlagFromName(tilemap_layer * dest, const cJSON * layer, const char * jsonFlag, uint8_t bitflag)
+// Checks if the name of a layer starts with (jsonFlag), if so, turns on (bitflag) at a WORLDTilemapLayer destination
+void InitLayerFlagFromName(WORLDTilemapLayer * dest, const cJSON * layer, const char * jsonFlag, uint8_t bitflag)
 {
     uint8_t flag = bitflag;
 
@@ -205,8 +205,8 @@ void PrintIntermediateTile(intermediate_tile tile)
     printf("X = %u, Y = %u, ID = %u\n", tile.x, tile.y, tile.textureID);
 }
 
-// Prints a tilemap_layer (for debugging)
-void PrintLayer(tilemap_layer * layer)
+// Prints a WORLDTilemapLayer (for debugging)
+void PrintLayer(WORLDTilemapLayer * layer)
 {
     register WORLDTile (*tiles)[layer -> sizeY][layer -> sizeX] = layer -> tiles;
     for (uint16_t y = 0; y < layer->sizeY; y++) {
@@ -220,8 +220,8 @@ void PrintLayer(tilemap_layer * layer)
     printf("\n\n");
 }
 
-// Parses a Spritefusion layer JSON to a tilemap_layer destination
-void InitTitlemapLayer(tilemap_layer * dest, const cJSON * layerJSON)
+// Parses a Spritefusion layer JSON to a WORLDTilemapLayer destination
+void InitTitlemapLayer(WORLDTilemapLayer * dest, const cJSON * layerJSON)
 {
     // Getting tile array
 
@@ -321,7 +321,7 @@ WORLDTilemap * CreateTilemap(const char * jsonPath)
     // Allocates tilemap struct and layer memory
 
     WORLDTilemap * tilemap = malloc(sizeof(WORLDTilemap));
-    tilemap -> layers = malloc(sizeof(tilemap_layer) * AmountOfLayers);
+    tilemap -> layers = malloc(sizeof(WORLDTilemapLayer) * AmountOfLayers);
     tilemap -> amount = AmountOfLayers;
     
     // Gets if the layer object exists to test map JSON valitidy

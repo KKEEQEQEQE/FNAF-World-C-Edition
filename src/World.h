@@ -25,6 +25,7 @@
 #pragma once
 
 #include "Animation.h"
+#include "Tilemap_JSON_Conversion.h"
 #include "UI.h"
 #include <stdint.h>
 
@@ -56,34 +57,6 @@ typedef struct WORLDCamera
     float zoom; // The amount of tiles you can see on the Y axis
 } WORLDCamera;
 
-#define LAYER_COLLIDABLE 1
-#define LAYER_INVISIBLE 2
-#define LAYER_SPAWN 4
-
-typedef struct tilemap_layer 
-{
-    // Transformation Variables
-
-    uint16_t offsetX;
-    uint16_t offsetY;
-    uint16_t sizeX;
-    uint16_t sizeY;
-
-    void * tiles; // WORLDTile 2D Array Pointer
-
-    // Flags
-
-    uint8_t FLAGS;
-} tilemap_layer;
-
-#define TILES_POINTER_TYPE(layer_pointer) WORLDTile (*)[layer_pointer->sizeY][layer_pointer->sizeX]
-
-typedef struct WORLDTilemap
-{
-    tilemap_layer * layers;
-    uint16_t amount;
-} WORLDTilemap;
-
 extern void LoadWorldTilemap(void);
 
 #define ACCESS_TILEMAP(x, y, tilemap) 
@@ -96,7 +69,7 @@ enum Corner
 };
 
 extern Vector2 GetEntityCorner(WORLDEntity * entity, enum Corner corner);
-extern WORLDTile AccessPositionInLayer(uint16_t x, uint16_t y, tilemap_layer * layer);
+extern WORLDTile AccessPositionInLayer(uint16_t x, uint16_t y, WORLDTilemapLayer * layer);
 extern void UpdateWorldEntity(WORLDEntity * entity);
 extern void RenderWorld(void);
 extern void PutWorld(void);

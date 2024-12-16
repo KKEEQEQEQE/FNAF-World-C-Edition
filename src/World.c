@@ -237,7 +237,7 @@ Vector2 GetEntityCorner(WORLDEntity * entity, enum Corner corner)
     }
 }
 
-WORLDTile AccessPositionInLayer(uint16_t x, uint16_t y, tilemap_layer * layer)
+WORLDTile AccessPositionInLayer(uint16_t x, uint16_t y, WORLDTilemapLayer * layer)
 {
     x -= layer -> offsetX;
     y -= layer -> offsetY;
@@ -248,7 +248,7 @@ WORLDTile AccessPositionInLayer(uint16_t x, uint16_t y, tilemap_layer * layer)
     return (*tiles)[y][x];
 }
 
-uint8_t CheckCollisionTilemap(WORLDEntity * entity, tilemap_layer * layer)
+uint8_t CheckCollisionTilemap(WORLDEntity * entity, WORLDTilemapLayer * layer)
 {
     if (!(entity -> collisionTargets & layer -> FLAGS)) return 0;
     
