@@ -25,6 +25,7 @@
 #pragma once
 
 
+#include <stdint.h>
 #define SCREEN_POSITION_TO_PIXEL_X(x, width, scale) ((int)GetScreenWidth()/2 + x * GetScreenWidth() / 2 - (int) (width * scale) / 2)
 #define SCREEN_POSITION_TO_PIXEL_Y(y, height, scale) ((int)GetScreenHeight()/2 + y * GetScreenHeight() / 2 - (int) (height * scale) / 2)
 
@@ -37,10 +38,10 @@
 
 enum UIType 
 {
-    UInotype, UIanimation, UItexture
+    UInotype, UIanimation, UItexture, UIanimationV2
 };
 #include "Animation.h"
-#include "Particle.h"
+
 
 enum UITextAlignment 
 {
@@ -56,9 +57,12 @@ typedef struct UIVisual
     {
         UITexture texture;
         Animation animation;
+        Animation_V2 animation_V2;
     };
     Color tint;
 } UIVisual;
+
+#include "Particle.h"
 
 typedef struct UIElement 
 {
@@ -88,7 +92,20 @@ typedef struct UIButton
 extern float GetScreenRatio(void);
 extern float GetScreenScale(void);
 extern float GetScreenScaleW(void);
-extern Vector2 GetAspectRatioFraction(uint16_t x, uint16_t y);
+
+extern float GetOutsideWindowX(Texture2D texture);
+extern float GetOutsideWindowY(Texture2D texture);
+
+extern float GetOutsideWindowX_u16(uint16_t width);
+extern float GetOutsideWindowY_u16(uint16_t height);
+
+extern UIVisual CreateUIVisual_UITexture(UITexture texture, Color tint);
+extern UIVisual CreateUIVisual_UIAnimation(const char * path, const uint8_t targetFPS, const Color tint);
+extern UIVisual CreateUIVisual_UIAnimation_V2(const char * path, const uint8_t targetFPS, const uint8_t amount, Vector2 tileSize, Color tint);
+extern UIElement CreateUIElement(UIVisual visual, float x, float y, float scale);
+
+extern UIVisual * UIVisual_Heap(UIVisual visual);
+
 extern void FreeUIElement(UIElement * element);
 extern void RenderUITexture(UITexture texture, float x, float y, float scale);
 extern void RenderUITextureDebug(UITexture texture, float x, float y, float scale);
@@ -99,3 +116,8 @@ extern void RenderUIText(const char * text, float x, float y, float fontSize, en
 extern void PutUIButton(const UIButton * button);
 extern float TileSpaceToScreenSpace(float n);
 extern float GetRotatedSize(UITexture texture, float rotation);
+
+extern void DrawUITextureSpritesheet(Texture2D atlas, int16_t x, int16_t y, uint16_t index, uint16_t tileSize);
+extern void DrawUITextureSpritesheetEx(Texture2D atlas, int16_t x, int16_t y, uint16_t index, Vector2 tileSize, float scale, Color tint);
+extern void RenderUITextureSpritesheet(Texture2D atlas, float x, float y, uint16_t index, uint16_t tileSize);
+extern void RenderUITextureSpritesheetEx(Texture2D atlas, float x, float y, uint16_t index, Vector2 tileSize, float scale, Color tint);

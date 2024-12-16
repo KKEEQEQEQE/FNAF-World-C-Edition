@@ -83,7 +83,7 @@ void InitTitleScreen(void)
     UIPlay.graphic.visual.animation = CreateAnimation("Assets/Menu/Title_Screen/Buttons/Start/Animations/", 30);
     UIPlay.graphic.scale = 1.5;
 
-    ParticleStars = CreateParticleIndexA("Assets/Particles/titlestar/", 20,2);
+    ParticleStars = CreateParticleIndexA_V2("Assets/Particles/titlestar.png", 20,8, (Vector2) {12, 12}, 1.5);
     TitleScreenFont = LoadFont("Assets/Menu/Title_Screen/font.ttf");
 }
 
@@ -95,7 +95,7 @@ void UninitTitleScreen(void)
     FreeUIElement(&UIParty);
     FreeUIElement(&UIPlay.graphic);
     FlushParticles();
-    DeleteParticle(ParticleStars);
+    RemoveParticleIndex(ParticleStars);
     UnloadMusicStream(Theme);
     //UnloadFont(TitleScreenFont);
 }

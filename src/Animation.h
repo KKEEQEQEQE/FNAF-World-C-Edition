@@ -37,12 +37,24 @@ typedef struct Animation {
     Texture2D * Frames;
 } Animation;
 
+typedef struct Animation_V2 {
+    uint16_t Amount;
+    uint8_t FPS;
+    clock_t Clock;
+    Texture2D Atlas;
+    uint16_t TileSize_x;
+    uint16_t TileSize_y;
+} Animation_V2;
+
 
 extern uint16_t GetFrameAmount(const char * directory);
-extern float GetOutsideWindowX(Texture2D texture);
-extern float GetOutsideWindowY(Texture2D texture);
 extern uint16_t GetCurrentAnimationFrame(const Animation * animation);
 extern uint16_t GetCurrentAnimationFrameC(clock_t startTime, uint16_t frames, uint8_t FPS);
 extern void RenderAnimation(const Animation * animation, float x, float y, float scale, clock_t timeOverride);
 extern Animation CreateAnimation(const char * path, const uint8_t targetFPS);
 extern void FreeAnimation(Animation * animation);
+
+extern Animation_V2 CreateAnimation_V2(const char * path, const uint8_t targetFPS, const uint16_t amount, const uint16_t tileSize_x, const uint16_t tileSize_y);
+extern void DrawAnimation_V2(const Animation_V2 *animation, int16_t x, int16_t y, float scale, clock_t timeOverride);
+extern void RenderAnimation_V2(const Animation_V2 *animation, float x, float y, float scale, clock_t timeOverride);
+extern void FreeAnimation_V2(Animation_V2 * animation);

@@ -123,13 +123,6 @@ clock_t ClockSeconds(clock_t time) {
     return (time / CLOCKS_PER_SEC);
 }
 
-float GetOutsideWindowX(Texture2D texture) {
-    return 1 + (float)(texture.width)/(GetScreenWidth());
-}
-
-float GetOutsideWindowY(Texture2D texture) {
-    return 1 + (float)(texture.height)/(GetScreenHeight());
-}
 
 void RenderAnimation(const Animation * animation, float x, float y, float scale, clock_t timeOverride) 
 {
@@ -144,4 +137,48 @@ void RenderAnimation(const Animation * animation, float x, float y, float scale,
         : GetCurrentAnimationFrame(animation);
 
     RenderUITexture(animation -> Frames[(uint16_t)currentFrame], x, y, scale);
+}
+
+// Animation V2
+
+Animation_V2 CreateAnimation_V2(const char * path, const uint8_t targetFPS, const uint16_t amount, const uint16_t tileSize_x, const uint16_t tileSize_y)
+{
+    Animation_V2 animation = {0};
+    animation.Atlas = LoadTexture(path);
+    SetTextureFilter(animation.Atlas, TEXTURE_FILTER_BILINEAR);
+    animation.Amount = amount;
+    animation.Clock = clock();
+    animation.FPS = targetFPS;
+    animation.TileSize_x = tileSize_x;
+    animation.TileSize_y = tileSize_y;
+    return animation;
+}
+
+void DrawAnimation_V2(const Animation_V2 *animation, int16_t x, int16_t y, float scale, clock_t timeOverride)
+{
+    uint16_t frame = timeOverride ? timeOverride : 
+                                    GetCurrentAnimationFrameC(  animation -> Clock,
+                                                                animation -> Amount, 
+                                                                animation -> FPS);
+                                                                
+    DrawUITextureSpritesheetEx(   animation -> Atlas, 
+                                x, y, 
+                                frame, 
+                                (Vector2) {animation -> TileSize_x, animation -> TileSize_y}, 
+                                scale, 
+                                WHITE   );
+}
+
+void RenderAnimation_V2(const Animation_V2 *animation, float x, float y, float scale, clock_t timeOverride)
+{
+    scale *= GetScreenScale();
+    DrawAnimation_V2(animation, 
+        SCREEN_POSITION_TO_PIXEL_X(x, animation -> TileSize_x, scale),
+        SCREEN_POSITION_TO_PIXEL_Y(y, animation -> TileSize_y, scale),
+        scale, 0);
+}
+
+void FreeAnimation_V2(Animation_V2 * animation)
+{
+    UnloadTexture(animation -> Atlas);
 }

@@ -23,6 +23,7 @@
 */
 
 #include "../Include/raylib.h"
+#include "Animation.h"
 #include "Title_Screen.h"
 #include "UI.h"
 #include "input.h"
@@ -45,6 +46,8 @@ int main(void)
     clock_t stop = clock();
     SwapGameState(100000);
     //SetTargetFPS(1000);
+    UIElement test = CreateUIElement(   CreateUIVisual_UIAnimation_V2("Title.png", 3, 3, (Vector2){650, 127}, WHITE),
+                                        0, -0.8, 1);
     while (!WindowShouldClose())
     {
         BeginDrawing();
@@ -58,7 +61,9 @@ int main(void)
                 PutWorld();
                 break;
             default:
+                
                 RenderUIText("Unknown / Invalid Game State Entered.\nTap to go back to title screen!", 0, 0, 0.06, CENTRE, (Font){0}, WHITE);
+                RenderUIElement(&test);
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SwapGameState(Title);
                 break;
         }

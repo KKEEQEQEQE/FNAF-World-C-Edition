@@ -71,29 +71,6 @@ char * ZoneNames[] = {"Fazbear Hills", "Choppy's Woods"};
 
 uint8_t BirdParticle = 0;
 
-UIVisual * CreateUIVisualTexture(const char * path, Color tint)
-{
-    UIVisual * visual = malloc(sizeof(UIVisual));
-    if (!visual) exit(EXIT_FAILURE);
-
-    visual -> type = UItexture; 
-    visual -> texture = LoadTexture(path);
-    visual -> tint = tint;
-    return visual;
-}
-
-UIVisual * CreateUIVisualAnimation(const char * path, Color tint, const uint8_t targetFPS)
-{
-    UIVisual * visual = malloc(sizeof(UIVisual));
-    if (!visual) exit(EXIT_FAILURE);
-
-    visual -> type = UIanimation; 
-    visual -> animation = CreateAnimation(path, targetFPS);
-    visual -> tint = tint;
-    return visual;
-
-}
-
 WORLDEntity CreateWorldEntity(Vector2 position, Vector2 size, Vector2 velocity, UIVisual * visual, float scale, uint16_t collisionTargets, void (*customCollision)(void))
 {
     WORLDEntity entity = {0};
@@ -140,9 +117,10 @@ void InitWorld(void)
 {
     if (!CurrentWorld) LoadWorldTilemap();
 
+    SetTraceLogLevel(LOG_WARNING);
     SetWorldSpriteSheet("Assets/Overworld/Maps/Overworld/spritesheet.png", 50); 
 
-    BirdParticle = CreateParticleIndexA("Assets/Particles/bird/", 30, 1);
+    BirdParticle = CreateParticleIndexA_V2("Assets/Particles/bird.png", 30, 10, (Vector2) {50, 50}, 1);
     CurrentTheme = LoadMusicStream("Assets/Themes/fazbearhills.mp3");
     CurrentTheme.looping = 1;
 
@@ -161,16 +139,16 @@ void InitWorld(void)
     SetTextureFilter(FreddyIdle.texture, TEXTURE_FILTER_BILINEAR);
 
     
-    FreddyWUp.type = UIanimation;
-    FreddyWUp.animation = CreateAnimation("Assets/Overworld/Freddy_Overworld/walking_north/", 30); 
+    FreddyWUp.type = UIanimationV2;
+    FreddyWUp.animation_V2 = CreateAnimation_V2("Assets/Overworld/Freddy_Overworld/walking_up.png", 30, 15, 60, 60); 
     FreddyWUp.tint = WHITE;
 
-    FreddyWLeft.type = UIanimation;
-    FreddyWLeft.animation = CreateAnimation("Assets/Overworld/Freddy_Overworld/walking_west/", 30); 
+    FreddyWLeft.type = UIanimationV2;
+    FreddyWLeft.animation_V2 = CreateAnimation_V2("Assets/Overworld/Freddy_Overworld/walking_left.png", 30, 15, 60, 60); 
     FreddyWLeft.tint = WHITE;
 
-    FreddyWRight.type = UIanimation;
-    FreddyWRight.animation = CreateAnimation("Assets/Overworld/Freddy_Overworld/walking_east/", 30); 
+    FreddyWRight.type = UIanimationV2;
+    FreddyWRight.animation_V2 = CreateAnimation_V2("Assets/Overworld/Freddy_Overworld/walking_right.png", 30, 15, 60, 60); 
     FreddyWRight.tint = WHITE;
 
     FreddyWDown.type = UIanimation;
@@ -180,15 +158,46 @@ void InitWorld(void)
     Freddy.visual = &FreddyIdle;
     Freddy.scale = 0.95;
 
-    WorldBuildings_Pre[0] = CreateWorldEntity((Vector2) {10.8, 11}, (Vector2) {0,0}, (Vector2) {0,0}, CreateUIVisualTexture("Assets/Overworld/Buildings/Blue_Castle.png", WHITE), 1, 0, NULL);
-    WorldBuildings_Pre[1] = CreateWorldEntity((Vector2) {14.5, 10.5}, (Vector2) {0,0}, (Vector2) {0,0}, CreateUIVisualTexture("Assets/Overworld/Buildings/Red_Castle.png", WHITE), 1, 0, NULL);
-    WorldBuildings_Pre[2] = CreateWorldEntity((Vector2) {13.5, 15.5}, (Vector2) {0,0}, (Vector2) {0,0}, CreateUIVisualTexture("Assets/Overworld/Buildings/Gear_House.png", WHITE), 1, 0, NULL);
-    WorldBuildings_Pre[3] = CreateWorldEntity((Vector2) {19.5, 12}, (Vector2) {0,0}, (Vector2) {0,0}, CreateUIVisualTexture("Assets/Overworld/Buildings/Lumber_House.png", WHITE), 1, 0, NULL);
-    WorldBuildings_After[0] = CreateWorldEntity((Vector2) {8.5, 17}, (Vector2) {0,0}, (Vector2) {0,0}, CreateUIVisualAnimation("Assets/Overworld/Buildings/Windmill/", WHITE, 30), 1, 0, NULL);
+    WorldBuildings_Pre[0] = CreateWorldEntity(  (Vector2) {10.8, 11}, 
+                                                (Vector2) {0,0}, 
+                                                (Vector2) {0,0}, 
+                                                UIVisual_Heap(CreateUIVisual_UITexture( LoadTexture("Assets/Overworld/Buildings/Blue_Castle.png"), 
+                                                                                                        WHITE)), 
+                                                1, 
+                                                0, 
+                                                NULL);
+    WorldBuildings_Pre[1] = CreateWorldEntity(  (Vector2) {14.5, 10.5},
+                                                (Vector2) {0,0}, 
+                                                (Vector2) {0,0}, 
+                                                UIVisual_Heap(CreateUIVisual_UITexture(LoadTexture("Assets/Overworld/Buildings/Red_Castle.png"), WHITE)),
+                                                1, 
+                                                0, 
+                                                NULL);
+    WorldBuildings_Pre[2] = CreateWorldEntity(  (Vector2) {13.5, 15.5}, 
+                                                (Vector2) {0,0},
+                                                (Vector2) {0,0}, 
+                                                UIVisual_Heap(CreateUIVisual_UITexture(LoadTexture("Assets/Overworld/Buildings/Gear_House.png"), WHITE)), 
+                                                1, 
+                                                0, 
+                                                NULL);
+    WorldBuildings_Pre[3] = CreateWorldEntity(  (Vector2) {19.5, 12}, 
+                                                (Vector2) {0,0}, 
+                                                (Vector2) {0,0}, 
+                                                UIVisual_Heap(CreateUIVisual_UITexture(LoadTexture("Assets/Overworld/Buildings/Lumber_House.png"), WHITE)), 
+                                                1, 
+                                                0, 
+                                                NULL);
+    WorldBuildings_After[0] = CreateWorldEntity(    (Vector2) {8.5, 17}, 
+                                                    (Vector2) {0,0}, 
+                                                    (Vector2) {0,0}, 
+                                                    UIVisual_Heap(CreateUIVisual_UIAnimation_V2("Assets/Overworld/Buildings/windmill_atlas.png", 30, 20, (Vector2) {200, 200}, WHITE)),
+                                                    1, 
+                                                    0,
+                                                    NULL);
 
     ZoneHeader[0] = LoadTexture("Assets/Overworld/UI/Zone_Names/1.png"); 
     ZoneHeader[1] = LoadTexture("Assets/Overworld/UI/Zone_Names/2.png"); 
-    HideCursor();
+    SetTraceLogLevel(LOG_ALL);
 }
 
 void ResetWorld(void)
@@ -266,7 +275,13 @@ uint8_t CheckCollisionTilemap(WORLDEntity * entity, tilemap_layer * layer)
     return 0;
 }
 
-
+Rectangle GetCameraView(void)
+{
+    return (Rectangle) {    WorldCamera.position.x - WorldCamera.zoom * ((float) GetScreenWidth() / GetScreenHeight()) / 2, 
+                            WorldCamera.position.y - WorldCamera.zoom / 2, 
+                            WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()) + 2, 
+                            WorldCamera.zoom + 2    };
+}
 void UpdateWorldEntity(WORLDEntity * entity)
 {
     if ((int16_t) entity -> velocity.x == 0 && (int16_t) entity -> velocity.y == 0) return;
@@ -303,10 +318,7 @@ void RenderLayer(uint16_t n, Vector2 CameraMinorOffset)
     {
         return;
     } 
-    Rectangle CameraView = {WorldCamera.position.x - WorldCamera.zoom * ((float) GetScreenWidth() / GetScreenHeight()) / 2, 
-                            WorldCamera.position.y - WorldCamera.zoom / 2, 
-                            WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()) + 2, 
-                            WorldCamera.zoom + 2};
+    Rectangle CameraView = GetCameraView();
     
     if (CameraView.x < 0) CameraView.width -= CameraView.x, CameraView.x = 0;
     if (CameraView.y < 0) CameraView.height -= CameraView.y, CameraView.y = 0;
@@ -336,42 +348,65 @@ void RenderLayer(uint16_t n, Vector2 CameraMinorOffset)
 
 void RenderWorldTexture(Texture2D * texture, Vector2 position, Vector2 offset, float scale)
 {
-    Rectangle CameraView = {WorldCamera.position.x - WorldCamera.zoom * ((float) GetScreenWidth() / GetScreenHeight()) / 2, 
-                            WorldCamera.position.y - WorldCamera.zoom / 2, 
-                            WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()) + 2, 
-                            WorldCamera.zoom + 2};
+    Rectangle CameraView = GetCameraView();
 
     if (CameraView.x < 0) CameraView.x = 0;
     if (CameraView.y < 0) CameraView.x = 0;
 
     Vector2 screen_pos = (Vector2) {(position.x - (uint16_t)CameraView.x) * 50., 
                                     (position.y - (uint16_t)CameraView.y) * 50.};
+
     DrawTexturePro( *texture, 
                     (Rectangle) {0, 0, texture -> width, texture -> height},
                     (Rectangle) {screen_pos.x, screen_pos.y,
                                  texture -> width * scale, texture -> height * scale},
-                    (Vector2) {texture -> width * scale * ((offset.x) + 1) / 2, texture -> height * scale * (offset.y + 1) / 2 },
+                    (Vector2) {texture -> width * scale * (offset.x + 1) / 2, texture -> height * scale * (offset.y + 1) / 2},
                     0,
                     WHITE);
 }
 
+void RenderWorldAnimation_V2(Animation_V2 * animation, Vector2 position, Vector2 offset, float scale)
+{
+    Rectangle CameraView = GetCameraView();
+
+    if (CameraView.x < 0) CameraView.x = 0;
+    if (CameraView.y < 0) CameraView.x = 0;
+
+    Vector2 screen_pos = (Vector2) {(position.x - (uint16_t)CameraView.x) * 50., 
+                                    (position.y - (uint16_t)CameraView.y) * 50.};
+    
+    offset = (Vector2) {animation->TileSize_x * scale * (offset.x + 1) / 2, animation -> TileSize_y * scale * (offset.y + 1) / 2};
+    screen_pos.x -= offset.x;
+    screen_pos.y -= offset.y;
+    
+    DrawAnimation_V2(animation, screen_pos.x, screen_pos.y, scale, 0);
+}
+
 void RenderWorldEntity(WORLDEntity * entity)
 {
-    Vector2 position = (Vector2) {entity -> position.x + entity -> size.x / 2, entity -> position.y + entity -> size.y / 2};
+    static Vector2 position = {0};
+    position = (Vector2) {entity -> position.x + entity -> size.x / 2, entity -> position.y + entity -> size.y / 2};
     switch (entity-> visual -> type) {
         case UIanimation:
             uint16_t i = GetCurrentAnimationFrame(&entity -> visual -> animation);
             Texture2D * frame = entity -> visual -> animation.Frames + i;
             RenderWorldTexture( frame, 
-                                position, 
+                                (Vector2) {entity -> position.x + entity -> size.x / 2, entity -> position.y + entity -> size.y / 2}, 
                                 entity -> visualOffset,
                                 entity -> scale);
+            break;
         case UItexture:
             Texture2D * texture = &entity -> visual -> texture;
             RenderWorldTexture( texture, 
-                                position, 
+                                (Vector2) {entity -> position.x + entity -> size.x / 2, entity -> position.y + entity -> size.y / 2}, 
                                 entity -> visualOffset,
                                 entity -> scale);
+            break;
+        case UIanimationV2:
+            RenderWorldAnimation_V2(&entity -> visual -> animation_V2, 
+                                    position, 
+                                    entity -> visualOffset,
+                                    entity -> scale);
             break;
         default:
             break;

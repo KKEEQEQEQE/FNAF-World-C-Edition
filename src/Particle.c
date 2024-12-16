@@ -42,10 +42,24 @@ float absf(float x)
 uint8_t CreateParticleIndexA(const char * path, const uint8_t targetFPS, float scale)
 {
     uint8_t id = 0;
-    for (; ParticlesIndex[id].type != UInotype && id < MAX_PARTICLES; id++); // Gets the an avaliable index id
+    for (; ParticlesIndex[id].visual.type != UInotype && id < MAX_PARTICLES; id++); // Gets the an avaliable index id
 
-    ParticlesIndex[id].type = UIanimation;
-    ParticlesIndex[id].animation = CreateAnimation(path, targetFPS);
+    ParticlesIndex[id].visual.type = UIanimation;
+    ParticlesIndex[id].visual.animation = CreateAnimation(path, targetFPS);
+    ParticlesIndex[id].scale = scale;
+
+    if (id == MAX_PARTICLES) return 0; // There are no avaliable index ids so 0 is returned
+
+    return id;
+}
+
+uint8_t CreateParticleIndexA_V2(const char * path, const uint8_t targetFPS, uint16_t amount, Vector2 spriteSize, float scale)
+{
+    uint8_t id = 0;
+    for (; ParticlesIndex[id].visual.type != UInotype && id < MAX_PARTICLES; id++); // Gets the an avaliable index id
+
+    ParticlesIndex[id].visual.type = UIanimationV2;
+    ParticlesIndex[id].visual.animation_V2 = CreateAnimation_V2(path, targetFPS, amount, spriteSize.x, spriteSize.y);
     ParticlesIndex[id].scale = scale;
 
     if (id == MAX_PARTICLES) return 0; // There are no avaliable index ids so 0 is returned
@@ -57,15 +71,31 @@ uint8_t CreateParticleIndexA(const char * path, const uint8_t targetFPS, float s
 uint8_t CreateParticleIndexT(const char * path, float scale)
 {
     uint8_t id = 0;
-    for (; ParticlesIndex[id].type != UInotype && id < MAX_PARTICLES; id++); // Gets the an avaliable index id
+    for (; ParticlesIndex[id].visual.type != UInotype && id < MAX_PARTICLES; id++); // Gets the an avaliable index id
 
-    ParticlesIndex[id].type = UItexture;
-    ParticlesIndex[id].texture = LoadTexture(path);
+    ParticlesIndex[id].visual.type = UItexture;
+    ParticlesIndex[id].visual.texture = LoadTexture(path);
     ParticlesIndex[id].scale = scale;
 
     if (id == MAX_PARTICLES) return 0; // There are no avaliable index ids so 0 is returned
 
     return id;
+}
+void RemoveParticleIndex(uint16_t id)
+{
+    if (ParticlesIndex[id].visual.type == UInotype) return;
+    switch (ParticlesIndex[id].visual.type) {
+        case UIanimation:
+            FreeAnimation(&ParticlesIndex[id].visual.animation);
+            break;
+        case UItexture:
+            UnloadTexture(ParticlesIndex[id].visual.texture);
+        case UIanimationV2:
+            FreeAnimation_V2(&ParticlesIndex[id].visual.animation_V2);
+            break;
+        default:
+            break;
+    }
 }
 
 void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY)
@@ -97,19 +127,26 @@ void UpdateUIParticle(uint16_t id)
     AllParticles[id].x += AllParticles[id].velocityX * GetFrameTime();
     AllParticles[id].y += AllParticles[id].velocityY * GetFrameTime();
 
-    Texture2D texture = {0};
-    switch (ParticlesIndex[id].type) 
+    Vector2 size = (Vector2) {0, 0};
+    Texture2D texture;
+    switch (ParticlesIndex[id].visual.type) 
     {
         case UIanimation:
-            Animation * animation = &ParticlesIndex[AllParticles[id].textureID].animation;
+            Animation * animation = &ParticlesIndex[AllParticles[id].textureID].visual.animation;
             texture = animation -> Frames[GetCurrentAnimationFrame(animation)];
+            size = (Vector2) {texture.width, texture.height};
             break;
         case UItexture:
-            texture = ParticlesIndex[AllParticles[id].textureID].texture;
+            texture = ParticlesIndex[AllParticles[id].textureID].visual.texture;
+            size = (Vector2) {texture.width, texture.height};
+            break;
+        case UIanimationV2:
+            size = (Vector2) {  ParticlesIndex[AllParticles[id].textureID].visual.animation_V2.TileSize_x, 
+                                ParticlesIndex[AllParticles[id].textureID].visual.animation_V2.TileSize_y};
             break;
     }
-    if (absf(AllParticles[id].x) > GetOutsideWindowX(texture) ||
-        absf(AllParticles[id].y) > GetOutsideWindowY(texture))
+    if (absf(AllParticles[id].x) > GetOutsideWindowX_u16(size.x) ||
+        absf(AllParticles[id].y) > GetOutsideWindowY_u16(size.y))
     {
         DeleteParticle(id); // Marks particle to be overwritten
     }
@@ -118,20 +155,27 @@ void UpdateUIParticle(uint16_t id)
 void RenderUIParticle(uint16_t id, register float screenScale)
 {
     uint8_t indexID = AllParticles[id].textureID;
-    switch (ParticlesIndex[indexID].type) 
+    switch (ParticlesIndex[indexID].visual.type) 
     {
         case UIanimation:
-            RenderAnimation(&ParticlesIndex[indexID].animation, 
+            RenderAnimation(&ParticlesIndex[indexID].visual.animation, 
                             AllParticles[id].x, 
                             AllParticles[id].y, 
                             ParticlesIndex[indexID].scale * screenScale, 
                             AllParticles[id].startTime);
             break;
         case UItexture:
-            RenderUITexture(ParticlesIndex[indexID].texture, 
+            RenderUITexture(ParticlesIndex[indexID].visual.texture, 
                             AllParticles[id].x, 
                             AllParticles[id].y, 
                             ParticlesIndex[indexID].scale * screenScale);
+            break;
+        case UIanimationV2:
+            RenderAnimation_V2(&ParticlesIndex[indexID].visual.animation_V2,
+                               AllParticles[id].x, 
+                               AllParticles[id].y, 
+                               ParticlesIndex[indexID].scale, 
+                               AllParticles[id].startTime);
             break;
     }  
 }

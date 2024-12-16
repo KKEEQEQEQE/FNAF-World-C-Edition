@@ -24,6 +24,8 @@
 
 #include "UI.h"
 #include "Animation.h"
+#include <memory.h>
+#include <stdlib.h>
 #include "input.h"
 #include <math.h>
 #include <string.h>
@@ -67,6 +69,26 @@ float GetScreenScaleW(void)
     return GetScreenWidth()/1280.;
 }
 
+float GetOutsideWindowX_u16(uint16_t width) 
+{
+    return 1 + (float)(width) / (GetScreenWidth());
+}
+
+float GetOutsideWindowY_u16(uint16_t height) 
+{
+    return 1 + (float)(height) / (GetScreenWidth());
+}
+
+float GetOutsideWindowX(Texture2D texture) 
+{
+    return 1 + (float)(texture.width) / (GetScreenWidth());
+}
+
+float GetOutsideWindowY(Texture2D texture) 
+{
+    return 1 + (float)(texture.height) / (GetScreenHeight());
+}
+
 void FreeUIElement(UIElement * element)
 {
     switch (element -> visual.type) 
@@ -76,6 +98,9 @@ void FreeUIElement(UIElement * element)
             break;
         case UIanimation:
             FreeAnimation(&element -> visual.animation);
+            break;
+        case UIanimationV2:
+            FreeAnimation_V2(&element -> visual.animation_V2);
             break;
         default:
             break;
@@ -109,6 +134,51 @@ void RenderUITextureDebug(UITexture texture, float x, float y, float scale)
                     WHITE);
 }
 
+// Copies a UIVisual to the heap and returns the address
+UIVisual * UIVisual_Heap(UIVisual visual)
+{
+    UIVisual * visual_heap = malloc(sizeof(UIVisual));
+    if (!visual_heap) exit(EXIT_FAILURE);
+    *visual_heap = visual;
+    return visual_heap;
+}
+UIVisual CreateUIVisual_UITexture(UITexture texture, Color tint)
+{
+    UIVisual temp = {0};
+    temp.type = UItexture;
+    temp.texture = texture;
+    temp.tint = tint;
+    return temp;
+}
+
+UIVisual CreateUIVisual_UIAnimation(const char * path, const uint8_t targetFPS, const Color tint)
+{
+    UIVisual temp = {0};
+    temp.type = UIanimation;
+    temp.animation = CreateAnimation(path, targetFPS);
+    temp.tint = tint;
+    return temp;
+}
+
+UIVisual CreateUIVisual_UIAnimation_V2(const char * path, const uint8_t targetFPS, const uint8_t amount, Vector2 tileSize, Color tint)
+{
+    UIVisual temp = {0};
+    temp.type = UIanimationV2;
+    temp.animation_V2 = CreateAnimation_V2(path, targetFPS, amount, tileSize.x, tileSize.y);
+    temp.tint = tint;
+    return temp;
+}
+
+UIElement CreateUIElement(UIVisual visual, float x, float y, float scale)
+{
+    UIElement temp = {0};
+    temp.visual = visual;
+    temp.scale = scale;
+    temp.x = x;
+    temp.y = y;
+    return temp;
+}
+
 void RenderUIElement(const UIElement * element) 
 {
     register float scale = element -> scale * GetScreenHeight() / 720.;
@@ -121,10 +191,18 @@ void RenderUIElement(const UIElement * element)
                             scale, 0);
             return;
         case UItexture:
-            RenderUITexture(element -> visual.texture, element -> x, element -> y, scale);
+            RenderUITexture(element -> visual.texture, 
+                            element -> x, 
+                            element -> y, 
+                            scale);
+            return;
+        case UIanimationV2:
+            RenderAnimation_V2(&element -> visual.animation_V2, 
+                                element -> x, element -> y, 
+                                element -> scale, 0);
             return;
         default:
-        return;
+            return;
     }
 }
 
@@ -212,4 +290,44 @@ void PutUIButton(const UIButton * button)
 float TileSpaceToScreenSpace(float n)
 {
     return (n + 1)/2;
+}
+
+void DrawUITextureSpritesheet(Texture2D atlas, int16_t x, int16_t y, uint16_t index, uint16_t tileSize)
+{
+    DrawUITextureSpritesheetEx(atlas, x, y, index, (Vector2) {tileSize, tileSize}, 1, WHITE);
+}
+
+void DrawUITextureSpritesheetEx(Texture2D atlas, int16_t x, int16_t y, uint16_t index, Vector2 tileSize, float scale, Color tint)
+{
+    uint16_t adjustedWidth = atlas.width / (uint16_t) tileSize.x;
+    adjustedWidth *= (uint16_t) tileSize.x; 
+    Rectangle source = {    (index * (uint16_t) tileSize.x) % adjustedWidth, 
+                            (uint16_t)((float) (index * (uint16_t) tileSize.x) / adjustedWidth) * tileSize.y,
+                            tileSize.x,
+                            tileSize.y   };
+    Rectangle dest = { x, y, tileSize.x * scale, tileSize.y * scale};
+    DrawTexturePro(atlas, source, dest, (Vector2) {0, 0}, 0, tint);
+}
+
+void RenderUITextureSpritesheet(Texture2D atlas, float x, float y, uint16_t index, uint16_t tileSize)
+{
+    DrawUITextureSpritesheetEx(   atlas, 
+                                SCREEN_POSITION_TO_PIXEL_X(x, tileSize, GetScreenScale()),
+                                SCREEN_POSITION_TO_PIXEL_Y(y, tileSize, GetScreenScale()),
+                                index, 
+                                (Vector2) {tileSize, tileSize}, 
+                                GetScreenScale(), 
+                                WHITE);
+}
+
+void RenderUITextureSpritesheetEx(Texture2D atlas, float x, float y, uint16_t index, Vector2 tileSize, float scale, Color tint)
+{
+    scale *= GetScreenScale();
+    DrawUITextureSpritesheetEx(   atlas, 
+                                SCREEN_POSITION_TO_PIXEL_X(x, tileSize.x, scale),
+                                SCREEN_POSITION_TO_PIXEL_Y(y, tileSize.y, scale), 
+                                index, 
+                                tileSize, 
+                                scale, 
+                                WHITE);
 }

@@ -32,11 +32,7 @@
 
 typedef struct UIParticleIndex
 {
-    enum UIType type;
-    union {
-        Animation animation;
-        Texture2D texture;
-    };
+    UIVisual visual;
     float scale;
 } UIParticleIndex;
 
@@ -56,6 +52,11 @@ extern uint8_t CreateParticleIndexA(const char * path, const uint8_t targetFPS, 
 extern uint8_t CreateParticleIndexT(const char * path, float scale);
 
 extern void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY);
+
+// Returns the index for an animated particle using UIanimationV2
+extern uint8_t CreateParticleIndexA_V2(const char * path, const uint8_t targetFPS, uint16_t amount, Vector2 spriteSize, float scale);
+
+extern void RemoveParticleIndex(uint16_t id);
 
 extern void DeleteParticle(uint16_t id);
 
