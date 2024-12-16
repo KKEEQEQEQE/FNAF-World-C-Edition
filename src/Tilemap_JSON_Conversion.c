@@ -31,6 +31,9 @@
 #include <stdio.h>
 #include <time.h>
 
+
+_Bool EncounterError = 0;
+
 // The intermediate tile format used during the layer parsing process
 typedef struct intermediate_tile 
 {
@@ -39,27 +42,31 @@ typedef struct intermediate_tile
     uint16_t textureID;
 } intermediate_tile;
 
-enum ConvertCrashID
+enum ErrorIDs
 {
-    BADPATH, BADOBJECT, FMALLOC
+    NOERRMESSAGE, BADPATH, BADOBJECT, FMALLOC, BTILE
 };
 
-void ConversionCrash(enum ConvertCrashID id)
+void ErrorEncountered(enum ErrorIDs id)
 {
     switch (id) 
     {
-
-    case BADPATH:
-        printf("Invalid JSON path!\n");
-        break;
-    case BADOBJECT:
-        printf("Invalid object!\n");
-        break;
-    case FMALLOC:
-        printf("Failed to allocate memory on heap!\n");
-      break;
+        case BADPATH:
+            printf("Invalid JSON path!\n");
+            break;
+        case BADOBJECT:
+            printf("Invalid object!\n");
+            break;
+        case FMALLOC:
+            printf("Failed to allocate memory on heap!\n");
+            break;
+        case BTILE:
+            printf("Invalid JSON Tile!\n");
+            break;
+        case NOERRMESSAGE:
+            break;
     }
-    exit(EXIT_FAILURE);
+    EncounterError = 1;
 }
 
 // Returns 1 if the base string starts with the substring. I.E base = "Hi There\0", substring = "Hi\0", result = 1
@@ -103,7 +110,7 @@ void InitLayerFlagFromName(WORLDTilemapLayer * dest, const cJSON * layer, const 
         return;
     }
     flag *= strstcmp(object -> valuestring, jsonFlag);
-    if (flag) printf("Layer %s Is %s\n", object->valuestring, jsonFlag);
+    if (flag && !MinimalPrinting) printf("Layer %s Is %s\n", object->valuestring, jsonFlag);
     cJSON_free(object);
     dest -> FLAGS |= flag;
 }
@@ -112,7 +119,11 @@ void InitLayerFlagFromName(WORLDTilemapLayer * dest, const cJSON * layer, const 
 cJSON * InitWorldJSON(const char * path)
 {
     FILE * jsonFile = fopen(path, "r"); // Opens JSON file
-    if (!jsonFile) ConversionCrash(BADPATH); 
+    if (!jsonFile) 
+    {
+        ErrorEncountered(BADPATH); 
+        return NULL;
+    }
 
     // Getting file size
 
@@ -122,7 +133,7 @@ cJSON * InitWorldJSON(const char * path)
 
     // Creating copy in heap
     char * jsonText = malloc(jsonTextLength);
-    if (!jsonText) ConversionCrash(FMALLOC);
+    if (!jsonText) ErrorEncountered(FMALLOC);
     fread(jsonText, 1, jsonTextLength, jsonFile);
     fclose(jsonFile);
 
@@ -165,20 +176,20 @@ intermediate_tile ParseJSONTile(const cJSON * tileJSON)
 
     if (jsonID == NULL)
     {   
-        printf("Invalid JSON Tile!\n");
-        exit(EXIT_FAILURE);
+        ErrorEncountered(BTILE);
+        return (intermediate_tile) {0};
     }
     
     if (!jsonX)
     {
-        printf("Invalid JSON Tile!\n");
-        exit(EXIT_FAILURE);
+        ErrorEncountered(BTILE);
+        return (intermediate_tile) {0};
     }
 
     if (!jsonY)
     {
-        printf("Invalid JSON Tile!\n");
-        exit(EXIT_FAILURE);
+        ErrorEncountered(BTILE);
+        return (intermediate_tile) {0};
     }
 
     // Gets parameters values
@@ -226,7 +237,11 @@ void InitTitlemapLayer(WORLDTilemapLayer * dest, const cJSON * layerJSON)
     // Getting tile array
 
     cJSON * tiles = cJSON_GetObjectItemCaseSensitive(layerJSON, "tiles");
-    if (!tiles) ConversionCrash(BADOBJECT);
+    if (!tiles)
+    {
+        ErrorEncountered(BADOBJECT);
+        return;
+    } 
 
     // Creating variables
 
@@ -240,7 +255,10 @@ void InitTitlemapLayer(WORLDTilemapLayer * dest, const cJSON * layerJSON)
     uint16_t SizeY = 0;
 
     intermediate_tile * intermediate_tiles = malloc(sizeof(intermediate_tile) * AmountOfTiles);
-    if (!intermediate_tiles) ConversionCrash(FMALLOC);
+    if (!intermediate_tiles)
+    {
+        ErrorEncountered(FMALLOC);
+    } 
 
     // Getting layer dimensions
 
@@ -257,6 +275,8 @@ void InitTitlemapLayer(WORLDTilemapLayer * dest, const cJSON * layerJSON)
         if (SizeY < intermediate_tiles[i].y) SizeY = intermediate_tiles[i].y;
     }
 
+    if (EncounterError) return;
+
     // Offseting size
 
     SizeX -= OffsetX - 1;
@@ -270,16 +290,15 @@ void InitTitlemapLayer(WORLDTilemapLayer * dest, const cJSON * layerJSON)
 
     if (!map) 
     {
-        if (!MinimalPrinting) printf("Failed to allocate %lluB in heap!", sizeof(WORLDTile) * SizeX * SizeY);
-        exit(EXIT_FAILURE);
+        printf("Failed to allocate %lluB in heap!", sizeof(WORLDTile) * SizeX * SizeY);
+        ErrorEncountered(NOERRMESSAGE);
+        return;
     }
 
     // Filling map array
 
     for (uint16_t i = 0; i < AmountOfTiles; i++)
     {
-        if (AmountOfTiles == 5) PrintIntermediateTile(intermediate_tiles[i]);
-
         (*map)[intermediate_tiles[i].y - OffsetY][intermediate_tiles[i].x - OffsetX] = intermediate_tiles[i].textureID + 1;
     }
 
@@ -303,13 +322,18 @@ void InitTitlemapLayer(WORLDTilemapLayer * dest, const cJSON * layerJSON)
 // Returns the address of a parsed tilemap based on a Spritefusion map JSON
 WORLDTilemap * CreateTilemap(const char * jsonPath)
 {
+    // Resets Error Detection
+
+    EncounterError = 0;
+
     // Gets main cJSON object
 
     cJSON * MainJSON = InitWorldJSON(jsonPath);
     if (!MainJSON)
     {
         printf("Invalid Path \"%s\"!\n", jsonPath);
-        exit(EXIT_FAILURE);
+        ErrorEncountered(NOERRMESSAGE);
+        return NULL;
     }
     
     // Gets layer JSON
@@ -329,7 +353,8 @@ WORLDTilemap * CreateTilemap(const char * jsonPath)
     if (LayersJSON == NULL)
     {
         printf("Invalid Map JSON \"%s\"!\n", jsonPath);
-        exit(EXIT_FAILURE);
+        ErrorEncountered(NOERRMESSAGE);
+        return NULL;
     }
 
     // Parses all layers and converts them to 2D uint16_t arrays
@@ -337,6 +362,7 @@ WORLDTilemap * CreateTilemap(const char * jsonPath)
     {
         if (!MinimalPrinting) printf("%p, %s\n", cJSON_GetArrayItem(LayersJSON,i), cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(LayersJSON, i), "name") -> valuestring);
         InitTitlemapLayer(tilemap -> layers + i, cJSON_GetArrayItem(LayersJSON,i));
+        if (EncounterError) return NULL;
     }
     return tilemap;
 }
