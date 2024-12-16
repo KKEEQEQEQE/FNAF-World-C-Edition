@@ -118,21 +118,31 @@ void InitWorld(void)
 {
     if (!CurrentWorld) LoadWorldTilemap();
 
+    // Temporary limits log level to minimize printing to console (for faster load times)
+
     SetTraceLogLevel(LOG_WARNING);
     SetWorldSpriteSheet("Assets/Overworld/Maps/Overworld/spritesheet.png", 50); 
 
+    // Particles
+
     BirdParticle = CreateParticleIndexA_V2("Assets/Particles/bird.png", 30, 10, (Vector2) {50, 50}, 1);
+    
+    // Musics
+
     CurrentTheme = LoadMusicStream("Assets/Themes/fazbearhills.mp3");
     CurrentTheme.looping = 1;
 
     PlayMusicStream(CurrentTheme);
 
+    // Zone Effects
     LegacyZoneEffect = (UIVisual) {UItexture, {LoadTexture("Assets/Overworld/Fazbear_Hills/sun_effect_mod.png")}, SKY_TINT};
     SetTextureFilter(LegacyZoneEffect.texture, TEXTURE_FILTER_BILINEAR);
 
     SunHeader = LoadTexture("Assets/Overworld/sun_effect_top.png");
     SetTextureFilter(SunHeader, TEXTURE_FILTER_BILINEAR);
 
+    // Freddy Sprites
+    
     FreddyIdle.type = UItexture;
     FreddyIdle.texture = LoadTexture("Assets/Overworld/Freddy_Overworld/idle.png"); 
     FreddyIdle.tint = WHITE;
@@ -291,7 +301,7 @@ Rectangle GetCameraView(void)
                             WorldCamera.zoom + 2    };
 }
 
-
+// Uses AABB Collision to check if collision has occured between to WORLDEntities
 _Bool CheckEntityCollision(WORLDEntity * collider, WORLDEntity * collidee)
 {
     Rectangle colliderHitbox = (Rectangle) {collider -> position.x, 
@@ -306,6 +316,7 @@ _Bool CheckEntityCollision(WORLDEntity * collider, WORLDEntity * collidee)
     return CheckCollisionRecs(colliderHitbox, collideeHitbox);
 }
 
+// Checks entity collision and uses custom collision function if there is one
 void HandleEntityCollision(WORLDEntity * entity)
 {
     
@@ -316,6 +327,7 @@ void HandleEntityCollision(WORLDEntity * entity)
     }
 }
 
+// Updates velocity and collision of a WORLDEntity
 void UpdateWorldEntity(WORLDEntity * entity)
 {
     if ((int16_t) entity -> velocity.x == 0 && (int16_t) entity -> velocity.y == 0) return;
@@ -346,7 +358,7 @@ void UpdateWorldEntity(WORLDEntity * entity)
 }
 
 
-
+// Scales and Renders a Texture2D relitive to the WORLDCamera
 void RenderWorldTexture(Texture2D * texture, Vector2 position, Vector2 offset, float scale)
 {
     Rectangle CameraView = GetCameraView();
@@ -366,6 +378,7 @@ void RenderWorldTexture(Texture2D * texture, Vector2 position, Vector2 offset, f
                     WHITE);
 }
 
+// Scales and Renders a UIanimationV2 relitive to the WORLDCamera
 void RenderWorldAnimation_V2(Animation_V2 * animation, Vector2 position, Vector2 offset, float scale)
 {
     Rectangle CameraView = GetCameraView();
@@ -383,6 +396,7 @@ void RenderWorldAnimation_V2(Animation_V2 * animation, Vector2 position, Vector2
     DrawAnimation_V2(animation, screen_pos.x, screen_pos.y, scale, 0);
 }
 
+// Scales and Renders a WORLDEntity
 void RenderWorldEntity(WORLDEntity * entity)
 {
     Vector2 position = position = (Vector2) {entity -> position.x + entity -> size.x / 2, entity -> position.y + entity -> size.y / 2};
@@ -413,11 +427,12 @@ void RenderWorldEntity(WORLDEntity * entity)
     }
 }
 
-void RenderBuildings(WORLDEntity * Buildings)
+// Scales and Renders all in a WORLDEntity array
+void RenderEntites(WORLDEntity * entities)
 {
-    for (uint16_t i = 0; Buildings[i].visual != NULL; i++)
+    for (uint16_t i = 0; entities[i].visual != NULL; i++)
     {
-        RenderWorldEntity(Buildings + i);
+        RenderWorldEntity(entities + i);
     }
 }
 void SpawnBirds(void)
@@ -502,6 +517,7 @@ void RenderZoneName(void)
     DrawTextureEx(ZoneHeader[zone], (Vector2) {25. * GetScreenHeight() / 720, 25. * GetScreenHeight() / 720}, 0, 0.025/scale, WHITE);
 }
 
+// Renders WORLDTilemapLayer onto Virtual Screen
 void RenderLayer(uint16_t n, Vector2 CameraMinorOffset)
 {
     if (CurrentWorld -> layers[n].FLAGS & LAYER_INVISIBLE)
@@ -552,28 +568,38 @@ void RenderWorld(void)
         WorldVirtualScreen = LoadRenderTexture(vWidth, vHeight);
     }
 
-    Rectangle CameraView = {WorldCamera.position.x - WorldCamera.zoom * ((float) GetScreenWidth() / GetScreenHeight()) / 2, 
-                            WorldCamera.position.y - WorldCamera.zoom / 2, 
-                            WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()), 
-                            WorldCamera.zoom};
+    Rectangle CameraView = GetCameraView();
+
     if (CameraView.x < 0) CameraView.x = 0;
     if (CameraView.y < 0) CameraView.x = 0;
 
     Vector2 CameraMinorOffset = (Vector2) { (float) (CameraView.x - (uint16_t) CameraView.x) * (GetScreenHeight() / WorldCamera.zoom),
                                             (float) (CameraView.y - (uint16_t) CameraView.y) * (GetScreenHeight() / WorldCamera.zoom)};
     BeginTextureMode(WorldVirtualScreen);
+
     ClearBackground(BLACK);
+
+    // Renders all tiles in each layer
+
     for (uint16_t i = CurrentWorld -> amount; i > 0; i--) RenderLayer(i, CameraMinorOffset);
     
-    RenderBuildings(WorldBuildings_Pre);
+    // Renders all buildings behind Freddy
+
+    RenderEntites(WorldBuildings_Pre);
 
     RenderWorldEntity(&Freddy);
 
-    RenderBuildings(WorldBuildings_After);
+    // Renders all buildings in front of Freddy
+
+    RenderEntites(WorldBuildings_After);
+
+    // Renders current zone effect
 
     RenderZoneEffect();
 
     EndTextureMode();
+
+    // Sets Virtual Screen texture to BILINEAR for better upscaling
     SetTextureFilter(WorldVirtualScreen.texture, TEXTURE_FILTER_BILINEAR);
     
     float scaleFactor = (float) GetScreenHeight() / WorldVirtualScreen.texture.height;

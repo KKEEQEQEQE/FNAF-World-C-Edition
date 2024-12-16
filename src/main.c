@@ -44,11 +44,12 @@ int main(void)
     clock_t start = clock();
     LoadWorldTilemap();
     clock_t stop = clock();
+    printf("%f\n", (stop-start)/(float)CLOCKS_PER_SEC);
     SwapGameState(100000);
-    //SetTargetFPS(1000);
+    SetTargetFPS(144);
     UIElement test = CreateUIElement(   CreateUIVisual_UIAnimation_V2("Title.png", 3, 3, (Vector2){650, 127}, WHITE),
                                         0, -0.8, 1);
-    while (!WindowShouldClose())
+    /*while (!WindowShouldClose())
     {
         BeginDrawing();
         ClearBackground(BLACK);
@@ -61,7 +62,6 @@ int main(void)
                 PutWorld();
                 break;
             default:
-                
                 RenderUIText("Unknown / Invalid Game State Entered.\nTap to go back to title screen!", 0, 0, 0.06, CENTRE, (Font){0}, WHITE);
                 RenderUIElement(&test);
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SwapGameState(Title);
@@ -69,7 +69,7 @@ int main(void)
         }
         DrawFPS(10, 10);
         EndDrawing();
-    }
+    }*/
     CloseAudioDevice();
     CloseWindow();
     return 0;
