@@ -38,7 +38,7 @@
 int main(void)
 {
     InitWindow(1280, 720, "FNAF World: C Edition");
-    SetWindowState(FLAG_WINDOW_RESIZABLE);
+    SetWindowState(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_UNDECORATED);
     SetWindowMinSize(1280, 720); 
     InitAudioDevice();
     clock_t start = clock();
@@ -46,10 +46,9 @@ int main(void)
     clock_t stop = clock();
     printf("%f\n", (stop-start)/(float)CLOCKS_PER_SEC);
     SwapGameState(100000);
-    SetTargetFPS(144);
-    UIElement test = CreateUIElement(   CreateUIVisual_UIAnimation_V2("Title.png", 3, 3, (Vector2){650, 127}, WHITE),
-                                        0, -0.8, 1);
-    /*while (!WindowShouldClose())
+    ToggleBorderlessWindowed();
+    SetTargetFPS(240);
+    while (!WindowShouldClose())
     {
         BeginDrawing();
         ClearBackground(BLACK);
@@ -63,13 +62,12 @@ int main(void)
                 break;
             default:
                 RenderUIText("Unknown / Invalid Game State Entered.\nTap to go back to title screen!", 0, 0, 0.06, CENTRE, (Font){0}, WHITE);
-                RenderUIElement(&test);
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SwapGameState(Title);
                 break;
         }
-        DrawFPS(10, 10);
+        //DrawFPS(10, 10);
         EndDrawing();
-    }*/
+    }
     CloseAudioDevice();
     CloseWindow();
     return 0;

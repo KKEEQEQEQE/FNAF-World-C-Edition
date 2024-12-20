@@ -56,6 +56,8 @@ WORLDEntity WorldBuildings_After[5] = {0}; // World Buildings rendered after Fre
 WORLDEntity WorldBuildings_Pre[5] = {0}; // World Buildings rendered before Freddy
 
 WORLDEntity WORLDEntities[5] = {0};
+WORLDEntity Lolbit[5] = {0};
+
 WORLDEntity Freddy = {0};
 
 UIVisual FreddyIdle = {0};
@@ -65,14 +67,18 @@ UIVisual FreddyWUp = {0};
 UIVisual FreddyWRight = {0};
 UIVisual FreddyWDown = {0};
 
-UITexture ZoneHeader[2];
-char * ZoneNames[] = {"Fazbear Hills", "Choppy's Woods"};
+// NPC Visuals
+
+UIVisual LolbitVisual = {0};
+
+UITexture ZoneHeader[3];
+char * ZoneNames[] = {"Fazbear Hills", "Choppy's Woods", "Dusting Fields"};
 
 // Particles
 
 uint8_t BirdParticle = 0;
 
-WORLDEntity CreateWorldEntity(Vector2 position, Vector2 size, Vector2 velocity, UIVisual * visual, float scale, uint16_t collisionTargets, void (*customCollision)(WORLDEntity *))
+WORLDEntity CreateWorldEntity(Vector2 position, Vector2 size, Vector2 velocity, UIVisual * visual, float scale, uint16_t collisionTargets, void (*customCollision)(WORLDEntity *), uint16_t depth)
 {
     WORLDEntity entity = {0};
     entity.position = position;
@@ -81,6 +87,7 @@ WORLDEntity CreateWorldEntity(Vector2 position, Vector2 size, Vector2 velocity, 
     entity.visual = visual;
     entity.scale = scale;
     entity.customCollision = customCollision;
+    entity.depth = depth;
     return entity;
 }
 
@@ -116,6 +123,7 @@ void SetWorldSpriteSheet(const char * path, uint16_t tileSize)
 
 void InitWorld(void)
 {
+
     if (!CurrentWorld) LoadWorldTilemap();
 
     // Temporary limits log level to minimize printing to console (for faster load times)
@@ -125,7 +133,7 @@ void InitWorld(void)
 
     // Particles
 
-    BirdParticle = CreateParticleIndexA_V2("Assets/Particles/bird.png", 30, 10, (Vector2) {50, 50}, 1);
+    BirdParticle = CreateParticleIndexA_V2("Assets/Particles/bird.png", 30, 10, (Vector2) {50, 50}, 1.5);
     
     // Musics
 
@@ -135,7 +143,8 @@ void InitWorld(void)
     PlayMusicStream(CurrentTheme);
 
     // Zone Effects
-    LegacyZoneEffect = (UIVisual) {UItexture, {LoadTexture("Assets/Overworld/Fazbear_Hills/sun_effect_mod.png")}, SKY_TINT};
+
+    LegacyZoneEffect = CreateUIVisual_UITexture_P("Assets/Overworld/Fazbear_Hills/sun_effect_mod.png", SKY_TINT);
     SetTextureFilter(LegacyZoneEffect.texture, TEXTURE_FILTER_BILINEAR);
 
     SunHeader = LoadTexture("Assets/Overworld/sun_effect_top.png");
@@ -168,63 +177,80 @@ void InitWorld(void)
 
     Freddy.visual = &FreddyIdle;
     Freddy.scale = 0.95;
+    Freddy.depth = 2;
 
-    WorldBuildings_Pre[0] = CreateWorldEntity(  (Vector2) {10.8, 11}, 
+    // Lolbits
+
+    LolbitVisual.type = UIanimationV2;
+    LolbitVisual.animation_V2 = CreateAnimation_V2("Assets/Overworld/NPCs/lolbit.png", 30, 15, 65, 65); 
+    LolbitVisual.tint = WHITE;
+
+    Lolbit[0] = CreateWorldEntity( (Vector2) {36, 17}, 
+                                            (Vector2) {1, 1},
+                                            (Vector2) {0,0}, 
+                                            &LolbitVisual, 
+                                            0.93, 
+                                            0, 
+                                            NULL, 2);
+
+
+    WorldBuildings_Pre[0] = CreateWorldEntity(  (Vector2) {33.8, 11}, 
                                                 (Vector2) {0,0}, 
                                                 (Vector2) {0,0}, 
                                                 UIVisual_Heap(CreateUIVisual_UITexture_P( "Assets/Overworld/Buildings/Blue_Castle.png", 
                                                                                                         WHITE)), 
                                                 1, 
                                                 0, 
-                                                NULL);
+                                                NULL, 3);
 
-    WorldBuildings_Pre[1] = CreateWorldEntity(  (Vector2) {14.5, 10.5},
+    WorldBuildings_Pre[1] = CreateWorldEntity(  (Vector2) {37.5, 10.5},
                                                 (Vector2) {0,0}, 
                                                 (Vector2) {0,0}, 
                                                 UIVisual_Heap(CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Red_Castle.png", 
                                                                                                         WHITE)),
                                                 1, 
                                                 0, 
-                                                NULL);
+                                                NULL, 3);
 
-    WorldBuildings_Pre[2] = CreateWorldEntity(  (Vector2) {13.5, 15.5}, 
+    WorldBuildings_Pre[2] = CreateWorldEntity(  (Vector2) {36.5, 15.5}, 
                                                 (Vector2) {0,0},
                                                 (Vector2) {0,0}, 
                                                 UIVisual_Heap(CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Gear_House.png", 
                                                                                                         WHITE)), 
                                                 1, 
                                                 0, 
-                                                NULL);
+                                                NULL, 3);
 
-    WorldBuildings_Pre[3] = CreateWorldEntity(  (Vector2) {19.5, 12}, 
+    WorldBuildings_Pre[3] = CreateWorldEntity(  (Vector2) {42, 12}, 
                                                 (Vector2) {0,0}, 
                                                 (Vector2) {0,0}, 
                                                 UIVisual_Heap(CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Lumber_House.png", 
                                                                                                         WHITE)), 
                                                 1, 
                                                 0, 
-                                                NULL);
+                                                NULL, 3);
                                                 
-    WorldBuildings_After[0] = CreateWorldEntity(    (Vector2) {8.5, 17}, 
-                                                    (Vector2) {0,0}, 
-                                                    (Vector2) {0,0}, 
-                                                    UIVisual_Heap(CreateUIVisual_UIAnimation_V2("Assets/Overworld/Buildings/windmill_atlas.png", 30, 20, (Vector2) {200, 200}, WHITE)),
-                                                    1, 
-                                                    0,
-                                                    NULL);
+    WorldBuildings_After[0] = CreateWorldEntity(   (Vector2) {31.5, 17}, 
+                                                            (Vector2) {0,0}, 
+                                                            (Vector2) {0,0}, 
+                                                            UIVisual_Heap(CreateUIVisual_UIAnimation_V2("Assets/Overworld/Buildings/windmill_atlas.png", 30, 20, (Vector2) {200, 200}, WHITE)),
+                                                            1, 
+                                                            0,
+                                                        NULL,2);
 
     ZoneHeader[0] = LoadTexture("Assets/Overworld/UI/Zone_Names/1.png"); 
     ZoneHeader[1] = LoadTexture("Assets/Overworld/UI/Zone_Names/2.png"); 
+    ZoneHeader[2] = LoadTexture("Assets/Overworld/UI/Zone_Names/3.png"); 
     SetTraceLogLevel(LOG_ALL);
 }
 
 void ResetWorld(void)
 {
     Freddy.collisionTargets = LAYER_COLLIDABLE;
-    Freddy.size = (Vector2) {0.8, 0.3};
+    Freddy.size = (Vector2) {0.7, 0.45};
     Freddy.scale = 0.95;
     Freddy.visualOffset = (Vector2) {0, 0.5};
-    Freddy.position = (Vector2) {15, 21};
+    Freddy.position = (Vector2) {38, 21};
     Freddy.customCollision = NULL;
 
     WorldCamera.target = (Vector2) {0, 0};
@@ -295,10 +321,18 @@ uint8_t CheckCollisionTilemap(WORLDEntity * entity, WORLDTilemapLayer * layer)
 
 Rectangle GetCameraView(void)
 {
-    return (Rectangle) {    WorldCamera.position.x - WorldCamera.zoom * ((float) GetScreenWidth() / GetScreenHeight()) / 2, 
-                            WorldCamera.position.y - WorldCamera.zoom / 2, 
-                            WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()) + 2, 
-                            WorldCamera.zoom + 2    };
+    Rectangle CameraView = (Rectangle) {    WorldCamera.position.x - WorldCamera.zoom * ((float) GetScreenWidth() / GetScreenHeight()) / 2, 
+                                            WorldCamera.position.y - WorldCamera.zoom / 2, 
+                                            WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()) + 2, 
+                                            WorldCamera.zoom + 2    };
+
+    if (CameraView.x + (CameraView.width + 2) / 2 >= CurrentWorld -> mapWidth) CameraView.x = CurrentWorld -> mapWidth - (CameraView.width + 2) / 2;
+    else if (CameraView.x < 0) CameraView.x = 0;
+
+    if (CameraView.y + (CameraView.height + 2) / 2 >= CurrentWorld -> mapHeight) CameraView.y = CurrentWorld -> mapHeight - (CameraView.height + 2) / 2;
+    else if (CameraView.y < 0) CameraView.y = 0;
+
+    return CameraView;
 }
 
 // Uses AABB Collision to check if collision has occured between to WORLDEntities
@@ -363,9 +397,6 @@ void RenderWorldTexture(Texture2D * texture, Vector2 position, Vector2 offset, f
 {
     Rectangle CameraView = GetCameraView();
 
-    if (CameraView.x < 0) CameraView.x = 0;
-    if (CameraView.y < 0) CameraView.x = 0;
-
     Vector2 screen_pos = (Vector2) {(position.x - (uint16_t)CameraView.x) * 50., 
                                     (position.y - (uint16_t)CameraView.y) * 50.};
 
@@ -382,9 +413,6 @@ void RenderWorldTexture(Texture2D * texture, Vector2 position, Vector2 offset, f
 void RenderWorldAnimation_V2(Animation_V2 * animation, Vector2 position, Vector2 offset, float scale)
 {
     Rectangle CameraView = GetCameraView();
-
-    if (CameraView.x < 0) CameraView.x = 0;
-    if (CameraView.y < 0) CameraView.x = 0;
 
     Vector2 screen_pos = (Vector2) {(position.x - (uint16_t)CameraView.x) * 50., 
                                     (position.y - (uint16_t)CameraView.y) * 50.};
@@ -427,14 +455,57 @@ void RenderWorldEntity(WORLDEntity * entity)
     }
 }
 
-// Scales and Renders all in a WORLDEntity array
-void RenderEntites(WORLDEntity * entities)
+enum FLAGS_ENTITY_ARRAY_RENDERING
 {
+    PROPER,
+    FAST,
+    IGNORE_DEPTH
+};
+
+// Scales and Renders all in a WORLDEntity array if the first element's depth is equal to depth
+static void RenderWorldEntities_FAST(WORLDEntity * entities, uint16_t depth)
+{
+    if (entities[0].depth != depth) return;
+
     for (uint16_t i = 0; entities[i].visual != NULL; i++)
     {
         RenderWorldEntity(entities + i);
     }
 }
+
+// Scales and Renders all in a WORLDEntity array that is at depth
+void RenderWorldEntities_PROPER(WORLDEntity * entities, uint16_t depth)
+{
+    for (uint16_t i = 0; entities[i].visual != NULL; i++)
+    {
+        if (entities[i].depth != depth) continue;
+        RenderWorldEntity(entities + i);
+    }
+}
+
+// Scales and Renders all in a WORLDEntity array
+void RenderWorldEntities_IGNORE_DEPTH(WORLDEntity * entities)
+{
+    for (uint16_t i = 0; entities[i].visual != NULL; i++) RenderWorldEntity(entities + i);
+}
+
+// Scales and Renders all in a WORLDEntity array
+void RenderWorldEntities(WORLDEntity * entities, uint16_t depth, enum FLAGS_ENTITY_ARRAY_RENDERING mode)
+{
+    switch (mode) 
+    {
+        case PROPER:
+            RenderWorldEntities_PROPER(entities, depth);
+            return;
+        case FAST:
+            RenderWorldEntities_FAST(entities, depth);
+            return;
+        case IGNORE_DEPTH:
+            RenderWorldEntities_IGNORE_DEPTH(entities);
+            return;
+    }
+}
+
 void SpawnBirds(void)
 {
     static clock_t timeSinceLastParticle = 0;
@@ -480,31 +551,68 @@ void RenderZoneEffect_Zone1(Vector2 offset)
     EndBlendMode();
 }
 
+void RenderZoneEffect_Zone3(Vector2 offset)
+{
+    float screenRatio = (float) GetScreenWidth() / GetScreenHeight();
+
+    int vWidth = (WorldCamera.zoom * CurrentTileSize) * screenRatio;
+    int vHeight = WorldCamera.zoom * CurrentTileSize;
+
+    float scale = (float) vWidth / LegacyZoneEffect.animation_V2.TileSize_x;
+
+    uint16_t width = (LegacyZoneEffect.animation_V2.TileSize_x * scale);
+    uint16_t height = (LegacyZoneEffect.animation_V2.TileSize_y * scale);
+
+    BeginBlendMode(BLEND_ADDITIVE);
+
+    DrawTexturePro( SunHeader, 
+                    (Rectangle) {0, 0, SunHeader.width, SunHeader.height}, 
+                    (Rectangle) {offset.x, offset.y, vWidth, vHeight / 3}, 
+                    (Vector2) {0, 0}, 0, 
+                    WHITE);
+
+    EndBlendMode();
+
+    DrawAnimation_V2(   &LegacyZoneEffect.animation_V2, 
+                        offset.x + vWidth / 2. - width / 2., 
+                        offset.y + vHeight / 2. - height / 2., 
+                        scale, 
+                        0);
+
+    
+}
+
 uint8_t GetZone(void)
 {
+    static uint16_t ZoneIds[3] = {32, 33, 46};
     Vector2 ZoneCheck = (Vector2) {Freddy.position.x + Freddy.size.x / 2, Freddy.position.y + Freddy.size.y / 2};
-    uint16_t zone = AccessPositionInLayer((uint16_t) ZoneCheck.x, (uint16_t) ZoneCheck.y, CurrentWorld->layers + 0) - 37;
-    if (zone > 3) return 0xff;
-    return zone - 1;
+    uint16_t Zone = AccessPositionInLayer((uint16_t) ZoneCheck.x, (uint16_t) ZoneCheck.y, CurrentWorld->layers + 0);
+
+    uint16_t i = 0;
+
+    for (; i <= sizeof(ZoneIds) / 2; i++) 
+    {
+        if (Zone == ZoneIds[i]) break;
+    }
+    if (i == sizeof(ZoneIds) / 2) return 0xff;
+    return i;
 }
 void RenderZoneEffect(void)
 {
     uint16_t zone = GetZone();
-    Rectangle CameraView = {WorldCamera.position.x - WorldCamera.zoom * ((float) GetScreenWidth() / GetScreenHeight()) / 2, 
-                            WorldCamera.position.y - WorldCamera.zoom / 2, 
-                            WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()), 
-                            WorldCamera.zoom};
-
-    if (CameraView.x < 0) CameraView.x = 0;
-    if (CameraView.y < 0) CameraView.x = 0;
+    Rectangle CameraView = GetCameraView();
 
     Vector2 CameraMinorOffset = (Vector2) { (float) (CameraView.x - (uint16_t) CameraView.x) * CurrentTileSize,
                                             (float) (CameraView.y - (uint16_t) CameraView.y) * CurrentTileSize};
-    switch (zone) {
-        case 1:
-        case 2:
-        default:
-            RenderZoneEffect_Zone1(CameraMinorOffset);
+    switch (zone + 1) {
+        case DUSTINGFIELDS:
+            RenderZoneEffect_Zone3(CameraMinorOffset);
+            break;
+        case FAZBEARHILLS:
+        case CHOPPYSWOODS: 
+            SpawnBirds();
+            RenderZoneEffect_Zone1(CameraMinorOffset);  
+        default:    
             break;
     }
 }
@@ -524,10 +632,9 @@ void RenderLayer(uint16_t n, Vector2 CameraMinorOffset)
     {
         return;
     } 
+
     Rectangle CameraView = GetCameraView();
     
-    if (CameraView.x < 0) CameraView.width -= CameraView.x, CameraView.x = 0;
-    if (CameraView.y < 0) CameraView.height -= CameraView.y, CameraView.y = 0;
     for (uint16_t y = (uint16_t) CameraView.y; y <= (uint16_t) CameraView.y + (uint16_t) CameraView.height + 1; y += 1)
     {
         for (uint16_t x = (uint16_t) CameraView.x; x <= (uint16_t) CameraView.x + (uint16_t) CameraView.width + 1; x += 1)
@@ -570,9 +677,6 @@ void RenderWorld(void)
 
     Rectangle CameraView = GetCameraView();
 
-    if (CameraView.x < 0) CameraView.x = 0;
-    if (CameraView.y < 0) CameraView.x = 0;
-
     Vector2 CameraMinorOffset = (Vector2) { (float) (CameraView.x - (uint16_t) CameraView.x) * (GetScreenHeight() / WorldCamera.zoom),
                                             (float) (CameraView.y - (uint16_t) CameraView.y) * (GetScreenHeight() / WorldCamera.zoom)};
     BeginTextureMode(WorldVirtualScreen);
@@ -581,17 +685,16 @@ void RenderWorld(void)
 
     // Renders all tiles in each layer
 
-    for (uint16_t i = CurrentWorld -> amount; i > 0; i--) RenderLayer(i, CameraMinorOffset);
-    
-    // Renders all buildings behind Freddy
+    for (uint16_t i = CurrentWorld -> amount; i > 0; i--) 
+    {
+        RenderLayer(i, CameraMinorOffset);
 
-    RenderEntites(WorldBuildings_Pre);
+        // Renders all WORLDEntities
 
-    RenderWorldEntity(&Freddy);
-
-    // Renders all buildings in front of Freddy
-
-    RenderEntites(WorldBuildings_After);
+        if (i == 2) RenderWorldEntity(&Freddy);
+        RenderWorldEntities(WorldBuildings_Pre, i, FAST);
+        RenderWorldEntities(WorldBuildings_After, i, FAST);
+    }
 
     // Renders current zone effect
 
@@ -654,12 +757,47 @@ void UpdateFreddy(void)
     WorldCamera.position = (Vector2) {Freddy.position.x + Freddy.size.x / 2, Freddy.position.y + Freddy.size.y / 2};
 }
 
+void UpdateZoneAssets(void)
+{
+    static enum WORLDZONES LastZoneCheck = 1;
+    
+    if (LastZoneCheck == GetZone() + 1) return;
+
+    if ((LastZoneCheck == FAZBEARHILLS || LastZoneCheck == CHOPPYSWOODS)
+         && (GetZone() + 1 == FAZBEARHILLS || GetZone() + 1 == CHOPPYSWOODS)) return;
+    
+    LastZoneCheck = GetZone() + 1;
+
+    UnloadMusicStream(CurrentTheme);
+    FreeUIVisual(&LegacyZoneEffect);
+    memset(&LegacyZoneEffect, 0, sizeof(UIVisual));
+    switch (LastZoneCheck) 
+    {
+        case DUSTINGFIELDS:
+            CurrentTheme = LoadMusicStream("Assets/Themes/dustingfields.mp3");
+            LegacyZoneEffect = CreateUIVisual_UIAnimation_V2(   "Assets/Overworld/Zone_Effects/dusting_fields_effect.png", 
+                                                                60, 11,
+                                                                (Vector2) {800, 480}, WHITE);
+            SetTextureFilter(LegacyZoneEffect.animation_V2.Atlas, TEXTURE_FILTER_BILINEAR);
+            break;
+        case CHOPPYSWOODS:
+        case FAZBEARHILLS:
+        default:
+            CurrentTheme = LoadMusicStream("Assets/Themes/fazbearhills.mp3");
+            LegacyZoneEffect = CreateUIVisual_UITexture_P("Assets/Overworld/Fazbear_Hills/sun_effect_mod.png", SKY_TINT);
+            SetTextureFilter(LegacyZoneEffect.texture, TEXTURE_FILTER_BILINEAR);
+    }
+    
+    CurrentTheme.looping = 1;
+    PlayMusicStream(CurrentTheme);
+}
 void PutWorld(void)
 {
+    
     UpdateMusicStream(CurrentTheme);
     UpdateFreddy();
+    UpdateZoneAssets();
     RenderWorld();
-    SpawnBirds();
     PutUIParticles();
     RenderZoneName();
 }

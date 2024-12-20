@@ -31,7 +31,9 @@
 
 enum WORLDZONES 
 {
-    FAZBEARHILLS=1
+    FAZBEARHILLS=1,
+    CHOPPYSWOODS,
+    DUSTINGFIELDS
 };
 
 typedef UIVisual WORLDTileDefinition;
@@ -47,6 +49,7 @@ typedef struct WORLDEntity
     UIVisual * visual;
     float scale;
     uint16_t collisionTargets;
+    uint16_t depth;
     void (*customCollision)(struct WORLDEntity *);
 } WORLDEntity;
 

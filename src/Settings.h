@@ -24,4 +24,5 @@
 
 #pragma once
 
+#include <stdint.h>
 extern _Bool MinimalPrinting;

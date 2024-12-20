@@ -90,9 +90,10 @@ void FreeUIElement(UIElement * element)
             FreeAnimation_V2(&element -> visual.animation_V2);
             break;
         default:
-            break;
-        memset(element, 0, sizeof(UIElement));
+            break;  
     }
+
+    memset(element, 0, sizeof(UIElement));
 }
 
 // Debugging DrawTextureEx wrapper which also prints position
@@ -160,6 +161,27 @@ UIVisual CreateUIVisual_UIAnimation_V2(const char * path, const uint8_t targetFP
     temp.animation_V2 = CreateAnimation_V2(path, targetFPS, amount, tileSize.x, tileSize.y);
     temp.tint = tint;
     return temp;
+}
+
+void FreeUIVisual(UIVisual * visual)
+{
+    switch (visual -> type) 
+    {
+        case UItexture:
+            UnloadTexture(visual -> texture);
+            break;
+        case UIanimation:
+            FreeAnimation(&visual->animation);
+            break;
+        case UIanimationV2:
+            FreeAnimation_V2(&visual -> animation_V2);
+            break;
+        default:
+            break;
+        
+    }
+
+    memset(visual, 0, sizeof(UIVisual));
 }
 
 UIElement CreateUIElement(UIVisual visual, float x, float y, float scale)
@@ -301,7 +323,9 @@ void DrawUITextureSpritesheetEx(Texture2D atlas, int16_t x, int16_t y, uint16_t 
                             (uint16_t)((float) (index * (uint16_t) tileSize.x) / adjustedWidth) * tileSize.y,
                             tileSize.x,
                             tileSize.y   };
+    
     Rectangle dest = { x, y, tileSize.x * scale, tileSize.y * scale};
+
     DrawTexturePro(atlas, source, dest, (Vector2) {0, 0}, 0, tint);
 }
 

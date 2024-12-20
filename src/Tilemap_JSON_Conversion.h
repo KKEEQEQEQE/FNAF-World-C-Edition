@@ -51,6 +51,8 @@ typedef struct WORLDTilemap
 {
     WORLDTilemapLayer * layers;
     uint16_t amount;
+    uint16_t mapWidth; // Used for camera collision
+    uint16_t mapHeight; // Used for camera collision
 } WORLDTilemap;
 
 // tilemap_layer FLAGS

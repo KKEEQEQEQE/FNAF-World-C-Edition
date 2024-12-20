@@ -1,6 +1,7 @@
 assets/
 bin/
 *.exe
+.clangd
 
 # Prerequisites
 *.d

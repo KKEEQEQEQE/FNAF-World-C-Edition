@@ -42,11 +42,13 @@ typedef struct intermediate_tile
     uint16_t textureID;
 } intermediate_tile;
 
+// Potential error codes to be used in void ErrorEncountered(enum ErrorIDs id)
 enum ErrorIDs
 {
     NOERRMESSAGE, BADPATH, BADOBJECT, FMALLOC, BTILE
 };
 
+// Prints error message and toggles EncounterError boolean
 void ErrorEncountered(enum ErrorIDs id)
 {
     switch (id) 
@@ -61,7 +63,7 @@ void ErrorEncountered(enum ErrorIDs id)
             printf("Failed to allocate memory on heap!\n");
             break;
         case BTILE:
-            printf("Invalid JSON Tile!\n");
+            printf("Invalid Spritefusion Tile JSON!\n");
             break;
         case NOERRMESSAGE:
             break;
@@ -329,6 +331,7 @@ WORLDTilemap * CreateTilemap(const char * jsonPath)
     // Gets main cJSON object
 
     cJSON * MainJSON = InitWorldJSON(jsonPath);
+
     if (!MainJSON)
     {
         printf("Invalid Path \"%s\"!\n", jsonPath);
@@ -340,6 +343,21 @@ WORLDTilemap * CreateTilemap(const char * jsonPath)
 
     cJSON * LayersJSON = cJSON_GetObjectItemCaseSensitive(MainJSON, "layers");
 
+    if (!LayersJSON)
+    {
+        printf("Invalid Spritefusion map (couldn't find layer JSON)!\n");
+        ErrorEncountered(NOERRMESSAGE);
+        return NULL;
+    }
+
+    // Gets map size to be potentially used for camera collisions (with the void)
+
+    cJSON * SizeXJSON = cJSON_GetObjectItemCaseSensitive(MainJSON, "mapWidth");
+    cJSON * SizeYJSON = cJSON_GetObjectItemCaseSensitive(MainJSON, "mapWidth");
+
+    uint16_t mapWidth = SizeXJSON ? SizeXJSON -> valueint : UINT16_MAX;
+    uint16_t mapHeight = SizeYJSON ? SizeYJSON -> valueint : UINT16_MAX;
+
     uint16_t AmountOfLayers = cJSON_GetArraySize(LayersJSON);
 
     // Allocates tilemap struct and layer memory
@@ -347,6 +365,8 @@ WORLDTilemap * CreateTilemap(const char * jsonPath)
     WORLDTilemap * tilemap = malloc(sizeof(WORLDTilemap));
     tilemap -> layers = malloc(sizeof(WORLDTilemapLayer) * AmountOfLayers);
     tilemap -> amount = AmountOfLayers;
+    tilemap -> mapWidth = mapWidth;
+    tilemap -> mapHeight = mapHeight;
     
     // Gets if the layer object exists to test map JSON valitidy
 

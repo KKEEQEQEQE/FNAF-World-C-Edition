@@ -127,6 +127,8 @@ extern UIElement CreateUIElement(UIVisual visual, float x, float y, float scale)
 // Copies a UIVisual to the heap and returns the address
 extern UIVisual * UIVisual_Heap(UIVisual visual);
 
+extern void FreeUIVisual(UIVisual * visual);
+
 extern void FreeUIElement(UIElement * element);
 
 // Scales and Renders a UITexture in UI Space
