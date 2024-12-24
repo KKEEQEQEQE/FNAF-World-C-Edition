@@ -19,12 +19,3 @@
         misrepresented as being the original software.
     3. This notice may not be removed or altered from any source distribution.
 */
-
-
-#pragma once
-
-#include "../Include/raylib.h"
-#include <stdint.h>
-
-// Renders a background
-extern void RenderBackground(Texture2D background);

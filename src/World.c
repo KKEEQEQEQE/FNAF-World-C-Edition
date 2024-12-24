@@ -1,30 +1,29 @@
 /*
-    MIT License
+    Zlib License
 
     Copyright (c) 2024 SpyterDev
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
+    This software is provided 'as-is', without any express or implied
+    warranty. In no event will the authors be held liable for any damages
+    arising from the use of this software.
 
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
+    Permission is granted to anyone to use this software for any purpose,
+    including commercial applications, and to alter it and redistribute it
+    freely, subject to the following restrictions:
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
+    1. The origin of this software must not be misrepresented; you must not
+        claim that you wrote the original software. If you use this software
+        in a product, an acknowledgment in the product documentation would be
+        appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be
+        misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
 */
 
 #include "Animation.h"
 #include "Background.h"
 #include "Particle.h"
+#include "Settings.h"
 #include <string.h>
 #include "UI.h"
 #include "Tilemap_JSON_Conversion.h"
@@ -53,8 +52,8 @@ UIVisual LegacyZoneEffect = {0};
 WORLDCamera WorldCamera = {0};
 
 WORLDEntity WorldBuildings_After[5] = {0}; // World Buildings rendered after Freddy
-WORLDEntity WorldBuildings_Pre[5] = {0}; // World Buildings rendered before Freddy
-
+WORLDEntity WorldBuildings_Pre[10] = {0}; // World Buildings rendered before Freddy
+WORLDEntity WorldWheel = {0}; // Note: The Ferris Wheel has to be seperate due to being behind trees
 WORLDEntity WORLDEntities[5] = {0};
 WORLDEntity Lolbit[5] = {0};
 
@@ -67,12 +66,14 @@ UIVisual FreddyWUp = {0};
 UIVisual FreddyWRight = {0};
 UIVisual FreddyWDown = {0};
 
-// NPC Visuals
+// UI
 
-UIVisual LolbitVisual = {0};
-
-UITexture ZoneHeader[3];
+UITexture ZoneHeader[3] = {0};
 char * ZoneNames[] = {"Fazbear Hills", "Choppy's Woods", "Dusting Fields"};
+
+UIElement JumpVisual = {0};
+_WarpButton WarpButtons[7] = {0};
+Sound WarpSoundEffect = {0};
 
 // Particles
 
@@ -121,26 +122,50 @@ void SetWorldSpriteSheet(const char * path, uint16_t tileSize)
     CurrentWorldSpriteSheet = LoadTexture(path);
 }
 
+static void WarpButton_1(UIButton * button)
+{
+    PlaySound(WarpSoundEffect);
+    Freddy.position = (Vector2) {   38 + 0.5 - Freddy.size.x / 2, 
+                                    21 + 0.5 - Freddy.size.y / 2};
+}
+
+static void WarpButton_2(UIButton * button)
+{
+    PlaySound(WarpSoundEffect);
+    Freddy.position = (Vector2) {   34 + 0.5 - Freddy.size.x / 2, 
+                                    32 + 0.5 - Freddy.size.y / 2};
+}
+
+static void WarpButton_3(UIButton * button)
+{
+    PlaySound(WarpSoundEffect);
+    Freddy.position = (Vector2) {   19 + 0.5 - Freddy.size.x / 2, 
+                                    34 + 0.5 - Freddy.size.y / 2};
+}
+
 void InitWorld(void)
 {
-
+    static UIVisual TurbineVisual = {0};
+    static UIVisual LolbitVisual = {0};
     if (!CurrentWorld) LoadWorldTilemap();
 
     // Temporary limits log level to minimize printing to console (for faster load times)
 
-    SetTraceLogLevel(LOG_WARNING);
+    //SetTraceLogLevel(LOG_WARNING);
     SetWorldSpriteSheet("Assets/Overworld/Maps/Overworld/spritesheet.png", 50); 
 
     // Particles
 
     BirdParticle = CreateParticleIndexA_V2("Assets/Particles/bird.png", 30, 10, (Vector2) {50, 50}, 1.5);
     
-    // Musics
+    // Musics and Sounds
 
     CurrentTheme = LoadMusicStream("Assets/Themes/fazbearhills.mp3");
     CurrentTheme.looping = 1;
 
     PlayMusicStream(CurrentTheme);
+
+    WarpSoundEffect = LoadSound("Assets/Sound_Effects/Zone_Warping.wav");
 
     // Zone Effects
 
@@ -179,11 +204,15 @@ void InitWorld(void)
     Freddy.scale = 0.95;
     Freddy.depth = 2;
 
-    // Lolbits
+    // Initizing repeated UIVisuals
 
     LolbitVisual.type = UIanimationV2;
     LolbitVisual.animation_V2 = CreateAnimation_V2("Assets/Overworld/NPCs/lolbit.png", 30, 15, 65, 65); 
     LolbitVisual.tint = WHITE;
+
+    TurbineVisual.type = UIanimationV2;
+    TurbineVisual.animation_V2 = CreateAnimation_V2("Assets/Overworld/Buildings/turbine_atlas.png", 30, 10, 50, 100); 
+    TurbineVisual.tint = WHITE;
 
     Lolbit[0] = CreateWorldEntity( (Vector2) {36, 17}, 
                                             (Vector2) {1, 1},
@@ -229,6 +258,16 @@ void InitWorld(void)
                                                 1, 
                                                 0, 
                                                 NULL, 3);
+
+    
+    WorldWheel = CreateWorldEntity(  (Vector2) {14.25, 15.25}, 
+                                                (Vector2) {5,5}, 
+                                                (Vector2) {0,0}, 
+                                                UIVisual_Heap(CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Wheel.png", 
+                                                                                                        WHITE)), 
+                                                1, 
+                                                0, 
+                                                NULL, 6);
                                                 
     WorldBuildings_After[0] = CreateWorldEntity(   (Vector2) {31.5, 17}, 
                                                             (Vector2) {0,0}, 
@@ -236,11 +275,55 @@ void InitWorld(void)
                                                             UIVisual_Heap(CreateUIVisual_UIAnimation_V2("Assets/Overworld/Buildings/windmill_atlas.png", 30, 20, (Vector2) {200, 200}, WHITE)),
                                                             1, 
                                                             0,
-                                                        NULL,2);
+                                                        NULL,1);
+    WorldBuildings_After[1] = CreateWorldEntity((Vector2) {33, 29.375}, 
+                                                (Vector2) {1,2}, 
+                                                (Vector2) {0,0}, 
+                                                &TurbineVisual,  
+                                                1, 
+                                                0, 
+                                                NULL, 1);
+    WorldBuildings_After[2] = CreateWorldEntity((Vector2) {35, 29.375}, 
+                                                (Vector2) {1,2}, 
+                                                (Vector2) {0,0}, 
+                                                &TurbineVisual,  
+                                                1, 
+                                                0, 
+                                                NULL, 1);
+
 
     ZoneHeader[0] = LoadTexture("Assets/Overworld/UI/Zone_Names/1.png"); 
     ZoneHeader[1] = LoadTexture("Assets/Overworld/UI/Zone_Names/2.png"); 
     ZoneHeader[2] = LoadTexture("Assets/Overworld/UI/Zone_Names/3.png"); 
+
+    WarpButtons[0] = (_WarpButton) {    {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Zone_Buttons/1.png", 
+                                                                WHITE), 
+                                            0.90, -0.8, 1.5),
+                                        WarpButton_1,
+                                        NULL, 
+                                        0},
+                                    1};
+
+    WarpButtons[1] = (_WarpButton) {    {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Zone_Buttons/2.png", 
+                                                                WHITE), 
+                                            0.90, -0.6, 1.5),
+                                        WarpButton_2,
+                                        NULL, 
+                                        0},
+                                    1};
+    
+    WarpButtons[2] = (_WarpButton) {    {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Zone_Buttons/3.png", 
+                                                                WHITE), 
+                                            0.90, -0.4, 1.5),
+                                        WarpButton_3,
+                                        NULL, 
+                                        0},
+                                    1};
+
+    JumpVisual = CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Zone_Buttons/Jump.png", 
+                                                                WHITE), 
+                                            0.90, -0.95, 1.5);
+
     SetTraceLogLevel(LOG_ALL);
 }
 
@@ -250,7 +333,8 @@ void ResetWorld(void)
     Freddy.size = (Vector2) {0.7, 0.45};
     Freddy.scale = 0.95;
     Freddy.visualOffset = (Vector2) {0, 0.5};
-    Freddy.position = (Vector2) {38, 21};
+    Freddy.position = (Vector2) {   38 + 0.5 - Freddy.size.x / 2, 
+                                    21 + 0.5 - Freddy.size.y / 2};
     Freddy.customCollision = NULL;
 
     WorldCamera.target = (Vector2) {0, 0};
@@ -427,7 +511,25 @@ void RenderWorldAnimation_V2(Animation_V2 * animation, Vector2 position, Vector2
 // Scales and Renders a WORLDEntity
 void RenderWorldEntity(WORLDEntity * entity)
 {
+    static uint8_t cam_extend = 3; // For quick entity skipping without having to first check the type of visual and getting that visual's sizw
     Vector2 position = position = (Vector2) {entity -> position.x + entity -> size.x / 2, entity -> position.y + entity -> size.y / 2};
+
+    // Checking if the entity is off camera and if so skipping rendering
+
+    Rectangle camera = GetCameraView();
+
+    camera.x -= cam_extend;
+    camera.y -= cam_extend;
+    camera.width += cam_extend;
+    camera.height += cam_extend;
+
+    if (    entity -> position.x + entity -> size.x < camera.x ||
+            entity -> position.x > camera.x + camera.width ||
+            entity -> position.y + entity -> size.y < camera.y ||
+            entity -> position.y > camera.y + camera.height) return;
+    
+    // Rendering entity
+
     switch (entity-> visual -> type) {
         case UIanimation:
             uint16_t i = GetCurrentAnimationFrame(&entity -> visual -> animation);
@@ -558,7 +660,9 @@ void RenderZoneEffect_Zone3(Vector2 offset)
     int vWidth = (WorldCamera.zoom * CurrentTileSize) * screenRatio;
     int vHeight = WorldCamera.zoom * CurrentTileSize;
 
-    float scale = (float) vWidth / LegacyZoneEffect.animation_V2.TileSize_x;
+    float scale =   GetScreenRatio() > 1.66666666667 ? 
+                        (float) vWidth / LegacyZoneEffect.animation_V2.TileSize_x  :
+                        (float) vHeight / LegacyZoneEffect.animation_V2.TileSize_y;
 
     uint16_t width = (LegacyZoneEffect.animation_V2.TileSize_x * scale);
     uint16_t height = (LegacyZoneEffect.animation_V2.TileSize_y * scale);
@@ -578,7 +682,7 @@ void RenderZoneEffect_Zone3(Vector2 offset)
                         offset.y + vHeight / 2. - height / 2., 
                         scale, 
                         0);
-
+ EndBlendMode();
     
 }
 
@@ -622,7 +726,9 @@ void RenderZoneName(void)
     uint8_t zone = GetZone();
     if (zone == 0xff) RenderUIText("Unknown Zone", -0.95, -0.9, 0.03, LEFTMOST, (Font) {0}, WHITE);
     float scale = (float) ZoneHeader[zone].height / GetScreenHeight();
-    DrawTextureEx(ZoneHeader[zone], (Vector2) {25. * GetScreenHeight() / 720, 25. * GetScreenHeight() / 720}, 0, 0.025/scale, WHITE);
+    Color tint = WHITE;
+    if (zone == 2 && DustingFieldsLogoIsBlack) tint = BLACK; 
+    DrawTextureEx(ZoneHeader[zone], (Vector2) {25. * GetScreenHeight() / 720, 25. * GetScreenHeight() / 720}, 0, 0.025/scale, tint);
 }
 
 // Renders WORLDTilemapLayer onto Virtual Screen
@@ -691,7 +797,8 @@ void RenderWorld(void)
 
         // Renders all WORLDEntities
 
-        if (i == 2) RenderWorldEntity(&Freddy);
+        if (i == Freddy.depth) RenderWorldEntity(&Freddy);
+        if (i == WorldWheel.depth) RenderWorldEntity(&WorldWheel);
         RenderWorldEntities(WorldBuildings_Pre, i, FAST);
         RenderWorldEntities(WorldBuildings_After, i, FAST);
     }
@@ -779,6 +886,7 @@ void UpdateZoneAssets(void)
                                                                 60, 11,
                                                                 (Vector2) {800, 480}, WHITE);
             SetTextureFilter(LegacyZoneEffect.animation_V2.Atlas, TEXTURE_FILTER_BILINEAR);
+            FlushParticles();
             break;
         case CHOPPYSWOODS:
         case FAZBEARHILLS:
@@ -791,6 +899,18 @@ void UpdateZoneAssets(void)
     CurrentTheme.looping = 1;
     PlayMusicStream(CurrentTheme);
 }
+
+void PutZoneWarp(void)
+{
+    JumpVisual.visual.tint = WHITE;
+    if (GetZone() + 1 == 2 && DustingFieldsLogoIsBlack) JumpVisual.visual.tint = BLACK; 
+    RenderUIElement(&JumpVisual);
+    for (uint16_t i = 0; i < 3; i++)
+    {
+        PutUIButton(&WarpButtons[i].button);
+    }
+}
+
 void PutWorld(void)
 {
     
@@ -800,4 +920,5 @@ void PutWorld(void)
     RenderWorld();
     PutUIParticles();
     RenderZoneName();
+    PutZoneWarp();
 }

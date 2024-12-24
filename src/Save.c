@@ -21,10 +21,3 @@
 */
 
 
-#pragma once
-
-#include "../Include/raylib.h"
-#include <stdint.h>
-
-// Renders a background
-extern void RenderBackground(Texture2D background);
