@@ -37,10 +37,7 @@ typedef struct UIParticleIndex
 typedef struct UIParticle 
 {
     uint8_t textureID;
-    float x;
-    float y;
-    float velocityX;
-    float velocityY;
+    float x, y, velocityX, velocityY;
     clock_t startTime;
 } UIParticle;
 

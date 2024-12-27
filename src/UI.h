@@ -67,8 +67,7 @@ typedef struct UIVisual
 typedef struct UIElement 
 {
     UIVisual visual;
-    float x;
-    float y;
+    float x, y;
     float scale;
 } UIElement;
 

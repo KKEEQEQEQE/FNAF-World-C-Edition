@@ -43,8 +43,7 @@ typedef struct Animation_V2 {
     uint8_t FPS;
     clock_t Clock;
     Texture2D Atlas;
-    uint16_t TileSize_x;
-    uint16_t TileSize_y;
+    uint16_t TileSize_x, TileSize_y;
 } Animation_V2;
 
 // UIanimation functions (NOTE THESE ALL OF FUNCTIONS ARE DEPRECATED)

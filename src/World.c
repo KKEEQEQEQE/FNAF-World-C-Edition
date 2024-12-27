@@ -30,6 +30,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "Save.h"
 #include <time.h>
 #include "World.h"
 
@@ -74,6 +75,11 @@ char * ZoneNames[] = {"Fazbear Hills", "Choppy's Woods", "Dusting Fields"};
 UIElement JumpVisual = {0};
 _WarpButton WarpButtons[7] = {0};
 Sound WarpSoundEffect = {0};
+
+UIButton PartyButton = {0};
+UIButton ChipsButton = {0};
+UIButton BytesButton = {0};
+UIButton SaveButton = {0};
 
 // Particles
 
@@ -141,6 +147,12 @@ static void WarpButton_3(UIButton * button)
     PlaySound(WarpSoundEffect);
     Freddy.position = (Vector2) {   19 + 0.5 - Freddy.size.x / 2, 
                                     34 + 0.5 - Freddy.size.y / 2};
+}
+
+static void SaveButtonPress(UIButton * button)
+{
+    PlaySound(WarpSoundEffect);
+    WriteSave();
 }
 
 void InitWorld(void)
@@ -323,6 +335,34 @@ void InitWorld(void)
     JumpVisual = CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Zone_Buttons/Jump.png", 
                                                                 WHITE), 
                                             0.90, -0.95, 1.5);
+
+    PartyButton =  (UIButton)   {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Party.png", 
+                                                    WHITE), 
+                                                    -0.8, 0.9, 1.5),
+                                    NULL,
+                                    NULL, 
+                                    0};
+
+    ChipsButton =  (UIButton)   {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Chips.png", 
+                                                    WHITE), 
+                                                    -0.525, 0.9, 1.5),
+                                    NULL,
+                                    NULL, 
+                                    0};
+
+    BytesButton =  (UIButton)   {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Bytes.png", 
+                                                    WHITE), 
+                                                    -0.25, 0.9, 1.5),
+                                    NULL,
+                                    NULL, 
+                                    0};
+
+    SaveButton =  (UIButton)    {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Save.png", 
+                                                    WHITE), 
+                                                    0.025, 0.9, 1.5),
+                                    SaveButtonPress,
+                                    NULL, 
+                                    0};
 
     SetTraceLogLevel(LOG_ALL);
 }
@@ -911,6 +951,15 @@ void PutZoneWarp(void)
     }
 }
 
+void PutDefaultUI(void)
+{
+    PutZoneWarp();
+    PutUIButton(&PartyButton);
+    PutUIButton(&ChipsButton);
+    PutUIButton(&BytesButton);
+    PutUIButton(&SaveButton);
+}
+
 void PutWorld(void)
 {
     
@@ -920,5 +969,5 @@ void PutWorld(void)
     RenderWorld();
     PutUIParticles();
     RenderZoneName();
-    PutZoneWarp();
+    PutDefaultUI();
 }

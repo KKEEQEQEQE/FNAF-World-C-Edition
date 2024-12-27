@@ -35,7 +35,11 @@ bin/World.o:
 bin/Settings.o:
 	$(cc) -c $(cflags) src/Settings.c -o bin/Settings.o
 
+bin/Save.o:
+	$(cc) -c $(cflags) src/Save.c -o bin/Save.o
+
 bin/main.o:
 	$(cc) -c $(cflags) src/main.c -o bin/main.o
-build_win: clean bin/main.o bin/Animation.o bin/input.o bin/UI.o bin/Title_Screen.o bin/Background.o bin/Game_State.o bin/Particle.o bin/Tilemap_JSON_Conversion.o bin/World.o bin/Settings.o
-	$(cc) -o FNAF_World_C.exe bin/main.o bin/input.o bin/Animation.o bin/UI.o bin/Background.o bin/Game_State.o bin/Title_Screen.o bin/Particle.o bin/Tilemap_JSON_Conversion.o bin/World.o bin/Settings.o Lib/cJSON.c -lraylib -lgdi32 -lwinmm -I include/ -L lib/
+
+build_win: clean bin/main.o bin/Animation.o bin/input.o bin/UI.o bin/Title_Screen.o bin/Background.o bin/Game_State.o bin/Particle.o bin/Tilemap_JSON_Conversion.o bin/World.o bin/Settings.o bin/Save.o
+	$(cc) -o FNAF_World_C.exe bin/main.o bin/input.o bin/Animation.o bin/UI.o bin/Background.o bin/Game_State.o bin/Title_Screen.o bin/Particle.o bin/Tilemap_JSON_Conversion.o bin/World.o bin/Settings.o bin/Save.o Lib/cJSON.c -lraylib -lgdi32 -lwinmm -I include/ -L lib/

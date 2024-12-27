@@ -19,3 +19,14 @@
         misrepresented as being the original software.
     3. This notice may not be removed or altered from any source distribution.
 */
+
+#pragma once
+#include <stdint.h>
+
+extern void CreateSave(const char * path);
+extern void LoadSave(const char * path);
+extern void WriteSave(void);
+extern uint8_t GetZone_Level(void);
+extern void SetZone_Level(uint8_t level);
+extern uint16_t GetFaz_Tokens(void);
+extern void UpdateFaz_Tokens(int16_t income);

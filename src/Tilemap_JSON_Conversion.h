@@ -32,10 +32,8 @@ typedef struct WORLDTilemapLayer
 {
     // Transformation Variables
 
-    uint16_t offsetX;
-    uint16_t offsetY;
-    uint16_t sizeX;
-    uint16_t sizeY;
+    uint16_t offsetX, offsetY;
+    uint16_t sizeX, sizeY;
 
     void * tiles; // WORLDTile 2D Array Pointer
 

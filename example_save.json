@@ -1,0 +1,42 @@
+{
+    "Zone_Level": 1,
+
+    "Faz-Tokens": 0,
+
+    "Chips": 
+    [
+        {"ID": 0}
+    ],
+
+    "Selected_Chips": 
+    [
+        0
+    ],
+
+    "Bytes": 
+    [
+        {"ID": 0}
+    ],
+
+    "Selected_Bytes": 
+    [
+        0
+    ],
+
+    "Party_1":
+    [
+        0
+    ],
+
+    "Party_2":
+    [
+        0
+    ],
+
+    "Animatronics": 
+    [
+        {"ID": 0, "Level": 0, "XP": 0}
+    ],
+
+    "Last_Location": {"x": 38, "y": 21}
+}

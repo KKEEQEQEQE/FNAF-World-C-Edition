@@ -32,7 +32,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
-#include "Tilemap_JSON_Conversion.h"
+#include "Save.h"
 
 int main(void)
 {
@@ -45,7 +45,8 @@ int main(void)
     clock_t stop = clock();
     printf("%f\n", (stop-start) / (float)CLOCKS_PER_SEC);
     SwapGameState(100000);
-    //ToggleBorderlessWindowed();
+    ToggleBorderlessWindowed();
+    CreateSave("Saves/Save1.json");
     SetTargetFPS(240);
     while (!WindowShouldClose())
     {
@@ -60,7 +61,7 @@ int main(void)
                 PutWorld();
                 break;
             default:
-                RenderUIText("Unknown / Invalid Game State Entered.\nTap to go back to title screen!", 0, 0, 0.06, CENTRE, (Font){0}, WHITE);
+                RenderUIText("Unknown / Invalid Game State Entered.\nTap to go back to title screen!", 0, 0, 0.06, CENTRE, (Font) {0}, WHITE);
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SwapGameState(Title);
                 break;
         }
