@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include "../Include/raylib.h"
 
+#define INVALID_ANIMATRONIC ((struct Animatronic) {0,0,0})
 
 typedef struct Selection
 {
@@ -79,8 +80,8 @@ static cJSON * Last_LocationJSON = {0};
 
 static struct 
 {
-    double * x;
-    double * y;
+    cJSON * x;
+    cJSON * y;
 } Last_Location = {0};
 
 // Returns the cJSON of a path
@@ -133,8 +134,8 @@ void CreateSave(const char * path)
     cJSON_SetIntValue(Faz_TokenJSON, 0);
 
     Last_LocationJSON = cJSON_AddObjectToObject(SaveJSON, "Last_Location");
-    Last_Location.x = &cJSON_AddNumberToObject(Last_LocationJSON, "x", 38.15) -> valuedouble;
-    Last_Location.y = &cJSON_AddNumberToObject(Last_LocationJSON, "y", 21.25) -> valuedouble;
+    Last_Location.x = cJSON_AddNumberToObject(Last_LocationJSON, "x", 38);
+    Last_Location.y = cJSON_AddNumberToObject(Last_LocationJSON, "y", 21);
 
     const char * directory = GetDirectoryPath(path);
     if (!DirectoryExists(directory)) MakeDirectory(directory);
@@ -165,6 +166,8 @@ void LoadSave(const char * path)
     Party_2 = cJSON_GetObjectItem(SaveJSON, "Party_2");
 
     Last_LocationJSON = cJSON_GetObjectItem(SaveJSON, "Last_Location");
+    Last_Location.x = cJSON_GetObjectItem(Last_LocationJSON, "x");
+    Last_Location.y = cJSON_GetObjectItem(Last_LocationJSON, "y");
 
     // Resets any missing save values
     
@@ -177,25 +180,18 @@ void LoadSave(const char * path)
     if (!AnimatronicJSON) AnimatronicJSON = cJSON_AddArrayToObject(SaveJSON, "Animatronics");
     if (!Party_1) Party_1 = cJSON_AddArrayToObject(SaveJSON, "Party_1");
     if (!Party_2) Party_2 = cJSON_AddArrayToObject(SaveJSON, "Party_2");
-    if (!Last_LocationJSON) 
-    {
-        Last_LocationJSON = cJSON_AddObjectToObject(SaveJSON, "Last_Location");
-        Last_Location.x = &cJSON_AddNumberToObject(Last_LocationJSON, "x", 38.15) -> valuedouble;
-        Last_Location.y = &cJSON_AddNumberToObject(Last_LocationJSON, "y", 21.25) -> valuedouble;
-    }
-
-    // Inits Last_Location
-
-    cJSON * temp = cJSON_GetObjectItem(Last_LocationJSON, "x");
-    Last_Location.x = &temp -> valuedouble;
-
-    temp = cJSON_GetObjectItem(Last_LocationJSON, "y");
-    Last_Location.y = &temp -> valuedouble;
+    if (!Last_LocationJSON) Last_LocationJSON = cJSON_AddObjectToObject(SaveJSON, "Last_Location");
+    if (!Last_Location.x) Last_Location.x = cJSON_AddNumberToObject(Last_LocationJSON, "x", 38);
+    if (!Last_Location.y) Last_Location.x = cJSON_AddNumberToObject(Last_LocationJSON, "x", 21);
 }
 
-void WriteSave(void)
+void WriteSave(Vector2 LastLocation)
 {
     if (*Selected_Save == '\0') return;
+
+    cJSON_SetIntValue(Last_Location.x, (uint16_t)LastLocation.x);
+    cJSON_SetIntValue(Last_Location.y, (uint16_t)LastLocation.y);
+
     SaveFileText(Selected_Save, cJSON_Print(SaveJSON));
 }
 
@@ -217,4 +213,118 @@ uint16_t GetFaz_Tokens(void)
 void UpdateFaz_Tokens(int16_t income)
 {
     cJSON_SetIntValue(Faz_TokenJSON, GetFaz_Tokens() + income);
+}
+
+static void UpdateNumberArray(uint8_t index, uint8_t value, cJSON * array, uint8_t cap)
+{
+    if (index >= cap || !array) return;
+
+    uint16_t size = cJSON_GetArraySize(array);
+    if (index < size) 
+    {
+        cJSON * item = cJSON_GetArrayItem(array, index);
+        if (!item) return;
+        cJSON_SetIntValue(item, value);
+        return;
+    }
+    
+    for (uint16_t i = 0; i < size - index; i++) cJSON_AddItemToArray(array, cJSON_CreateNumber(0));
+    cJSON_AddItemToArray(array, cJSON_CreateNumber(value));
+}
+
+void UpdateParty_1(uint8_t index, uint8_t id)
+{
+    if (id >= cJSON_GetArraySize(Party_1)) return;
+    UpdateNumberArray(index, id, Party_1, 4);
+}
+
+void UpdateParty_2(uint8_t index, uint8_t id)
+{
+    if (id >= cJSON_GetArraySize(Party_2)) return;
+    UpdateNumberArray(index, id, Party_2, 4);
+}
+
+void UpdateSelected_Chips(uint8_t index, uint8_t id)
+{
+    if (id >= cJSON_GetArraySize(ChipsJSON)) return;
+    UpdateNumberArray(index, id, Selected_Chips, 4);
+}
+
+void UpdateSelected_Bytes(uint8_t index, uint8_t id)
+{
+    if (id >= cJSON_GetArraySize(BytesJSON)) return;
+    UpdateNumberArray(index, id, Selected_Bytes, 4);
+}
+
+static void AddGameItem(cJSON * array, uint8_t id)
+{
+    cJSON * item = cJSON_CreateObject();
+    if (!item) return;
+
+    if (!cJSON_AddNumberToObject(item, "ID", id)) return;
+
+    cJSON_AddItemToArray(array, item);
+}
+
+void AddChip(uint8_t id)
+{
+    AddGameItem(ChipsJSON, id);
+}
+
+void AddByte(uint8_t id)
+{
+    AddGameItem(BytesJSON, id);
+}
+
+void AddAnimatronic(uint8_t id)
+{
+    cJSON * item = cJSON_CreateObject();
+    if (!item) return;
+
+    if (!cJSON_AddNumberToObject(item, "ID", id)) return;
+    if (!cJSON_AddNumberToObject(item, "Level", 1)) return;
+    if (!cJSON_AddNumberToObject(item, "XP", 0)) return;
+
+    cJSON_AddItemToArray(AnimatronicJSON, item);
+}
+
+void UpdateAnimatronic(uint8_t index, uint16_t level_surplus, uint32_t xp_surplus)
+{
+    if (index >= cJSON_GetArraySize(AnimatronicJSON)) return;
+    
+    cJSON * animatronic = cJSON_GetArrayItem(AnimatronicJSON, index);
+    if (!animatronic) return;
+
+    cJSON * levelJSON = cJSON_GetObjectItem(animatronic, "Level");
+    cJSON * xpJSON = cJSON_GetObjectItem(animatronic, "XP");
+    if (!levelJSON) levelJSON = cJSON_AddNumberToObject(animatronic, "Level", 1);
+    if (!xpJSON) xpJSON = cJSON_AddNumberToObject(animatronic, "XP", 0);
+
+    cJSON_SetNumberHelper(levelJSON, levelJSON -> valueint + level_surplus);
+    cJSON_SetNumberHelper(xpJSON, xpJSON -> valueint + xp_surplus);
+}
+
+typedef struct Animatronic
+{
+    uint8_t id, level; 
+    uint32_t xp;
+} Animatronic;
+
+Animatronic GetAnimatronic(uint8_t index)
+{
+    if (index >= cJSON_GetArraySize(AnimatronicJSON)) return INVALID_ANIMATRONIC;
+    
+    cJSON * animatronic = cJSON_GetArrayItem(AnimatronicJSON, index);
+    if (!animatronic) return INVALID_ANIMATRONIC;
+
+    cJSON * idJSON = cJSON_GetObjectItem(animatronic, "ID");
+    cJSON * levelJSON = cJSON_GetObjectItem(animatronic, "Level");
+    cJSON * xpJSON = cJSON_GetObjectItem(animatronic, "XP");
+    if (!idJSON) return INVALID_ANIMATRONIC;
+    if (!levelJSON) levelJSON = cJSON_AddNumberToObject(animatronic, "Level", 1);
+    if (!xpJSON) xpJSON = cJSON_AddNumberToObject(animatronic, "XP", 0);
+
+    return (Animatronic) {   idJSON->valueint, 
+                                    levelJSON -> valueint, 
+                                    xpJSON -> valueint  };
 }
