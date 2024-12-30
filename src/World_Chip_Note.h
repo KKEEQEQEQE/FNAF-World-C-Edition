@@ -21,3 +21,11 @@
 */
 
 #pragma once
+
+#include <stdint.h>
+
+extern void AddChipNoteQueue(uint8_t id);
+
+extern void LoadNewChipBanner(void);
+
+extern void RenderChipNoteBanner(void);

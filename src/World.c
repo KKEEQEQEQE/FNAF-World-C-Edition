@@ -27,6 +27,7 @@
 #include <string.h>
 #include "UI.h"
 #include "Tilemap_JSON_Conversion.h"
+#include "World_Chip_Note.h"
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -1049,6 +1050,7 @@ void HandleSingleBoxCollision(WORLDBox * box)
             UpdateFaz_Tokens(box -> content.token_amount);
             break;
         case CHIP:
+            AddChipNoteQueue(box -> content.id);
             AddChip(box -> content.id);
             break;
         case BYTE:
@@ -1063,9 +1065,9 @@ void HandleBoxCollisions(WORLDBox * boxes, uint16_t amount)
 {
     for (uint16_t i = 0; i < amount; i++) HandleSingleBoxCollision(boxes + i);
 }
+
 void PutWorld(void)
-{
-    
+{   
     UpdateMusicStream(CurrentTheme);
     UpdateFreddy();
     UpdateZoneAssets();
@@ -1074,4 +1076,5 @@ void PutWorld(void)
     RenderZoneName();
     HandleWorldButtonCollision();
     PutDefaultUI();
+    RenderChipNoteBanner();
 }

@@ -25,6 +25,7 @@
 #include <malloc.h>
 #include <stdint.h>
 #include <memory.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -51,46 +52,105 @@ static char * __fastcall uintstr(uint64_t number)
     return stringLocation;
 }
 
+uint8_t GetAvailableChipQueue(void)
+{
+    uint8_t index = 0;
+
+    for (; chip_queue[index] && index < MAX_CHIPS_IN_QUEUE; index++);
+
+    return index;
+}
+
+uint8_t GetUnavailableChipQueue(void)
+{
+    uint8_t index = 0;
+
+    for (; !chip_queue[index] && index < MAX_CHIPS_IN_QUEUE; index++);
+
+    return index;
+}
+    
 void AddChipNoteQueue(uint8_t id)
 {
-    if (wait_queue == MAX_CHIPS_IN_QUEUE) return;
-    chip_queue[wait_queue] = id;
+    uint8_t index = GetAvailableChipQueue();
+
+    if (index == MAX_CHIPS_IN_QUEUE) return;
+
     wait_queue++;
+
+    chip_queue[index] = id + 1;
 }
 
 void LoadNewChipBanner(void)
 {
-    static uint8_t last_queue_check = 0;
-    if (last_queue_check == current_queue) return;
+    char path[42] = "Assets/Overworld/UI/Chip_Banners/";
 
-    if (current_chip_banner.visual.type != UInotype) FreeUIVisual(&current_chip_banner.visual);
-
-    char path[41] = "Assets/Overworld/UI/Chip_Banners/";
-
+    if (chip_queue[current_queue] == 0) return;
     strcat( path, 
-            uintstr(current_queue));
+            uintstr(chip_queue[current_queue] - 1));
 
     strcat(path, ".png");
 
+    printf("%s\n", path);
+
     current_chip_banner.visual = CreateUIVisual_UIAnimation_V2( path, 
                                                                 10, 
-                                                                3, 
-                                                                (Vector2) {0,0}, 
+                                                                6, 
+                                                                (Vector2) {400, 100}, 
                                                                 WHITE);
-    last_queue_check = current_queue;
-
-
 }
 
-void RenderChipNoteBanner(void)
+void UpdateChipNoteBanner(void)
 {
-    static uint8_t cooldown = 0;
+    static clock_t cooldown = 0;
+    static uint8_t last_queue = 0;
 
-    if (cooldown - clock() >= CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC)
+    if (!wait_queue) return;
+    
+    if (last_queue == 0 && wait_queue)
     {
+        current_queue = GetUnavailableChipQueue();
         LoadNewChipBanner();
-        cooldown = clock();
+        cooldown = clock() + CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC;
+        last_queue = wait_queue;
+        return;
+    }
+    
+    if (clock() + CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC - cooldown >= CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC)
+    {
+        chip_queue[current_queue] = 0;
+        current_queue = GetUnavailableChipQueue();
+
+        if (current_chip_banner.visual.type != UInotype) FreeUIVisual(&current_chip_banner.visual);
+        memset(&current_chip_banner.visual, 0, sizeof(UIVisual));
+        
+        if (current_queue == MAX_CHIPS_IN_QUEUE) 
+        {
+            wait_queue = 0; 
+            
+            return;
+        }
+        LoadNewChipBanner();
+        cooldown = clock() + CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC;
+    }
+    
+    last_queue = wait_queue;
+}
+
+void PrintChipQueue(void)
+{
+    printf("{ ");
+
+    for (uint8_t i = 0; i < MAX_CHIPS_IN_QUEUE; i++)
+    {
+        printf("%u, ", chip_queue[i]);
     }
 
+    printf("}\n");
+}
+void RenderChipNoteBanner(void)
+{
+    UpdateChipNoteBanner();
+    PrintChipQueue();
     RenderUIElement(&current_chip_banner);
 }

@@ -38,10 +38,13 @@ bin/Settings.o:
 bin/Save.o:
 	$(cc) -c $(cflags) src/Save.c -o bin/Save.o
 
+bin/World_Chip_Note.o:
+	$(cc) -c $(cflags) src/World_Chip_Note.c -o bin/World_Chip_Note.o
+
 bin/main.o:
 	$(cc) -c $(cflags) src/main.c -o bin/main.o
 
-compile: clean bin/main.o bin/Animation.o bin/input.o bin/UI.o bin/Title_Screen.o bin/Background.o bin/Game_State.o bin/Particle.o bin/Tilemap_JSON_Conversion.o bin/World.o bin/Settings.o bin/Save.o
+compile: clean bin/main.o bin/Animation.o bin/input.o bin/UI.o bin/Title_Screen.o bin/Background.o bin/Game_State.o bin/Particle.o bin/Tilemap_JSON_Conversion.o bin/World.o bin/Settings.o bin/Save.o bin/World_Chip_Note.o
 
 merge: compile
 	ld -relocatable bin/*.o -o FNAF_World_C.o
