@@ -174,5 +174,4 @@ void PutTitleScreen(void)
     RenderUIText("Demo: 1", -0.95, 0.875,0.06, LEFTMOST, TitleScreenFont, WHITE);
     RenderUIText("Original Game By: Scott Cawthon", 0.9, 0.8,0.04, RIGHTMOST,TitleScreenFont, WHITE);
     RenderUIText("Remake By: SpyterDev", 0.9, 0.9,0.04, RIGHTMOST, TitleScreenFont, WHITE);
-    
 }

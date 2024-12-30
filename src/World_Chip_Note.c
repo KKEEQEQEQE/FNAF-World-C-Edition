@@ -20,7 +20,7 @@
     3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "World_Byte_Note.h"
+#include "World_Chip_Note.h"
 #include "UI.h"
 #include <malloc.h>
 #include <stdint.h>
