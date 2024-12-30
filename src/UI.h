@@ -37,7 +37,7 @@
 
 enum UIType 
 {
-    UInotype, UIanimation, UItexture, UIanimationV2
+    UInotype, UIanimation, UItexture, UIanimationV2, UItextureSnippet
 };
 
 #include "Animation.h"
@@ -59,6 +59,7 @@ typedef struct UIVisual
         Animation animation;
         Animation_V2 animation_V2;
     };
+    Rectangle snippet; // for UItextureSnippet
     Color tint;
 } UIVisual;
 
@@ -108,17 +109,32 @@ extern float GetOutsideWindowX_u16(uint16_t width);
 // Gets the position y needed for a texture to not be visible in UI space
 extern float GetOutsideWindowY_u16(uint16_t height);
 
-// Creates a UIVisual of type UItexture via path
-extern UIVisual CreateUIVisual_UITexture(UITexture texture, Color tint);
+// UItexture
 
-// Creates a UIVisual of type UIanimation via path
-extern UIVisual CreateUIVisual_UITexture_P(const char * path, Color tint);
+    // Creates a UIVisual of type UItexture via path
+    extern UIVisual CreateUIVisual_UITexture(UITexture texture, Color tint);
 
-// Creates a UIVisual of type UIanimation via path
-extern UIVisual CreateUIVisual_UIAnimation(const char * path, const uint8_t targetFPS, const Color tint);
+    // Creates a UIVisual of type UItexture via path
+    extern UIVisual CreateUIVisual_UITexture_P(const char * path, Color tint);
 
-// Creates a UIVisual of type UIanimationV2 via path
-extern UIVisual CreateUIVisual_UIAnimation_V2(const char * path, const uint8_t targetFPS, const uint8_t amount, Vector2 tileSize, Color tint);
+// UItextureSnippet
+
+    // Creates a UIVisual of type UITextureSnippet via UItexture
+    extern UIVisual CreateUIVisual_UITextureSnippet(UITexture texture, Rectangle snippet, Color tint);
+
+    // Creates a UIVisual of type UITextureSnippet via path
+    extern UIVisual CreateUIVisual_UITextureSnippet_P(const char * path, Rectangle snippet, Color tint);
+
+
+// Deprecated UIanimation
+    // Creates a UIVisual of type UIanimation via path
+    extern UIVisual CreateUIVisual_UIAnimation(const char * path, const uint8_t targetFPS, const Color tint);
+
+// UIanimationV2
+    // Creates a UIVisual of type UIanimationV2 via path
+    extern UIVisual CreateUIVisual_UIAnimation_V2(const char * path, const uint8_t targetFPS, const uint8_t amount, Vector2 tileSize, Color tint);
+
+
 
 extern UIElement CreateUIElement(UIVisual visual, float x, float y, float scale);
 
@@ -161,3 +177,18 @@ extern void RenderUITextureSpritesheet(Texture2D atlas, float x, float y, uint16
 
 // Scales and Renders a Sprite from a UITexture Spritesheet in UI space with addition parameters
 extern void RenderUITextureSpritesheetEx(Texture2D atlas, float x, float y, uint16_t index, Vector2 tileSize, float scale, Color tint);
+
+
+// UItextureSnippet
+
+    // Draws a snippet from a UItexture
+    extern void DrawUITextureSnippet(Texture2D atlas, int16_t x, int16_t y, Rectangle snippet);
+
+    // Draws a snippet from a UItexture with addition parameters
+    extern void DrawUITextureSnippetEx(Texture2D atlas, int16_t x, int16_t y, Rectangle snippet, float scale, Color tint);
+
+    // Scales and Renders a snippet from a UItextureSnippet in UI space
+    extern void RenderUITextureSnippet(Texture2D atlas, float x, float y, Rectangle snippet);
+
+    // Scales and Renders a snippet from a UItextureSnippet in UI space with addition parameters
+    extern void RenderUITextureSnippetEx(Texture2D atlas, float x, float y, Rectangle snippet, float scale, Color tint);

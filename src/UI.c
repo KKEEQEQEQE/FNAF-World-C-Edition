@@ -23,7 +23,6 @@
 
 #include "UI.h"
 #include "Animation.h"
-#include <memory.h>
 #include <stdlib.h>
 #include "input.h"
 #include <math.h>
@@ -79,6 +78,7 @@ void FreeUIElement(UIElement * element)
 {
     switch (element -> visual.type) 
     {
+        case UItextureSnippet:
         case UItexture:
             UnloadTexture(element -> visual.texture);
             break;
@@ -142,6 +142,28 @@ UIVisual CreateUIVisual_UITexture_P(const char * path, Color tint)
     return temp;
 }
 
+// Creates a UIVisual of type UITextureSnippet via UItexture
+UIVisual CreateUIVisual_UITextureSnippet(UITexture texture, Rectangle snippet, Color tint)
+{
+    UIVisual temp = {0};
+    temp.type = UItextureSnippet;
+    temp.texture = texture;
+    temp.tint = tint;
+    temp.snippet = snippet;
+    return temp;
+}
+
+// Creates a UIVisual of type UITextureSnippet via path
+UIVisual CreateUIVisual_UITextureSnippet_P(const char * path, Rectangle snippet, Color tint)
+{
+    UIVisual temp = {0};
+    temp.type = UItextureSnippet;
+    temp.texture = LoadTexture(path);
+    temp.tint = tint;
+    temp.snippet = snippet;
+    return temp;
+}
+
 // Creates a UIVisual of type UIanimation via path
 UIVisual CreateUIVisual_UIAnimation(const char * path, const uint8_t targetFPS, const Color tint)
 {
@@ -166,6 +188,7 @@ void FreeUIVisual(UIVisual * visual)
 {
     switch (visual -> type) 
     {
+        case UItextureSnippet:
         case UItexture:
             UnloadTexture(visual -> texture);
             break;
@@ -211,6 +234,12 @@ void RenderUIElement(const UIElement * element)
                             element -> y, 
                             scale);
             return;
+        case UItextureSnippet:
+            RenderUITextureSnippet( element -> visual.texture,
+                                    element -> x,
+                                    element -> y,
+                                    element -> visual.snippet);
+            break;
         case UIanimationV2:
             RenderAnimation_V2(&element -> visual.animation_V2, 
                                 element -> x, element -> y, 
@@ -272,6 +301,10 @@ void UpdateUIButton(const UIButton * button)
         case UIanimation: 
             uint16_t currentFrame = GetCurrentAnimationFrame(&button -> graphic.visual.animation);
             buttonTexture = button -> graphic.visual.animation.Frames[currentFrame];
+            break;
+        case UItextureSnippet:
+            buttonTexture.width = button -> graphic.visual.snippet.width;
+            buttonTexture.height = button -> graphic.visual.snippet.height;
             break;
         case UItexture:
             buttonTexture = button -> graphic.visual.texture;
@@ -350,5 +383,42 @@ void RenderUITextureSpritesheetEx(Texture2D atlas, float x, float y, uint16_t in
                                 index, 
                                 tileSize, 
                                 scale, 
+                                WHITE);
+}
+
+// Draws a snippet from a UItexture
+void DrawUITextureSnippet(Texture2D atlas, int16_t x, int16_t y, Rectangle snippet)
+{
+    DrawUITextureSnippetEx(atlas, x, y, snippet, 1, WHITE);
+}
+
+// Draws a snippet from a UItexture with addition parameters
+void DrawUITextureSnippetEx(Texture2D atlas, int16_t x, int16_t y, Rectangle snippet, float scale, Color tint)
+{
+    Rectangle dest = { x, y, snippet.width * scale, snippet.height * scale};
+
+    DrawTexturePro(atlas, snippet, dest, (Vector2) {0, 0}, 0, tint);
+}
+
+// Scales and Renders a snippet from a UItextureSnippet in UI space
+void RenderUITextureSnippet(Texture2D atlas, float x, float y, Rectangle snippet)
+{
+    DrawUITextureSnippetEx(     atlas, 
+                                SCREEN_POSITION_TO_PIXEL_X(x, snippet.width, GetScreenScale()),
+                                SCREEN_POSITION_TO_PIXEL_Y(y, snippet.height, GetScreenScale()),
+                                snippet,
+                                GetScreenScale(),
+                                WHITE);
+}
+
+// Scales and Renders a snippet from a UItextureSnippet in UI space with addition parameters
+void RenderUITextureSnippetEx(Texture2D atlas, float x, float y, Rectangle snippet, float scale, Color tint)
+{
+    scale *= GetScreenScale();
+    DrawUITextureSnippetEx(   atlas, 
+                                SCREEN_POSITION_TO_PIXEL_X(x, snippet.width, scale),
+                                SCREEN_POSITION_TO_PIXEL_Y(y, snippet.height, scale), 
+                                snippet, 
+                                scale,  
                                 WHITE);
 }
