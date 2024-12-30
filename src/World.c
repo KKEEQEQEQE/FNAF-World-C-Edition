@@ -55,19 +55,48 @@ WORLDCamera WorldCamera = {0};
 WORLDEntity WorldBuildings_After[5] = {0}; // World Buildings rendered after Freddy
 WORLDEntity WorldBuildings_Pre[10] = {0}; // World Buildings rendered before Freddy
 WORLDEntity WorldWheel = {0}; // Note: The Ferris Wheel has to be seperate due to being behind trees
+
 WORLDEntity WORLDEntities[5] = {0};
 WORLDEntity Lolbit[5] = {0};
 
 WORLDEntity Freddy = {0};
 
 UIVisual FreddyIdle = {0};
-
 UIVisual FreddyWLeft = {0};
 UIVisual FreddyWUp = {0};
 UIVisual FreddyWRight = {0};
 UIVisual FreddyWDown = {0};
 
-// UI
+WORLDEntity WorldZoneButtonUpdater[2];
+
+#define NUMBER_OF_BUTTONS (sizeof(WorldZoneButtonUpdater) / sizeof(WORLDEntity))
+
+UIVisual ButtonUp = {0};
+UIVisual ButtonDown = {0};
+
+enum WORLDItemType
+{
+    FAZTOKENS, 
+    CHIP,
+    BYTE
+};
+
+typedef struct WORLDItem 
+{
+    enum WORLDItemType type;
+    union
+    {
+        uint16_t token_amount; // Number of Faz-tokens
+        uint8_t id; // Byte or Chip IDs
+    };
+} WORLDItem;
+
+typedef struct WORLDBox 
+{
+    WORLDItem content;
+    WORLDEntity entity;
+    _Bool open;
+} WORLDBox;
 
 UITexture ZoneHeader[3] = {0};
 char * ZoneNames[] = {"Fazbear Hills", "Choppy's Woods", "Dusting Fields"};
@@ -152,7 +181,8 @@ static void WarpButton_3(UIButton * button)
 static void SaveButtonPress(UIButton * button)
 {
     PlaySound(WarpSoundEffect);
-    WriteSave();
+    WriteSave((Vector2) {   Freddy.position.x + Freddy.size.x / 2,
+                            Freddy.position.y + Freddy.size.y / 2});
 }
 
 void InitWorld(void)
@@ -181,7 +211,7 @@ void InitWorld(void)
 
     // Zone Effects
 
-    LegacyZoneEffect = CreateUIVisual_UITexture_P("Assets/Overworld/Fazbear_Hills/sun_effect_mod.png", SKY_TINT);
+    LegacyZoneEffect = CreateUIVisual_UITexture_P("Assets/Overworld/Zone_Effects/sun_effect_mod.png", SKY_TINT);
     SetTextureFilter(LegacyZoneEffect.texture, TEXTURE_FILTER_BILINEAR);
 
     SunHeader = LoadTexture("Assets/Overworld/sun_effect_top.png");
@@ -303,6 +333,30 @@ void InitWorld(void)
                                                 0, 
                                                 NULL, 1);
 
+    ButtonUp = CreateUIVisual_UITexture_P("Assets/Overworld/NPCs/buttonup.png", WHITE);
+    ButtonDown = CreateUIVisual_UITexture_P("Assets/Overworld/NPCs/buttondown.png", WHITE);
+
+    WorldZoneButtonUpdater[0] = CreateWorldEntity(  (Vector2) {32, 32}, 
+                                                    (Vector2) {1,1}, 
+                                                    (Vector2) {0,0}, 
+                                                    &ButtonUp,  
+                                                    1, 
+                                                    0, 
+                                                    NULL, 1);
+
+    WorldZoneButtonUpdater[1] = CreateWorldEntity(  (Vector2) {19, 34}, 
+                                                    (Vector2) {1,1}, 
+                                                    (Vector2) {0,0}, 
+                                                    NULL,  
+                                                    1, 
+                                                    0, 
+                                                    NULL, 1);
+
+    for (uint8_t i = 2; i <= GetZone_Level() && i - 2 < NUMBER_OF_BUTTONS; i++)
+    {
+        if (i - 2 == 1) continue;
+        WorldZoneButtonUpdater[i - 2].visual = &ButtonDown;
+    }
 
     ZoneHeader[0] = LoadTexture("Assets/Overworld/UI/Zone_Names/1.png"); 
     ZoneHeader[1] = LoadTexture("Assets/Overworld/UI/Zone_Names/2.png"); 
@@ -373,8 +427,8 @@ void ResetWorld(void)
     Freddy.size = (Vector2) {0.7, 0.45};
     Freddy.scale = 0.95;
     Freddy.visualOffset = (Vector2) {0, 0.5};
-    Freddy.position = (Vector2) {   38 + 0.5 - Freddy.size.x / 2, 
-                                    21 + 0.5 - Freddy.size.y / 2};
+    Freddy.position = (Vector2) {   GetLast_Location().x + 0.5 - Freddy.size.x / 2, 
+                                    GetLast_Location().y + 0.5 - Freddy.size.y / 2};
     Freddy.customCollision = NULL;
 
     WorldCamera.target = (Vector2) {0, 0};
@@ -771,6 +825,16 @@ void RenderZoneName(void)
     DrawTextureEx(ZoneHeader[zone], (Vector2) {25. * GetScreenHeight() / 720, 25. * GetScreenHeight() / 720}, 0, 0.025/scale, tint);
 }
 
+void RenderWorldButtons(void)
+{
+    for (uint8_t i = 2; i <= GetZone_Level() && i - 2 < NUMBER_OF_BUTTONS; i++)
+    {
+        if (i - 2 == 1) continue;
+        WorldZoneButtonUpdater[i - 2].visual = &ButtonDown;
+    }
+    RenderWorldEntities(WorldZoneButtonUpdater, 0, IGNORE_DEPTH);
+}
+
 // Renders WORLDTilemapLayer onto Virtual Screen
 void RenderLayer(uint16_t n, Vector2 CameraMinorOffset)
 {
@@ -837,9 +901,12 @@ void RenderWorld(void)
 
         // Renders all WORLDEntities
 
+        if (i == 3) RenderWorldButtons();
+
         if (i == Freddy.depth) RenderWorldEntity(&Freddy);
         if (i == WorldWheel.depth) RenderWorldEntity(&WorldWheel);
         RenderWorldEntities(WorldBuildings_Pre, i, FAST);
+        
         RenderWorldEntities(WorldBuildings_After, i, FAST);
     }
 
@@ -932,7 +999,7 @@ void UpdateZoneAssets(void)
         case FAZBEARHILLS:
         default:
             CurrentTheme = LoadMusicStream("Assets/Themes/fazbearhills.mp3");
-            LegacyZoneEffect = CreateUIVisual_UITexture_P("Assets/Overworld/Fazbear_Hills/sun_effect_mod.png", SKY_TINT);
+            LegacyZoneEffect = CreateUIVisual_UITexture_P("Assets/Overworld/Zone_Effects/sun_effect_mod.png", SKY_TINT);
             SetTextureFilter(LegacyZoneEffect.texture, TEXTURE_FILTER_BILINEAR);
     }
     
@@ -945,7 +1012,7 @@ void PutZoneWarp(void)
     JumpVisual.visual.tint = WHITE;
     if (GetZone() + 1 == 2 && DustingFieldsLogoIsBlack) JumpVisual.visual.tint = BLACK; 
     RenderUIElement(&JumpVisual);
-    for (uint16_t i = 0; i < 3; i++)
+    for (uint16_t i = 0; i < GetZone_Level(); i++)
     {
         PutUIButton(&WarpButtons[i].button);
     }
@@ -960,6 +1027,42 @@ void PutDefaultUI(void)
     PutUIButton(&SaveButton);
 }
 
+void HandleWorldButtonCollision(void)
+{
+    for (uint8_t i = GetZone_Level() - 1; i < NUMBER_OF_BUTTONS; i++)
+    {
+        if (!CheckEntityCollision(WorldZoneButtonUpdater + i, &Freddy)) continue;
+        SetZone_Level(i + 2);
+        WriteSave(Freddy.position);
+        return;
+    }
+}
+
+void HandleSingleBoxCollision(WORLDBox * box)
+{
+    if (!CheckEntityCollision(&box->entity, &Freddy) ||
+        box -> open) return;
+
+    switch (box -> content.type)
+    {
+        case FAZTOKENS: 
+            UpdateFaz_Tokens(box -> content.token_amount);
+            break;
+        case CHIP:
+            AddChip(box -> content.id);
+            break;
+        case BYTE:
+            AddByte(box -> content.id);
+            break;
+    }
+
+    WriteSave(Freddy.position);
+}
+
+void HandleBoxCollisions(WORLDBox * boxes, uint16_t amount)
+{
+    for (uint16_t i = 0; i < amount; i++) HandleSingleBoxCollision(boxes + i);
+}
 void PutWorld(void)
 {
     
@@ -969,5 +1072,6 @@ void PutWorld(void)
     RenderWorld();
     PutUIParticles();
     RenderZoneName();
+    HandleWorldButtonCollision();
     PutDefaultUI();
 }

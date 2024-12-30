@@ -46,7 +46,7 @@ int main(void)
     printf("%f\n", (stop-start) / (float)CLOCKS_PER_SEC);
     SwapGameState(100000);
     ToggleBorderlessWindowed();
-    CreateSave("Saves/Save1.json");
+    LoadSave("Saves/Save1.json");
     SetTargetFPS(240);
     while (!WindowShouldClose())
     {

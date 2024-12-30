@@ -21,12 +21,36 @@
 */
 
 #pragma once
+
 #include <stdint.h>
+#include "../Include/raylib.h"
 
 extern void CreateSave(const char * path);
 extern void LoadSave(const char * path);
-extern void WriteSave(void);
+extern void WriteSave(Vector2 LastLocation);
+
+extern Vector2 GetLast_Location(void);
+
 extern uint8_t GetZone_Level(void);
 extern void SetZone_Level(uint8_t level);
 extern uint16_t GetFaz_Tokens(void);
 extern void UpdateFaz_Tokens(int16_t income);
+
+typedef struct Animatronic
+{
+    uint8_t id, level; 
+    uint32_t xp;
+} Animatronic;
+
+extern void AddAnimatronic(uint8_t id);
+extern void UpdateAnimatronic(uint8_t index, uint16_t level_surplus, uint32_t xp_surplus);
+extern Animatronic GetAnimatronic(uint8_t index);
+
+extern void UpdateParty_1(uint8_t index, uint8_t id);
+extern void UpdateParty_2(uint8_t index, uint8_t id);
+
+extern void AddChip(uint8_t id);
+extern void UpdateSelected_Chips(uint8_t index, uint8_t id);
+
+extern void AddByte(uint8_t id);
+extern void UpdateSelected_Bytes(uint8_t index, uint8_t id);

@@ -44,8 +44,10 @@ bin/main.o:
 compile: clean bin/main.o bin/Animation.o bin/input.o bin/UI.o bin/Title_Screen.o bin/Background.o bin/Game_State.o bin/Particle.o bin/Tilemap_JSON_Conversion.o bin/World.o bin/Settings.o bin/Save.o
 
 merge: compile
-	ld -relocatable bin/*.o -o bin/FNAF_World_C.o
-	rm -- !(bin/FNAF_World_C.o)
+	ld -relocatable bin/*.o -o FNAF_World_C.o
+	rm bin/*.o
+	cp FNAF_World_C.o bin/FNAF_World_C.o
+	rm FNAF_World_C.o
 
-build_win: merge
+build_windows: merge
 	$(cc) -o FNAF_World_C.exe bin/FNAF_World_C.o Lib/cJSON.c -lraylib -lgdi32 -lwinmm -I include/ -L lib/

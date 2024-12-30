@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../Include/raylib.h"
-
+#include "Save.h"
 #define INVALID_ANIMATRONIC ((struct Animatronic) {0,0,0})
 
 typedef struct Selection
@@ -148,8 +148,11 @@ void LoadSave(const char * path)
     
     // Loads all save values
 
+    if (path) strcpy_s(Selected_Save, sizeof(Selected_Save), path);
+
     SaveJSON = cJSON_LoadJSON(path);
-    if (!SaveJSON) return CreateSave("Save/TempSave.json");
+    printf("\nLoaded at %p\n", SaveJSON);
+    if (!SaveJSON) return CreateSave(path);
     
     Zone_LevelJSON = cJSON_GetObjectItem(SaveJSON, "Zone_Level");
     Faz_TokenJSON = cJSON_GetObjectItem(SaveJSON, "Faz-Tokens");
@@ -172,7 +175,7 @@ void LoadSave(const char * path)
     // Resets any missing save values
     
     if (!Zone_LevelJSON) Zone_LevelJSON = cJSON_AddNumberToObject(SaveJSON, "Zone_Level", 1), cJSON_SetIntValue(Zone_LevelJSON, 1);
-    if (!Faz_TokenJSON) Zone_LevelJSON = cJSON_AddNumberToObject(SaveJSON, "Faz-Tokens", 0), cJSON_SetIntValue(Zone_LevelJSON, 0);
+    if (!Faz_TokenJSON) Faz_TokenJSON = cJSON_AddNumberToObject(SaveJSON, "Faz-Tokens", 0), cJSON_SetIntValue(Faz_TokenJSON, 0);
     if (!ChipsJSON) ChipsJSON = cJSON_AddArrayToObject(SaveJSON, "Chips");
     if (!Selected_Chips) Selected_Chips = cJSON_AddArrayToObject(SaveJSON, "Selected_Chips");
     if (!BytesJSON) BytesJSON = cJSON_AddArrayToObject(SaveJSON, "Bytes");
@@ -182,7 +185,7 @@ void LoadSave(const char * path)
     if (!Party_2) Party_2 = cJSON_AddArrayToObject(SaveJSON, "Party_2");
     if (!Last_LocationJSON) Last_LocationJSON = cJSON_AddObjectToObject(SaveJSON, "Last_Location");
     if (!Last_Location.x) Last_Location.x = cJSON_AddNumberToObject(Last_LocationJSON, "x", 38);
-    if (!Last_Location.y) Last_Location.x = cJSON_AddNumberToObject(Last_LocationJSON, "x", 21);
+    if (!Last_Location.y) Last_Location.y = cJSON_AddNumberToObject(Last_LocationJSON, "y", 21);
 }
 
 void WriteSave(Vector2 LastLocation)
@@ -190,6 +193,7 @@ void WriteSave(Vector2 LastLocation)
     if (*Selected_Save == '\0') return;
 
     cJSON_SetIntValue(Last_Location.x, (uint16_t)LastLocation.x);
+    printf("%u, %u\n", (uint16_t)LastLocation.x, (uint16_t)LastLocation.y);
     cJSON_SetIntValue(Last_Location.y, (uint16_t)LastLocation.y);
 
     SaveFileText(Selected_Save, cJSON_Print(SaveJSON));
@@ -197,11 +201,16 @@ void WriteSave(Vector2 LastLocation)
 
 uint8_t GetZone_Level(void)
 {
+    if (Zone_LevelJSON -> valueint > 3) 
+    {
+        cJSON_SetIntValue(Zone_LevelJSON, 3);
+    }
     return Zone_LevelJSON -> valueint;
 }
 
 void SetZone_Level(uint8_t level)
 {
+    if (level > 3) level = 3;
     cJSON_SetIntValue(Zone_LevelJSON, level);
 }
 
@@ -230,6 +239,12 @@ static void UpdateNumberArray(uint8_t index, uint8_t value, cJSON * array, uint8
     
     for (uint16_t i = 0; i < size - index; i++) cJSON_AddItemToArray(array, cJSON_CreateNumber(0));
     cJSON_AddItemToArray(array, cJSON_CreateNumber(value));
+}
+
+Vector2 GetLast_Location(void)
+{
+    return (Vector2) {  (float) Last_Location.x -> valueint, 
+                        (float) Last_Location.y -> valueint  };
 }
 
 void UpdateParty_1(uint8_t index, uint8_t id)
@@ -303,12 +318,6 @@ void UpdateAnimatronic(uint8_t index, uint16_t level_surplus, uint32_t xp_surplu
     cJSON_SetNumberHelper(levelJSON, levelJSON -> valueint + level_surplus);
     cJSON_SetNumberHelper(xpJSON, xpJSON -> valueint + xp_surplus);
 }
-
-typedef struct Animatronic
-{
-    uint8_t id, level; 
-    uint32_t xp;
-} Animatronic;
 
 Animatronic GetAnimatronic(uint8_t index)
 {
