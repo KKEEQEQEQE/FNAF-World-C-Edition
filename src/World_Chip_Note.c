@@ -31,12 +31,13 @@
 #include <time.h>
 
 #define MAX_CHIPS_IN_QUEUE 10
-#define CHIP_NOTE_SCREEN_TIME 5
+#define CHIP_NOTE_SCREEN_TIME 2
 static uint8_t chip_queue[MAX_CHIPS_IN_QUEUE] = {0};
 
 static uint8_t wait_queue = 0;
 static uint8_t current_queue = 0;
 static UIElement current_chip_banner = {{0}, 0, -0.8f, 1};
+static Sound note_sfx = {0};
 
 // Turns a Unsigned Long into a Stack Allocated String
 static char * __fastcall uintstr(uint64_t number) 
@@ -86,6 +87,11 @@ void LoadNewChipBanner(void)
     char path[42] = "Assets/Overworld/UI/Chip_Banners/";
 
     if (chip_queue[current_queue] == 0) return;
+    
+    if (!IsSoundValid(note_sfx)) note_sfx = LoadSound("Assets/Sound_Effects/New_Chip.wav");
+
+    PlaySound(note_sfx);
+
     strcat( path, 
             uintstr(chip_queue[current_queue] - 1));
 
@@ -148,6 +154,7 @@ void PrintChipQueue(void)
 
     printf("}\n");
 }
+
 void RenderChipNoteBanner(void)
 {
     UpdateChipNoteBanner();

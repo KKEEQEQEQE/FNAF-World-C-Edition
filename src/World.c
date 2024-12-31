@@ -99,6 +99,9 @@ typedef struct WORLDBox
     _Bool open;
 } WORLDBox;
 
+WORLDBox WorldBoxes[1] = {0};
+Texture2D ItemAtlas = {0};
+
 UITexture ZoneHeader[3] = {0};
 char * ZoneNames[] = {"Fazbear Hills", "Choppy's Woods", "Dusting Fields"};
 
@@ -333,9 +336,16 @@ void InitWorld(void)
                                                 1, 
                                                 0, 
                                                 NULL, 1);
+    
+    ItemAtlas = LoadTexture("Assets/Overworld/NPCs/items.png");
+    ButtonUp = CreateUIVisual_UITextureSnippet( ItemAtlas,   
+                                                (Rectangle) {50, 50, 50, 50}, 
+                                                WHITE);
+    ButtonDown = CreateUIVisual_UITextureSnippet(   ItemAtlas,   
+                                                    (Rectangle) {100, 50, 50, 50}, 
+                                                    WHITE);
 
-    ButtonUp = CreateUIVisual_UITexture_P("Assets/Overworld/NPCs/buttonup.png", WHITE);
-    ButtonDown = CreateUIVisual_UITexture_P("Assets/Overworld/NPCs/buttondown.png", WHITE);
+    
 
     WorldZoneButtonUpdater[0] = CreateWorldEntity(  (Vector2) {32, 32}, 
                                                     (Vector2) {1,1}, 
@@ -358,6 +368,19 @@ void InitWorld(void)
         if (i - 2 == 1) continue;
         WorldZoneButtonUpdater[i - 2].visual = &ButtonDown;
     }
+
+    // Initizing boxes
+
+    WorldBoxes[0] = (WORLDBox) {{CHIP, .id=0 }, 
+                                CreateWorldEntity(  (Vector2) {33,32},
+                                                    (Vector2) {1, 1},
+                                                    (Vector2) {0, 0},
+                                                    UIVisual_Heap(CreateUIVisual_UITextureSnippet(ItemAtlas, (Rectangle) {0,0, 50, 50}, WHITE)), 
+                                                    1, 
+                                                    0, 
+                                                    NULL, 
+                                                    3), 
+                                0};
 
     ZoneHeader[0] = LoadTexture("Assets/Overworld/UI/Zone_Names/1.png"); 
     ZoneHeader[1] = LoadTexture("Assets/Overworld/UI/Zone_Names/2.png"); 
@@ -588,6 +611,22 @@ void RenderWorldTexture(Texture2D * texture, Vector2 position, Vector2 offset, f
                     WHITE);
 }
 
+void RenderWorldTextureSnippet(Texture2D * atlas, Vector2 position, Rectangle snippet, Vector2 offset, float scale)
+{
+    Rectangle CameraView = GetCameraView();
+
+    Vector2 screen_pos = (Vector2) {(position.x - (uint16_t)CameraView.x) * 50., 
+                                    (position.y - (uint16_t)CameraView.y) * 50.};
+
+    DrawTexturePro( *atlas, 
+                    snippet,
+                    (Rectangle) {screen_pos.x, screen_pos.y,
+                                 snippet.width * scale, snippet.height * scale},
+                    (Vector2) {snippet.width * scale * (offset.x + 1) / 2, snippet.height * scale * (offset.y + 1) / 2},
+                    0,
+                    WHITE);
+}
+
 // Scales and Renders a UIanimationV2 relitive to the WORLDCamera
 void RenderWorldAnimation_V2(Animation_V2 * animation, Vector2 position, Vector2 offset, float scale)
 {
@@ -640,6 +679,15 @@ void RenderWorldEntity(WORLDEntity * entity)
                                 position, 
                                 entity -> visualOffset,
                                 entity -> scale);
+            break;
+
+        case UItextureSnippet:
+            texture = &entity -> visual -> texture;
+            RenderWorldTextureSnippet(  texture,
+                                        position,
+                                        entity -> visual -> snippet,
+                                        entity -> visualOffset,
+                                        entity -> scale);
             break;
         case UIanimationV2:
             RenderWorldAnimation_V2(&entity -> visual -> animation_V2, 
@@ -836,6 +884,15 @@ void RenderWorldButtons(void)
     RenderWorldEntities(WorldZoneButtonUpdater, 0, IGNORE_DEPTH);
 }
 
+void RenderWorldBoxes(WORLDBox * boxes, uint16_t amount)
+{
+    for (uint16_t i = 0; i < amount; i++)
+    {
+        if (boxes -> open) continue;
+        RenderWorldEntity(&boxes -> entity);
+    }
+}
+
 // Renders WORLDTilemapLayer onto Virtual Screen
 void RenderLayer(uint16_t n, Vector2 CameraMinorOffset)
 {
@@ -903,7 +960,7 @@ void RenderWorld(void)
         // Renders all WORLDEntities
 
         if (i == 3) RenderWorldButtons();
-
+        if (i == Freddy.depth) RenderWorldBoxes(WorldBoxes, sizeof(WorldBoxes) / sizeof(WORLDBox));
         if (i == Freddy.depth) RenderWorldEntity(&Freddy);
         if (i == WorldWheel.depth) RenderWorldEntity(&WorldWheel);
         RenderWorldEntities(WorldBuildings_Pre, i, FAST);
@@ -1058,12 +1115,18 @@ void HandleSingleBoxCollision(WORLDBox * box)
             break;
     }
 
+    box -> open = 1;
+
     WriteSave(Freddy.position);
 }
 
 void HandleBoxCollisions(WORLDBox * boxes, uint16_t amount)
 {
-    for (uint16_t i = 0; i < amount; i++) HandleSingleBoxCollision(boxes + i);
+    for (uint16_t i = 0; i < amount; i++) 
+    {
+        if (boxes[i].open) continue;
+        HandleSingleBoxCollision(boxes + i);
+    }
 }
 
 void PutWorld(void)
@@ -1075,6 +1138,7 @@ void PutWorld(void)
     PutUIParticles();
     RenderZoneName();
     HandleWorldButtonCollision();
+    HandleBoxCollisions(WorldBoxes, sizeof(WorldBoxes) / sizeof(WORLDBox));
     PutDefaultUI();
     RenderChipNoteBanner();
 }
