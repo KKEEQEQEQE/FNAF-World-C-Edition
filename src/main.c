@@ -51,7 +51,7 @@ int main(void)
 
     clock_t start = clock();
     LoadWorldTilemap();
-    LoadSave("Save/Save1.json");
+    LoadSave("Saves/Save1.json");
     clock_t stop = clock();
     printf("%f\n", (stop-start) / (float)CLOCKS_PER_SEC);
 
