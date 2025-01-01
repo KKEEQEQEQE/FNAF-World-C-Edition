@@ -158,6 +158,5 @@ void PrintChipQueue(void)
 void RenderChipNoteBanner(void)
 {
     UpdateChipNoteBanner();
-    PrintChipQueue();
     RenderUIElement(&current_chip_banner);
 }

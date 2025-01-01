@@ -34,20 +34,33 @@
 #include <time.h>
 #include "Save.h"
 
+// Well this is the main function and yup that's about what it is
 int main(void)
 {
+    // Init Window
+
     InitWindow(1280, 720, "FNAF World: C Edition");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(1280, 720); 
+
     InitAudioDevice();
+
+    SwapGameState(Title);
+
+    // Loading important stuff
+
     clock_t start = clock();
     LoadWorldTilemap();
+    LoadSave("Save/Save1.json");
     clock_t stop = clock();
     printf("%f\n", (stop-start) / (float)CLOCKS_PER_SEC);
-    SwapGameState(100000);
-    //ToggleBorderlessWindowed();
-    LoadSave(NULL);
+
+    // Setting FPS cap so I don't blow up my computer
+
     SetTargetFPS(240);
+    
+    // Main Game Loop
+
     while (!WindowShouldClose())
     {
         BeginDrawing();
@@ -68,6 +81,9 @@ int main(void)
         DrawFPS(10, 10);
         EndDrawing();
     }
+    
+    // Uniniting stuff
+
     CloseAudioDevice();
     CloseWindow();
     return 0;

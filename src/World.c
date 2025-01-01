@@ -1003,7 +1003,7 @@ void RenderChipBoxes(WORLDBox * boxes, uint16_t amount)
     for (uint16_t i = 0; i < amount; i++)
     {
         if (boxes[i].open) continue;
-        RenderWorldEntity(&boxes -> entity);
+        RenderWorldEntity(&boxes[i].entity);
     }
 }
 
