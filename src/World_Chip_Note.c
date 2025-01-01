@@ -100,7 +100,7 @@ void LoadNewChipBanner(void)
     printf("%s\n", path);
 
     current_chip_banner.visual = CreateUIVisual_UIAnimation_V2( path, 
-                                                                10, 
+                                                                30, 
                                                                 6, 
                                                                 (Vector2) {400, 100}, 
                                                                 WHITE);
@@ -125,6 +125,7 @@ void UpdateChipNoteBanner(void)
     if (clock() + CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC - cooldown >= CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC)
     {
         chip_queue[current_queue] = 0;
+        wait_queue--;
         current_queue = GetUnavailableChipQueue();
 
         if (current_chip_banner.visual.type != UInotype) FreeUIVisual(&current_chip_banner.visual);
@@ -133,7 +134,6 @@ void UpdateChipNoteBanner(void)
         if (current_queue == MAX_CHIPS_IN_QUEUE) 
         {
             wait_queue = 0; 
-            
             return;
         }
         LoadNewChipBanner();
