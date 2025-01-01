@@ -99,7 +99,8 @@ typedef struct WORLDBox
     _Bool open;
 } WORLDBox;
 
-WORLDBox WorldBoxes[1] = {0};
+#define NUMBER_OF_CHIPS 7
+WORLDBox ChipBoxes[NUMBER_OF_CHIPS] = {0};
 Texture2D ItemAtlas = {0};
 
 UITexture ZoneHeader[3] = {0};
@@ -189,50 +190,116 @@ static void SaveButtonPress(UIButton * button)
                             Freddy.position.y + Freddy.size.y / 2});
 }
 
-void InitWorld(void)
+static void InitOpenedChipBoxes(void)
 {
-    static UIVisual TurbineVisual = {0};
-    static UIVisual LolbitVisual = {0};
-    if (!CurrentWorld) LoadWorldTilemap();
+    uint8_t chip_ids[21];
+    GetChipInv(&chip_ids);
 
-    // Temporary limits log level to minimize printing to console (for faster load times)
+    for (uint8_t i = 0; i < 21; i++)
+    {
+        ChipBoxes[i].open = chip_ids[i];
+    }
+}
 
-    //SetTraceLogLevel(LOG_WARNING);
-    SetWorldSpriteSheet("Assets/Overworld/Maps/Overworld/spritesheet.png", 50); 
+static void InitBoxes(void)
+{
+    static UIVisual grey_chip_chest = {0};
 
-    // Particles
+    if (!grey_chip_chest.type) grey_chip_chest = CreateUIVisual_UITextureSnippet(ItemAtlas, (Rectangle) {0,0, 50, 50}, WHITE);
 
-    BirdParticle = CreateParticleIndexA_V2("Assets/Particles/bird.png", 30, 10, (Vector2) {50, 50}, 1.5);
+    // Initizing boxes
+
+    ChipBoxes[0] = (WORLDBox) {{CHIP, .id=0 }, 
+                                CreateWorldEntity(  (Vector2) {46, 12},
+                                                    (Vector2) {1, 1},
+                                                    (Vector2) {0, 0},
+                                                    &grey_chip_chest, 
+                                                    1, 
+                                                    0, 
+                                                    NULL, 
+                                                    3), 
+                                0};
     
-    // Musics and Sounds
+    ChipBoxes[1] = (WORLDBox) {{CHIP, .id=1 }, 
+                                CreateWorldEntity(  (Vector2) {38, 7},
+                                                    (Vector2) {1, 1},
+                                                    (Vector2) {0, 0},
+                                                    &grey_chip_chest, 
+                                                    1, 
+                                                    0, 
+                                                    NULL, 
+                                                    3), 
+                                0};
 
-    CurrentTheme = LoadMusicStream("Assets/Themes/fazbearhills.mp3");
-    CurrentTheme.looping = 1;
+    ChipBoxes[2] = (WORLDBox) {{CHIP, .id=2 }, 
+                                CreateWorldEntity(  (Vector2) {33, 32},
+                                                    (Vector2) {1, 1},
+                                                    (Vector2) {0, 0},
+                                                    &grey_chip_chest, 
+                                                    1, 
+                                                    0, 
+                                                    NULL, 
+                                                    3), 
+                                0};
+    
+    ChipBoxes[3] = (WORLDBox) {{CHIP, .id=3 }, 
+                                CreateWorldEntity(  (Vector2) {33, 32},
+                                                    (Vector2) {1, 1},
+                                                    (Vector2) {0, 0},
+                                                    &grey_chip_chest, 
+                                                    1, 
+                                                    0, 
+                                                    NULL, 
+                                                    3), 
+                                0};
+    
+    ChipBoxes[4] = (WORLDBox) {{CHIP, .id=4 }, 
+                                CreateWorldEntity(  (Vector2) {33, 32},
+                                                    (Vector2) {1, 1},
+                                                    (Vector2) {0, 0},
+                                                    &grey_chip_chest, 
+                                                    1, 
+                                                    0, 
+                                                    NULL, 
+                                                    3), 
+                                0};
+    
+    ChipBoxes[5] = (WORLDBox) {{CHIP, .id=5 }, 
+                                CreateWorldEntity(  (Vector2) {33, 32},
+                                                    (Vector2) {1, 1},
+                                                    (Vector2) {0, 0},
+                                                    &grey_chip_chest, 
+                                                    1, 
+                                                    0, 
+                                                    NULL, 
+                                                    3), 
+                                0};
 
-    PlayMusicStream(CurrentTheme);
+    ChipBoxes[6] = (WORLDBox) {{CHIP, .id=6 }, 
+                                CreateWorldEntity(  (Vector2) {33, 32},
+                                                    (Vector2) {1, 1},
+                                                    (Vector2) {0, 0},
+                                                    &grey_chip_chest, 
+                                                    1, 
+                                                    0, 
+                                                    NULL, 
+                                                    3), 
+                                0};
+    InitOpenedChipBoxes();
+}
 
-    WarpSoundEffect = LoadSound("Assets/Sound_Effects/Zone_Warping.wav");
-
-    // Zone Effects
-
-    LegacyZoneEffect = CreateUIVisual_UITexture_P("Assets/Overworld/Zone_Effects/sun_effect_mod.png", SKY_TINT);
-    SetTextureFilter(LegacyZoneEffect.texture, TEXTURE_FILTER_BILINEAR);
-
-    SunHeader = LoadTexture("Assets/Overworld/sun_effect_top.png");
-    SetTextureFilter(SunHeader, TEXTURE_FILTER_BILINEAR);
-
+static void InitFreddy(void)
+{
     // Freddy Sprites
     
     FreddyIdle.type = UItexture;
     FreddyIdle.texture = LoadTexture("Assets/Overworld/Freddy_Overworld/idle.png"); 
     FreddyIdle.tint = WHITE;
-
-    SetTextureFilter(FreddyIdle.texture, TEXTURE_FILTER_BILINEAR);
-
     
     FreddyWUp.type = UIanimationV2;
     FreddyWUp.animation_V2 = CreateAnimation_V2("Assets/Overworld/Freddy_Overworld/walking_up.png", 30, 15, 60, 60); 
     FreddyWUp.tint = WHITE;
+
 
     FreddyWLeft.type = UIanimationV2;
     FreddyWLeft.animation_V2 = CreateAnimation_V2("Assets/Overworld/Freddy_Overworld/walking_left.png", 30, 15, 60, 60); 
@@ -246,34 +313,44 @@ void InitWorld(void)
     FreddyWDown.animation_V2 = CreateAnimation_V2("Assets/Overworld/Freddy_Overworld/walking_down.png", 30, 15, 60, 60); 
     FreddyWDown.tint = WHITE;
 
+    SetTextureFilter(FreddyIdle.texture, TEXTURE_FILTER_BILINEAR);
+    SetTextureFilter(FreddyWUp.animation_V2.Atlas, TEXTURE_FILTER_BILINEAR);
+    SetTextureFilter(FreddyWLeft.animation_V2.Atlas, TEXTURE_FILTER_BILINEAR);
+    SetTextureFilter(FreddyWRight.animation_V2.Atlas, TEXTURE_FILTER_BILINEAR);
+    SetTextureFilter(FreddyWDown.animation_V2.Atlas, TEXTURE_FILTER_BILINEAR);
+
     Freddy.visual = &FreddyIdle;
     Freddy.scale = 0.95;
     Freddy.depth = 2;
+}
 
-    // Initizing repeated UIVisuals
-
-    LolbitVisual.type = UIanimationV2;
-    LolbitVisual.animation_V2 = CreateAnimation_V2("Assets/Overworld/NPCs/lolbit.png", 30, 15, 65, 65); 
-    LolbitVisual.tint = WHITE;
-
-    TurbineVisual.type = UIanimationV2;
-    TurbineVisual.animation_V2 = CreateAnimation_V2("Assets/Overworld/Buildings/turbine_atlas.png", 30, 10, 50, 100); 
-    TurbineVisual.tint = WHITE;
-
+static void InitLolbit(void)
+{
     Lolbit[0] = CreateWorldEntity( (Vector2) {36, 17}, 
                                             (Vector2) {1, 1},
                                             (Vector2) {0,0}, 
-                                            &LolbitVisual, 
+                                            UIVisual_Heap(CreateUIVisual_UIAnimation_V2("Assets/Overworld/NPCs/lolbit.png", 30, 15, (Vector2) {65, 65}, WHITE)), 
                                             0.93, 
                                             0, 
                                             NULL, 2);
+}
 
+static void InitBuildings_Pre(void)
+{
+    static UIVisual blue_castle = {0};
+    static UIVisual red_castle = {0};
+    static UIVisual gear_house = {0};
+    static UIVisual lumber_house = {0};
+
+    if (!blue_castle.type) blue_castle = CreateUIVisual_UITexture_P( "Assets/Overworld/Buildings/Blue_Castle.png", WHITE);
+    if (!red_castle.type) red_castle = CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Red_Castle.png", WHITE);
+    if (!gear_house.type) gear_house = CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Gear_House.png", WHITE);
+    if (!lumber_house.type) lumber_house = CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Lumber_House.png", WHITE);
 
     WorldBuildings_Pre[0] = CreateWorldEntity(  (Vector2) {33.8, 11}, 
                                                 (Vector2) {0,0}, 
                                                 (Vector2) {0,0}, 
-                                                UIVisual_Heap(CreateUIVisual_UITexture_P( "Assets/Overworld/Buildings/Blue_Castle.png", 
-                                                                                                        WHITE)), 
+                                                &blue_castle, 
                                                 1, 
                                                 0, 
                                                 NULL, 3);
@@ -281,8 +358,7 @@ void InitWorld(void)
     WorldBuildings_Pre[1] = CreateWorldEntity(  (Vector2) {37.5, 10.5},
                                                 (Vector2) {0,0}, 
                                                 (Vector2) {0,0}, 
-                                                UIVisual_Heap(CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Red_Castle.png", 
-                                                                                                        WHITE)),
+                                                &red_castle,
                                                 1, 
                                                 0, 
                                                 NULL, 3);
@@ -290,8 +366,7 @@ void InitWorld(void)
     WorldBuildings_Pre[2] = CreateWorldEntity(  (Vector2) {36.5, 15.5}, 
                                                 (Vector2) {0,0},
                                                 (Vector2) {0,0}, 
-                                                UIVisual_Heap(CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Gear_House.png", 
-                                                                                                        WHITE)), 
+                                                &gear_house, 
                                                 1, 
                                                 0, 
                                                 NULL, 3);
@@ -299,45 +374,43 @@ void InitWorld(void)
     WorldBuildings_Pre[3] = CreateWorldEntity(  (Vector2) {42, 12}, 
                                                 (Vector2) {0,0}, 
                                                 (Vector2) {0,0}, 
-                                                UIVisual_Heap(CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Lumber_House.png", 
-                                                                                                        WHITE)), 
+                                                &lumber_house, 
                                                 1, 
                                                 0, 
                                                 NULL, 3);
+}
 
-    
-    WorldWheel = CreateWorldEntity(  (Vector2) {14.25, 15.25}, 
-                                                (Vector2) {5,5}, 
+static void InitBuildings_After(void)
+{
+    static UIVisual turbine = {0};
+
+    if (!turbine.type) turbine = CreateUIVisual_UIAnimation_V2("Assets/Overworld/Buildings/turbine_atlas.png", 30, 10, (Vector2) {50, 100}, WHITE);
+
+    WorldBuildings_After[0] = CreateWorldEntity((Vector2) {31.5, 17}, 
                                                 (Vector2) {0,0}, 
-                                                UIVisual_Heap(CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Wheel.png", 
-                                                                                                        WHITE)), 
+                                                (Vector2) {0,0}, 
+                                                UIVisual_Heap(CreateUIVisual_UIAnimation_V2("Assets/Overworld/Buildings/windmill_atlas.png", 30, 20, (Vector2) {200, 200}, WHITE)),
                                                 1, 
-                                                0, 
-                                                NULL, 6);
-                                                
-    WorldBuildings_After[0] = CreateWorldEntity(   (Vector2) {31.5, 17}, 
-                                                            (Vector2) {0,0}, 
-                                                            (Vector2) {0,0}, 
-                                                            UIVisual_Heap(CreateUIVisual_UIAnimation_V2("Assets/Overworld/Buildings/windmill_atlas.png", 30, 20, (Vector2) {200, 200}, WHITE)),
-                                                            1, 
-                                                            0,
-                                                        NULL,1);
+                                                0,
+                                                NULL,1);
     WorldBuildings_After[1] = CreateWorldEntity((Vector2) {33, 29.375}, 
                                                 (Vector2) {1,2}, 
                                                 (Vector2) {0,0}, 
-                                                &TurbineVisual,  
+                                                &turbine,
                                                 1, 
                                                 0, 
                                                 NULL, 1);
     WorldBuildings_After[2] = CreateWorldEntity((Vector2) {35, 29.375}, 
                                                 (Vector2) {1,2}, 
                                                 (Vector2) {0,0}, 
-                                                &TurbineVisual,  
+                                                &turbine,  
                                                 1, 
                                                 0, 
                                                 NULL, 1);
-    
-    ItemAtlas = LoadTexture("Assets/Overworld/NPCs/items.png");
+}
+
+static void InitZoneButtons(void)
+{
     ButtonUp = CreateUIVisual_UITextureSnippet( ItemAtlas,   
                                                 (Rectangle) {50, 50, 50, 50}, 
                                                 WHITE);
@@ -368,19 +441,60 @@ void InitWorld(void)
         if (i - 2 == 1) continue;
         WorldZoneButtonUpdater[i - 2].visual = &ButtonDown;
     }
+}
 
-    // Initizing boxes
+void InitWorld(void)
+{
+    if (!CurrentWorld) LoadWorldTilemap();
 
-    WorldBoxes[0] = (WORLDBox) {{CHIP, .id=0 }, 
-                                CreateWorldEntity(  (Vector2) {33,32},
-                                                    (Vector2) {1, 1},
-                                                    (Vector2) {0, 0},
-                                                    UIVisual_Heap(CreateUIVisual_UITextureSnippet(ItemAtlas, (Rectangle) {0,0, 50, 50}, WHITE)), 
-                                                    1, 
-                                                    0, 
-                                                    NULL, 
-                                                    3), 
-                                0};
+    // Temporary limits log level to minimize printing to console (for faster load times)
+
+    //SetTraceLogLevel(LOG_WARNING);
+
+    SetWorldSpriteSheet("Assets/Overworld/Maps/Overworld/spritesheet.png", 50); 
+
+    // Particles
+
+    BirdParticle = CreateParticleIndexA_V2("Assets/Particles/bird.png", 30, 10, (Vector2) {50, 50}, 1.5);
+    
+    // Musics and Sounds
+
+    CurrentTheme = LoadMusicStream("Assets/Themes/fazbearhills.mp3");
+    CurrentTheme.looping = 1;
+
+    PlayMusicStream(CurrentTheme);
+
+    WarpSoundEffect = LoadSound("Assets/Sound_Effects/Zone_Warping.wav");
+
+    // Zone Effects
+
+    LegacyZoneEffect = CreateUIVisual_UITexture_P("Assets/Overworld/Zone_Effects/sun_effect_mod.png", SKY_TINT);
+    SetTextureFilter(LegacyZoneEffect.texture, TEXTURE_FILTER_BILINEAR);
+
+    SunHeader = LoadTexture("Assets/Overworld/sun_effect_top.png");
+    SetTextureFilter(SunHeader, TEXTURE_FILTER_BILINEAR);
+
+    InitFreddy();
+
+    // Initizing repeated UIVisuals
+
+    InitBuildings_Pre();
+    InitBuildings_After();
+    
+    WorldWheel = CreateWorldEntity(  (Vector2) {14.25, 15.25}, 
+                                                (Vector2) {5,5}, 
+                                                (Vector2) {0,0}, 
+                                                UIVisual_Heap(CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Wheel.png", 
+                                                                                                        WHITE)), 
+                                                1, 
+                                                0, 
+                                                NULL, 6);
+    
+    ItemAtlas = LoadTexture("Assets/Overworld/NPCs/items.png");
+
+    InitZoneButtons();
+
+    InitBoxes();
 
     ZoneHeader[0] = LoadTexture("Assets/Overworld/UI/Zone_Names/1.png"); 
     ZoneHeader[1] = LoadTexture("Assets/Overworld/UI/Zone_Names/2.png"); 
@@ -884,11 +998,11 @@ void RenderWorldButtons(void)
     RenderWorldEntities(WorldZoneButtonUpdater, 0, IGNORE_DEPTH);
 }
 
-void RenderWorldBoxes(WORLDBox * boxes, uint16_t amount)
+void RenderChipBoxes(WORLDBox * boxes, uint16_t amount)
 {
     for (uint16_t i = 0; i < amount; i++)
     {
-        if (boxes -> open) continue;
+        if (boxes[i].open) continue;
         RenderWorldEntity(&boxes -> entity);
     }
 }
@@ -960,7 +1074,7 @@ void RenderWorld(void)
         // Renders all WORLDEntities
 
         if (i == 3) RenderWorldButtons();
-        if (i == Freddy.depth) RenderWorldBoxes(WorldBoxes, sizeof(WorldBoxes) / sizeof(WORLDBox));
+        if (i == Freddy.depth) RenderChipBoxes(ChipBoxes, NUMBER_OF_CHIPS);
         if (i == Freddy.depth) RenderWorldEntity(&Freddy);
         if (i == WorldWheel.depth) RenderWorldEntity(&WorldWheel);
         RenderWorldEntities(WorldBuildings_Pre, i, FAST);
@@ -1138,7 +1252,7 @@ void PutWorld(void)
     PutUIParticles();
     RenderZoneName();
     HandleWorldButtonCollision();
-    HandleBoxCollisions(WorldBoxes, sizeof(WorldBoxes) / sizeof(WORLDBox));
+    HandleBoxCollisions(ChipBoxes, NUMBER_OF_CHIPS);
     PutDefaultUI();
     RenderChipNoteBanner();
 }
