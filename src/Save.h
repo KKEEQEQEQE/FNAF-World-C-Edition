@@ -49,6 +49,7 @@ extern Animatronic GetAnimatronic(uint8_t index);
 extern void UpdateParty_1(uint8_t index, uint8_t id);
 extern void UpdateParty_2(uint8_t index, uint8_t id);
 
+extern void GetChipInv(uint8_t (*dest) [21]);
 extern void AddChip(uint8_t id);
 extern void UpdateSelected_Chips(uint8_t index, uint8_t id);
 

@@ -137,13 +137,17 @@ void CreateSave(const char * path)
     Last_Location.x = cJSON_AddNumberToObject(Last_LocationJSON, "x", 38);
     Last_Location.y = cJSON_AddNumberToObject(Last_LocationJSON, "y", 21);
 
-    const char * directory = GetDirectoryPath(path);
-    if (!DirectoryExists(directory)) MakeDirectory(directory);
-    if (path) SaveFileText(path, cJSON_Print(SaveJSON));
+    if (path) 
+    {
+        const char * directory = GetDirectoryPath(path);
+        if (!DirectoryExists(directory)) MakeDirectory(directory);
+        SaveFileText(path, cJSON_Print(SaveJSON));
+    }
 }
 
 void LoadSave(const char * path)
 {
+    if (!path) return CreateSave(NULL);
     if (!FileExists(path)) return CreateSave(path);
     
     // Loads all save values
@@ -284,6 +288,22 @@ static void AddGameItem(cJSON * array, uint8_t id)
 void AddChip(uint8_t id)
 {
     AddGameItem(ChipsJSON, id);
+}
+
+void GetChipInv(uint8_t (*dest) [21]) 
+{
+    memset(dest, 0, 21);
+    
+    uint16_t loop_array_size = cJSON_GetArraySize(ChipsJSON);
+
+    for (uint8_t i = 0; i < loop_array_size; i++)
+    {
+        cJSON * id = cJSON_GetObjectItem(cJSON_GetArrayItem(ChipsJSON, i), "id");
+
+        if (!id) continue;
+
+        (*dest)[id -> valueint] = 1;
+    }
 }
 
 void AddByte(uint8_t id)
