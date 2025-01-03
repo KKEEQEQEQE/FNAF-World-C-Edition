@@ -395,11 +395,17 @@ static void InitBuildings_Pre(void)
     static UIVisual red_castle = {0};
     static UIVisual gear_house = {0};
     static UIVisual lumber_house = {0};
+    static UIVisual chimney_freddy = {0};
 
-    if (!blue_castle.type) blue_castle = CreateUIVisual_UITexture_P( "Assets/Overworld/Buildings/Blue_Castle.png", WHITE);
-    if (!red_castle.type) red_castle = CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Red_Castle.png", WHITE);
-    if (!gear_house.type) gear_house = CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Gear_House.png", WHITE);
-    if (!lumber_house.type) lumber_house = CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Lumber_House.png", WHITE);
+    blue_castle = CreateUIVisual_UITexture_P( "Assets/Overworld/Buildings/Blue_Castle.png", WHITE);
+    red_castle = CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Red_Castle.png", WHITE);
+    gear_house = CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Gear_House.png", WHITE);
+    lumber_house = CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Lumber_House.png", WHITE);
+    chimney_freddy = CreateUIVisual_UIAnimation_V2( "Assets/Overworld/NPCs/chimney_freddy.png", 
+                                                    15, 
+                                                    31, 
+                                                    (Vector2) {50, 50}, 
+                                                    WHITE);
 
     WorldBuildings_Pre[0] = CreateWorldEntity(  (Vector2) {33.8, 11}, 
                                                 (Vector2) {0,0}, 
@@ -429,6 +435,13 @@ static void InitBuildings_Pre(void)
                                                 (Vector2) {0,0}, 
                                                 (Vector2) {0,0}, 
                                                 &lumber_house, 
+                                                1, 
+                                                0, 
+                                                NULL, 3);
+    WorldBuildings_Pre[4] = CreateWorldEntity(  (Vector2) {8, 19.25}, 
+                                                (Vector2) {1,1}, 
+                                                (Vector2) {0,0}, 
+                                                &chimney_freddy, 
                                                 1, 
                                                 0, 
                                                 NULL, 3);
@@ -697,11 +710,11 @@ Rectangle GetCameraView(void)
                                             WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()) + 2, 
                                             WorldCamera.zoom + 2    };
 
-    if (CameraView.x + (CameraView.width - 2) / 2 >= CurrentWorld -> mapWidth) CameraView.x = CurrentWorld -> mapWidth - (CameraView.width - 2) / 2;
-    else if (CameraView.x < 0) CameraView.x = 0;
+    //if (CameraView.x + (CameraView.width - 2) / 2 >= CurrentWorld -> mapWidth) CameraView.x = CurrentWorld -> mapWidth - (CameraView.width - 2) / 2;
+    if (CameraView.x <= 0) CameraView.x = 0;
 
-    /*if (CameraView.y + (CameraView.height - 2) / 2 >= CurrentWorld -> mapHeight) CameraView.y = CurrentWorld -> mapHeight - (CameraView.height - 2) / 2;
-    else if (CameraView.y < 0) CameraView.y = 0;*/
+    //if (CameraView.y + (CameraView.height - 2) / 2 >= CurrentWorld -> mapHeight) CameraView.y = CurrentWorld -> mapHeight - (CameraView.height - 2) / 2;
+    if (CameraView.y <= 0) CameraView.y = 0;
 
     return CameraView;
 }
@@ -996,13 +1009,13 @@ void RenderZoneEffect_Zone3(Vector2 offset)
                     WHITE);
 
     EndBlendMode();
-
+    
     DrawAnimation_V2(   &LegacyZoneEffect.animation_V2, 
                         offset.x + vWidth / 2. - width / 2., 
                         offset.y + vHeight / 2. - height / 2., 
                         scale, 
                         0);
-    EndBlendMode();
+    
 }
 
 uint8_t GetZone(void)
@@ -1333,8 +1346,8 @@ static void HandleMineCollision_Ent(void)
 
 static void HandleMineCollision_Ex(void)
 {
-    static Vector2 look_up_table[NUMBER_OF_MINES] = {   (Vector2) {44.65, 33.275},
-                                                        (Vector2) {8.65, 23.275}};
+    static Vector2 look_up_table[NUMBER_OF_MINES] = {   (Vector2) {44.65, 33},
+                                                        (Vector2) {8.65, 23}};
     for (uint8_t i = 0; i < NUMBER_OF_MINES; i++)
     {
         if (CheckEntityCollision(&Freddy, Ex_MinesTeleporters + i))

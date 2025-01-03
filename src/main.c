@@ -39,13 +39,13 @@ int main(void)
 {
     // Init Window
 
-    InitWindow(1280, 720, "FNAF World: C Edition");
+    InitWindow(1280, 720, "FNAF World: Raylib Edition");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
-    SetWindowMinSize(1280, 720); 
+    //SetWindowMinSize(1280, 720); 
 
     InitAudioDevice();
 
-    SwapGameState(Title);
+    
 
     // Loading important stuff
 
@@ -55,18 +55,14 @@ int main(void)
 
     clock_t stop = clock();
     printf("%f\n", (stop-start) / (float)CLOCKS_PER_SEC);
-
-    // Setting FPS cap so I don't blow up my computer
-
+    SwapGameState(World);
     SetTargetFPS(240);
-    
     // Main Game Loop
 
     while (!WindowShouldClose())
     {
         BeginDrawing();
-        // This can actually be omited because pixel gets redrawn
-        //ClearBackground(BLACK);
+        ClearBackground(BLACK);
         switch (GetGameState()) 
         {
             case Title:
