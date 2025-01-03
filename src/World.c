@@ -243,7 +243,7 @@ static void InitBoxes(void)
                                 0};
     
     ChipBoxes[3] = (WORLDBox) {{CHIP, .id=3 }, 
-                                CreateWorldEntity(  (Vector2) {33, 32},
+                                CreateWorldEntity(  (Vector2) {26, 29},
                                                     (Vector2) {1, 1},
                                                     (Vector2) {0, 0},
                                                     &grey_chip_chest, 
@@ -254,7 +254,7 @@ static void InitBoxes(void)
                                 0};
     
     ChipBoxes[4] = (WORLDBox) {{CHIP, .id=4 }, 
-                                CreateWorldEntity(  (Vector2) {33, 32},
+                                CreateWorldEntity(  (Vector2) {15, 27},
                                                     (Vector2) {1, 1},
                                                     (Vector2) {0, 0},
                                                     &grey_chip_chest, 
@@ -276,7 +276,7 @@ static void InitBoxes(void)
                                 0};
 
     ChipBoxes[6] = (WORLDBox) {{CHIP, .id=6 }, 
-                                CreateWorldEntity(  (Vector2) {33, 32},
+                                CreateWorldEntity(  (Vector2) {49, 18},
                                                     (Vector2) {1, 1},
                                                     (Vector2) {0, 0},
                                                     &grey_chip_chest, 
