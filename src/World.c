@@ -24,6 +24,7 @@
 #include "Background.h"
 #include "Particle.h"
 #include "Settings.h"
+#include <stdlib.h>
 #include <string.h>
 #include "UI.h"
 #include "Tilemap_JSON_Conversion.h"
@@ -100,10 +101,16 @@ typedef struct WORLDBox
 } WORLDBox;
 
 #define NUMBER_OF_CHIPS 7
+
 WORLDBox ChipBoxes[NUMBER_OF_CHIPS] = {0};
 Texture2D ItemAtlas = {0};
 
-UITexture ZoneHeader[3] = {0};
+#define NUMBER_OF_MINES 2
+
+WORLDEntity Ent_MinesTeleporters[NUMBER_OF_MINES];
+WORLDEntity Ex_MinesTeleporters[NUMBER_OF_MINES];
+
+UITexture ZoneHeader[4] = {0};
 char * ZoneNames[] = {"Fazbear Hills", "Choppy's Woods", "Dusting Fields"};
 
 UIElement JumpVisual = {0};
@@ -201,11 +208,58 @@ static void InitOpenedChipBoxes(void)
     }
 }
 
+static void InitMines(void)
+{
+    static Texture2D mine_atlas = {0};
+    static UIVisual mine_front = {0};
+    static UIVisual mine_back = {0};
+
+    mine_atlas = LoadTexture("Assets/Overworld/Buildings/Mine_Atlas.png");
+
+    //SetTextureFilter(mine_atlas, TEXTURE_FILTER_BILINEAR);
+
+    mine_front = CreateUIVisual_UITextureSnippet(mine_atlas, (Rectangle) {0, 0, 113, 75}, WHITE);
+    mine_back = CreateUIVisual_UITextureSnippet(mine_atlas, (Rectangle) {113, 0, 80, 53}, WHITE);
+
+    Ent_MinesTeleporters[0] = CreateWorldEntity((Vector2){44, 31},
+                                                (Vector2){2, 2}, 
+                                                (Vector2) {0, 0}, 
+                                                &mine_front, 
+                                                1, 
+                                                0, 
+                                                NULL, 
+                                                3);
+    Ent_MinesTeleporters[1] = CreateWorldEntity((Vector2){8, 21}, 
+                                                (Vector2){2, 2}, 
+                                                (Vector2) {0, 0}, 
+                                                &mine_front, 
+                                                1, 
+                                                0, 
+                                                NULL, 
+                                                3);
+
+    Ex_MinesTeleporters[0] = CreateWorldEntity( (Vector2){29, 72}, 
+                                                (Vector2){1, 1}, 
+                                                (Vector2) {0, 0}, 
+                                                &mine_back, 
+                                                1, 
+                                                0, 
+                                                NULL, 
+                                                3);
+    Ex_MinesTeleporters[1] = CreateWorldEntity( (Vector2){36, 62}, 
+                                                (Vector2){1, 1}, 
+                                                (Vector2) {0, 0}, 
+                                                &mine_back, 
+                                                1, 
+                                                0, 
+                                                NULL, 
+                                                3);
+}
 static void InitBoxes(void)
 {
     static UIVisual grey_chip_chest = {0};
 
-    if (!grey_chip_chest.type) grey_chip_chest = CreateUIVisual_UITextureSnippet(ItemAtlas, (Rectangle) {0,0, 50, 50}, WHITE);
+    grey_chip_chest = CreateUIVisual_UITextureSnippet(ItemAtlas, (Rectangle) {0,0, 50, 50}, WHITE);
 
     // Initizing boxes
 
@@ -232,7 +286,7 @@ static void InitBoxes(void)
                                 0};
 
     ChipBoxes[2] = (WORLDBox) {{CHIP, .id=2 }, 
-                                CreateWorldEntity(  (Vector2) {33, 32},
+                                CreateWorldEntity(  (Vector2) {50, 22},
                                                     (Vector2) {1, 1},
                                                     (Vector2) {0, 0},
                                                     &grey_chip_chest, 
@@ -493,12 +547,13 @@ void InitWorld(void)
     ItemAtlas = LoadTexture("Assets/Overworld/NPCs/items.png");
 
     InitZoneButtons();
-
+    InitMines();
     InitBoxes();
 
     ZoneHeader[0] = LoadTexture("Assets/Overworld/UI/Zone_Names/1.png"); 
     ZoneHeader[1] = LoadTexture("Assets/Overworld/UI/Zone_Names/2.png"); 
     ZoneHeader[2] = LoadTexture("Assets/Overworld/UI/Zone_Names/3.png"); 
+    ZoneHeader[3] = LoadTexture("Assets/Overworld/UI/Zone_Names/4.png"); 
 
     WarpButtons[0] = (_WarpButton) {    {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Zone_Buttons/1.png", 
                                                                 WHITE), 
@@ -642,11 +697,11 @@ Rectangle GetCameraView(void)
                                             WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()) + 2, 
                                             WorldCamera.zoom + 2    };
 
-    if (CameraView.x + (CameraView.width + 2) / 2 >= CurrentWorld -> mapWidth) CameraView.x = CurrentWorld -> mapWidth - (CameraView.width + 2) / 2;
+    if (CameraView.x + (CameraView.width - 2) / 2 >= CurrentWorld -> mapWidth) CameraView.x = CurrentWorld -> mapWidth - (CameraView.width - 2) / 2;
     else if (CameraView.x < 0) CameraView.x = 0;
 
-    if (CameraView.y + (CameraView.height + 2) / 2 >= CurrentWorld -> mapHeight) CameraView.y = CurrentWorld -> mapHeight - (CameraView.height + 2) / 2;
-    else if (CameraView.y < 0) CameraView.y = 0;
+    /*if (CameraView.y + (CameraView.height - 2) / 2 >= CurrentWorld -> mapHeight) CameraView.y = CurrentWorld -> mapHeight - (CameraView.height - 2) / 2;
+    else if (CameraView.y < 0) CameraView.y = 0;*/
 
     return CameraView;
 }
@@ -887,6 +942,19 @@ void SpawnBirds(void)
     }
 }
 
+void RenderZoneEffect_Back_Texture(Vector2 offset)
+{
+    float screenRatio = (float) GetScreenWidth() / GetScreenHeight();
+    int vWidth = (WorldCamera.zoom * CurrentTileSize) * screenRatio + 3;
+    int vHeight = WorldCamera.zoom * CurrentTileSize + 3;
+
+    DrawTexturePro( LegacyZoneEffect.texture, 
+                    (Rectangle) {0, 0, LegacyZoneEffect.texture.width, LegacyZoneEffect.texture.height}, 
+                    (Rectangle) {offset.x - 1, offset.y - 1, vWidth, vHeight}, 
+                    (Vector2) {0, 0}, 0, 
+                    LegacyZoneEffect.tint);
+}
+
 void RenderZoneEffect_Zone1(Vector2 offset)
 {
     float screenRatio = (float) GetScreenWidth() / GetScreenHeight();
@@ -901,12 +969,7 @@ void RenderZoneEffect_Zone1(Vector2 offset)
                     (Vector2) {0, 0}, 0, 
                     SKYBLUE);
 
-    DrawTexturePro( LegacyZoneEffect.texture, 
-                    (Rectangle) {0, 0, LegacyZoneEffect.texture.width, LegacyZoneEffect.texture.height}, 
-                    (Rectangle) {offset.x, offset.y, vWidth, vHeight}, 
-                    (Vector2) {0, 0}, 0, 
-                    LegacyZoneEffect.tint);
-
+    RenderZoneEffect_Back_Texture(offset);
     EndBlendMode();
 }
 
@@ -918,8 +981,8 @@ void RenderZoneEffect_Zone3(Vector2 offset)
     int vHeight = WorldCamera.zoom * CurrentTileSize;
 
     float scale =   GetScreenRatio() > 1.66666666667 ? 
-                        (float) vWidth / LegacyZoneEffect.animation_V2.TileSize_x  :
-                        (float) vHeight / LegacyZoneEffect.animation_V2.TileSize_y;
+                        (float) vWidth / LegacyZoneEffect.animation_V2.TileSize_x + 0.1 :
+                        (float) vHeight / LegacyZoneEffect.animation_V2.TileSize_y + 0.1;
 
     uint16_t width = (LegacyZoneEffect.animation_V2.TileSize_x * scale);
     uint16_t height = (LegacyZoneEffect.animation_V2.TileSize_y * scale);
@@ -939,13 +1002,12 @@ void RenderZoneEffect_Zone3(Vector2 offset)
                         offset.y + vHeight / 2. - height / 2., 
                         scale, 
                         0);
- EndBlendMode();
-    
+    EndBlendMode();
 }
 
 uint8_t GetZone(void)
 {
-    static uint16_t ZoneIds[3] = {32, 33, 46};
+    static uint16_t ZoneIds[] = {32, 33, 46, 89};
     Vector2 ZoneCheck = (Vector2) {Freddy.position.x + Freddy.size.x / 2, Freddy.position.y + Freddy.size.y / 2};
     uint16_t Zone = AccessPositionInLayer((uint16_t) ZoneCheck.x, (uint16_t) ZoneCheck.y, CurrentWorld->layers + 0);
 
@@ -969,11 +1031,14 @@ void RenderZoneEffect(void)
         case DUSTINGFIELDS:
             RenderZoneEffect_Zone3(CameraMinorOffset);
             break;
+        case MYSTERIOUSMINES:
+            RenderZoneEffect_Back_Texture(CameraMinorOffset);
+            break;
         case FAZBEARHILLS:
         case CHOPPYSWOODS: 
+        default: 
             SpawnBirds();
             RenderZoneEffect_Zone1(CameraMinorOffset);  
-        default:    
             break;
     }
 }
@@ -1073,10 +1138,13 @@ void RenderWorld(void)
 
         // Renders all WORLDEntities
 
+        RenderWorldEntities(Ent_MinesTeleporters, i, FAST);
+        RenderWorldEntities(Ex_MinesTeleporters, i, FAST);
         if (i == 3) RenderWorldButtons();
         if (i == Freddy.depth) RenderChipBoxes(ChipBoxes, NUMBER_OF_CHIPS);
         if (i == Freddy.depth) RenderWorldEntity(&Freddy);
         if (i == WorldWheel.depth) RenderWorldEntity(&WorldWheel);
+
         RenderWorldEntities(WorldBuildings_Pre, i, FAST);
         
         RenderWorldEntities(WorldBuildings_After, i, FAST);
@@ -1167,6 +1235,11 @@ void UpdateZoneAssets(void)
             SetTextureFilter(LegacyZoneEffect.animation_V2.Atlas, TEXTURE_FILTER_BILINEAR);
             FlushParticles();
             break;
+        case MYSTERIOUSMINES:
+            CurrentTheme = LoadMusicStream("Assets/Themes/mysteriousmines.mp3");
+            LegacyZoneEffect = CreateUIVisual_UITexture_P("Assets/Overworld/Zone_Effects/mysterious_mines_effect.png", WHITE);
+            FlushParticles();
+            break;
         case CHOPPYSWOODS:
         case FAZBEARHILLS:
         default:
@@ -1243,6 +1316,42 @@ void HandleBoxCollisions(WORLDBox * boxes, uint16_t amount)
     }
 }
 
+static void HandleMineCollision_Ent(void)
+{
+    static Vector2 look_up_table[NUMBER_OF_MINES] = {   (Vector2) {29.15, 71.275},
+                                                        (Vector2) {36.15, 61.275}};
+    for (uint8_t i = 0; i < NUMBER_OF_MINES; i++)
+    {
+        if (CheckEntityCollision(&Freddy, Ent_MinesTeleporters + i))
+        {
+            Freddy.position = look_up_table[i];
+            WorldCamera.position = look_up_table[i];
+        }
+    }
+
+}
+
+static void HandleMineCollision_Ex(void)
+{
+    static Vector2 look_up_table[NUMBER_OF_MINES] = {   (Vector2) {44.65, 33.275},
+                                                        (Vector2) {8.65, 23.275}};
+    for (uint8_t i = 0; i < NUMBER_OF_MINES; i++)
+    {
+        if (CheckEntityCollision(&Freddy, Ex_MinesTeleporters + i))
+        {
+            Freddy.position = look_up_table[i];
+            WorldCamera.position = look_up_table[i];
+        }
+    }
+
+}
+
+static void HandleMineCollision(void)
+{
+    HandleMineCollision_Ent();
+    HandleMineCollision_Ex();
+}
+
 void PutWorld(void)
 {   
     UpdateMusicStream(CurrentTheme);
@@ -1253,6 +1362,7 @@ void PutWorld(void)
     RenderZoneName();
     HandleWorldButtonCollision();
     HandleBoxCollisions(ChipBoxes, NUMBER_OF_CHIPS);
+    HandleMineCollision();
     PutDefaultUI();
     RenderChipNoteBanner();
 }

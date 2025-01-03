@@ -50,8 +50,9 @@ int main(void)
     // Loading important stuff
 
     clock_t start = clock();
-    LoadWorldTilemap();
-    LoadSave("Saves/Save1.json");
+
+    LoadSave("Saves/save1.json");
+
     clock_t stop = clock();
     printf("%f\n", (stop-start) / (float)CLOCKS_PER_SEC);
 
@@ -64,7 +65,8 @@ int main(void)
     while (!WindowShouldClose())
     {
         BeginDrawing();
-        ClearBackground(BLACK);
+        // This can actually be omited because pixel gets redrawn
+        //ClearBackground(BLACK);
         switch (GetGameState()) 
         {
             case Title:
@@ -78,7 +80,7 @@ int main(void)
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SwapGameState(Title);
                 break;
         }
-        DrawFPS(10, 10);
+        DrawFPS(10,10);
         EndDrawing();
     }
     
