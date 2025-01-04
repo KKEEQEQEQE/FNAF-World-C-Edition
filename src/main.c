@@ -45,8 +45,6 @@ int main(void)
 
     InitAudioDevice();
 
-    
-
     // Loading important stuff
 
     clock_t start = clock();
@@ -55,7 +53,7 @@ int main(void)
 
     clock_t stop = clock();
     printf("%f\n", (stop-start) / (float)CLOCKS_PER_SEC);
-    SwapGameState(World);
+    SwapGameState(Title);
     SetTargetFPS(240);
 
     // Main Game Loop

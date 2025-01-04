@@ -1315,14 +1315,7 @@ void PutZoneWarp(void)
     }
 }
 
-void PutDefaultUI(void)
-{
-    PutZoneWarp();
-    PutUIButton(&PartyButton);
-    PutUIButton(&ChipsButton);
-    PutUIButton(&BytesButton);
-    PutUIButton(&SaveButton);
-}
+
 enum UIStyles 
 {
     PCORIGINAL, MOBILE, CONTROLLER, PCMINIMAL
@@ -1376,7 +1369,7 @@ static void SwitchUI_MOBILE(void)
     SaveButton.graphic.y = -0.9f;
 }
 
-static void SwitchUI(enum UIStyles style)
+static void SwitchUI(enum Input_Types style)
 {
     switch (style) {
         case MOBILE:
@@ -1475,6 +1468,34 @@ void PutTouchUI(void)
     
 }
 
+void PutPC_Original_UI(void)
+{
+    PutZoneWarp();
+    PutUIButton(&PartyButton);
+    PutUIButton(&ChipsButton);
+    PutUIButton(&BytesButton);
+    PutUIButton(&SaveButton);
+}
+
+void PutDefaultUI(void)
+{
+    static enum Input_Types UI_type = KEYBOARD;
+
+    if (UI_type != GetInputType())
+    {
+        UI_type = GetInputType();
+        SwitchUI(UI_type);
+    }
+
+    switch (UI_type) 
+    {
+        case KEYBOARD:
+            return PutPC_Original_UI();
+        case TOUCH:
+            return PutTouchUI();
+    }
+}
+
 void HandleWorldButtonCollision(void)
 {
     for (uint8_t i = GetZone_Level() - 1; i < NUMBER_OF_BUTTONS; i++)
@@ -1559,7 +1580,6 @@ void PutWorld(void)
 {   
     UpdateMusicStream(CurrentTheme);
     UpdateFreddy();
-    SwitchUI(MOBILE);
     UpdateZoneAssets();
     RenderWorld();
     PutUIParticles();
@@ -1567,6 +1587,6 @@ void PutWorld(void)
     HandleWorldButtonCollision();
     HandleBoxCollisions(ChipBoxes, NUMBER_OF_CHIPS);
     HandleMineCollision();
-    PutTouchUI();
+    PutDefaultUI();
     RenderChipNoteBanner();
 }
