@@ -30,7 +30,7 @@
 UIParticleIndex ParticlesIndex[255] = {0};
 UIParticle AllParticles[MAX_PARTICLES] = {0};
 
-float absf(float x)
+static float absf(float x)
 {
     *(int *)&x &= 0x7fffffff;
     return x;

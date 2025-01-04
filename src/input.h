@@ -28,4 +28,15 @@
 #define TERM_INPUT_CORD {NAN, NAN}
 #define MAX_INPUT_POINTS 11
 
-extern Vector2 * GetInputMouseTouch(void);
+enum Input_Types
+{
+    KEYBOARD,
+    TOUCH
+};
+
+extern enum Input_Types GetInputType(void);
+
+extern void RefreshInput(void);
+
+extern Vector2 * GetInputDown(void);
+extern Vector2 GetInputTap(void);

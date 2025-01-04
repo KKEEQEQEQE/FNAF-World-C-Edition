@@ -82,3 +82,11 @@ typedef struct _WarpButton
     UIButton button;
     uint16_t zoneRequirement;
 } _WarpButton;
+
+typedef struct TouchJoystick
+{
+    float x, y; // In UI Space
+    Vector2 velocity; // Ranges from (-1.0, -1.0) to (1.0, 1.0)
+    UITexture background;
+    UITexture knob;
+} TouchJoystick;

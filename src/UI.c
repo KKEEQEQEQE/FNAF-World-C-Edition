@@ -39,7 +39,7 @@ float GetScreenRatio(void)
 }
 
 // Gets the screen scale relative to the screen height
-float GetScreenScale(void)
+float GetScreenScaleH(void)
 {
     return GetScreenHeight()/720.;
 }
@@ -50,6 +50,22 @@ float GetScreenScaleW(void)
     return GetScreenWidth()/1280.;
 }
 
+enum UI_SCREEN_SCALE_MODE Scale_Mode = HEIGHT;
+
+void SetUIScreenScaleMode(enum UI_SCREEN_SCALE_MODE mode)
+{
+    Scale_Mode = mode;
+}
+
+float GetScreenScale(void)
+{
+    switch (Scale_Mode) {
+        case WIDTH:
+            return GetScreenScaleW();
+        case HEIGHT:
+            return GetScreenScaleH();
+    }
+}
 // Gets the position x needed for a texture to not be visible in UI space
 float GetOutsideWindowX_u16(uint16_t width) 
 {
@@ -219,7 +235,7 @@ UIElement CreateUIElement(UIVisual visual, float x, float y, float scale)
 // Scales and Renders a UIElement
 void RenderUIElement(const UIElement * element) 
 {
-    register float scale = element -> scale * GetScreenHeight() / 720.;
+    register float scale = element -> scale * GetScreenScale();
     switch (element -> visual.type) {
 
         case UIanimation:
@@ -292,7 +308,7 @@ void UpdateUIButton(const UIButton * button)
     register uint16_t inputX = 0;
     register uint16_t inputY = 0;
 
-    register float scale = button -> graphic.scale * GetScreenHeight() / 720.;
+    register float scale = button -> graphic.scale * GetScreenScale();
 
     UITexture buttonTexture = {0};
 
@@ -319,7 +335,7 @@ void UpdateUIButton(const UIButton * button)
     register uint16_t buttonW = buttonTexture.width * scale;
     register uint16_t buttonH = buttonTexture.height * scale;
     
-    Vector2 * inputs = GetInputMouseTouch();
+    Vector2 inputs[2] = {GetInputTap(), (Vector2){NAN, NAN}};
     for (uint8_t i = 0; inputs[i].x != NAN && inputs[i].y != NAN && i < MAX_INPUT_POINTS; i++) 
     {
         inputX = (uint16_t) inputs[i].x;

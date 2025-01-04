@@ -39,9 +39,9 @@ int main(void)
 {
     // Init Window
 
-    InitWindow(1280, 720, "FNAF World: Raylib Edition");
+    InitWindow(1280, 720, "FNAF World: C Edition");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
-    //SetWindowMinSize(1280, 720); 
+    SetWindowMinSize(1280, 720); 
 
     InitAudioDevice();
 
@@ -57,10 +57,13 @@ int main(void)
     printf("%f\n", (stop-start) / (float)CLOCKS_PER_SEC);
     SwapGameState(World);
     SetTargetFPS(240);
-    // Main Game Loop
 
+    // Main Game Loop
+    
     while (!WindowShouldClose())
     {
+        
+
         BeginDrawing();
         ClearBackground(BLACK);
         switch (GetGameState()) 
@@ -77,6 +80,10 @@ int main(void)
                 break;
         }
         DrawFPS(10,10);
+        
+        // Refreshes Touch Input
+        RefreshInput();
+
         EndDrawing();
     }
     

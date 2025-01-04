@@ -30,9 +30,11 @@
 #include "Tilemap_JSON_Conversion.h"
 #include "World_Chip_Note.h"
 #include <math.h>
+#include "../Include/raymath.h"
 #include <stdint.h>
 #include <stdio.h>
 #include "Save.h"
+#include "input.h"
 #include <time.h>
 #include "World.h"
 
@@ -114,13 +116,17 @@ UITexture ZoneHeader[4] = {0};
 char * ZoneNames[] = {"Fazbear Hills", "Choppy's Woods", "Dusting Fields"};
 
 UIElement JumpVisual = {0};
-_WarpButton WarpButtons[7] = {0};
+
+#define NUMBER_OF_WARP_BUTTONS 7
+_WarpButton WarpButtons[NUMBER_OF_WARP_BUTTONS] = {0};
 Sound WarpSoundEffect = {0};
 
 UIButton PartyButton = {0};
 UIButton ChipsButton = {0};
 UIButton BytesButton = {0};
 UIButton SaveButton = {0};
+
+TouchJoystick Mobile_Joystick = {0};
 
 // Particles
 
@@ -208,6 +214,14 @@ static void InitOpenedChipBoxes(void)
     }
 }
 
+static void InitJoystick(void)
+{
+    Mobile_Joystick.background = LoadTexture("Assets/Overworld/UI_Touch/joystick/backgrounds/joystick_background_black.png");
+    Mobile_Joystick.knob = LoadTexture("Assets/Overworld/UI_Touch/joystick/joystick_knob.png");
+    Mobile_Joystick.velocity = (Vector2) {0, 0};
+    Mobile_Joystick.x = -0.65;
+    Mobile_Joystick.y = 0.5;
+}
 static void InitMines(void)
 {
     static Texture2D mine_atlas = {0};
@@ -560,6 +574,7 @@ void InitWorld(void)
     ItemAtlas = LoadTexture("Assets/Overworld/NPCs/items.png");
 
     InitZoneButtons();
+    InitJoystick();
     InitMines();
     InitBoxes();
 
@@ -748,8 +763,7 @@ void HandleEntityCollision(WORLDEntity * entity)
 // Updates velocity and collision of a WORLDEntity
 void UpdateWorldEntity(WORLDEntity * entity)
 {
-    if ((int16_t) entity -> velocity.x == 0 && (int16_t) entity -> velocity.y == 0) return;
-
+    if (entity -> velocity.x == 0 && entity -> velocity.y == 0) return;
     entity -> position.x += entity -> velocity.x * GetFrameTime();
 
     for (uint16_t i = 1; i < CurrentWorld -> amount; i++)
@@ -1182,6 +1196,12 @@ void RenderWorld(void)
                     WHITE);
 }
 
+static float absf(float x)
+{
+    *(int *)&x &= 0x7fffffff;
+    return x;
+}
+
 void UpdateFreddy(void)
 {
     static uint8_t lastDirection = 0;
@@ -1195,6 +1215,19 @@ void UpdateFreddy(void)
     if (IsKeyDown(KEY_A)) Freddy.velocity.x = -2, CurrentDirection = 2;
     else if (IsKeyDown(KEY_D)) Freddy.velocity.x = 2, CurrentDirection = 3;
     else Freddy.velocity.x = 0;
+
+    Freddy.velocity.x += Mobile_Joystick.velocity.x * 2;
+    Freddy.velocity.y += Mobile_Joystick.velocity.y * 2;
+
+    if (Freddy.velocity.y > 0) CurrentDirection = 4;
+    else if (Freddy.velocity.y < 0) CurrentDirection = 1;
+
+    if (absf(Freddy.velocity.x) >= absf(Freddy.velocity.y))
+    {
+        if (Freddy.velocity.x > 0) CurrentDirection = 3;
+        else if (Freddy.velocity.x < 0) CurrentDirection = 2;
+    }
+    
 
     if (lastDirection != CurrentDirection)
     {
@@ -1237,6 +1270,9 @@ void UpdateZoneAssets(void)
 
     UnloadMusicStream(CurrentTheme);
     FreeUIVisual(&LegacyZoneEffect);
+
+    UnloadTexture(Mobile_Joystick.background);
+    
     memset(&LegacyZoneEffect, 0, sizeof(UIVisual));
     switch (LastZoneCheck) 
     {
@@ -1246,11 +1282,13 @@ void UpdateZoneAssets(void)
                                                                 60, 11,
                                                                 (Vector2) {800, 480}, WHITE);
             SetTextureFilter(LegacyZoneEffect.animation_V2.Atlas, TEXTURE_FILTER_BILINEAR);
+            Mobile_Joystick.background = LoadTexture("Assets/Overworld/UI_Touch/joystick/backgrounds/joystick_background_black.png");
             FlushParticles();
             break;
         case MYSTERIOUSMINES:
             CurrentTheme = LoadMusicStream("Assets/Themes/mysteriousmines.mp3");
             LegacyZoneEffect = CreateUIVisual_UITexture_P("Assets/Overworld/Zone_Effects/mysterious_mines_effect.png", WHITE);
+            Mobile_Joystick.background = LoadTexture("Assets/Overworld/UI_Touch/joystick/backgrounds/joystick_background_blue.png");
             FlushParticles();
             break;
         case CHOPPYSWOODS:
@@ -1258,6 +1296,7 @@ void UpdateZoneAssets(void)
         default:
             CurrentTheme = LoadMusicStream("Assets/Themes/fazbearhills.mp3");
             LegacyZoneEffect = CreateUIVisual_UITexture_P("Assets/Overworld/Zone_Effects/sun_effect_mod.png", SKY_TINT);
+            Mobile_Joystick.background = LoadTexture("Assets/Overworld/UI_Touch/joystick/backgrounds/joystick_background_black.png");
             SetTextureFilter(LegacyZoneEffect.texture, TEXTURE_FILTER_BILINEAR);
     }
     
@@ -1283,6 +1322,157 @@ void PutDefaultUI(void)
     PutUIButton(&ChipsButton);
     PutUIButton(&BytesButton);
     PutUIButton(&SaveButton);
+}
+enum UIStyles 
+{
+    PCORIGINAL, MOBILE, CONTROLLER, PCMINIMAL
+};
+
+static void SwitchUI_PC_ORIGINAL(void)
+{   
+    for (uint8_t i = 0; i < NUMBER_OF_WARP_BUTTONS; i++) 
+    {
+        WarpButtons[i].button.graphic.x = 0.90f;
+        WarpButtons[i].button.graphic.y = -0.8f + 0.2f * i;
+    }
+
+    JumpVisual.x = 0.90f;
+    JumpVisual.y = -0.95f;
+
+    PartyButton.graphic.x = -0.8f;
+    PartyButton.graphic.y = 0.9f;
+
+    ChipsButton.graphic.x = -0.525f;
+    ChipsButton.graphic.y = 0.9f;
+
+    BytesButton.graphic.x = -0.25f;
+    BytesButton.graphic.y = 0.9f;
+
+    SaveButton.graphic.x = 0.025f;
+    SaveButton.graphic.y = 0.9f;
+}
+
+static void SwitchUI_MOBILE(void)
+{   
+    for (uint8_t i = 0; i < NUMBER_OF_WARP_BUTTONS; i++) 
+    {
+        WarpButtons[i].button.graphic.x = 0.90f;
+        WarpButtons[i].button.graphic.y = -0.8f + 0.2f * i;
+    }
+
+    JumpVisual.x = 0.90f;
+    JumpVisual.y = -0.95f;
+
+    PartyButton.graphic.x = 0.55f;
+    PartyButton.graphic.y = -0.9f;
+
+    ChipsButton.graphic.x = 0.275f;
+    ChipsButton.graphic.y = -0.9f;
+
+    BytesButton.graphic.x = 0;
+    BytesButton.graphic.y = -0.9f;
+
+    SaveButton.graphic.x = -0.275f;
+    SaveButton.graphic.y = -0.9f;
+}
+
+static void SwitchUI(enum UIStyles style)
+{
+    switch (style) {
+        case MOBILE:
+            SwitchUI_MOBILE();
+            return;
+        case PCORIGINAL:
+        default:
+            SwitchUI_PC_ORIGINAL();
+            return;
+    }
+}
+
+// Touch UI
+
+float Vector2Strength(Vector2 v)
+{
+    return sqrtf((v.x * v.x) + (v.y * v.y));
+}
+
+Vector2 Vector2Norm(Vector2 v, float target)
+{
+    float angle = tanhf(v.y/v.x);
+    return (Vector2) {cosf(angle) * target, sinf(angle) * target};
+}
+
+void UpdateJoystick(void)
+{
+    float scale = GetScreenScale();
+
+    Vector2 joystick_position = (Vector2) { SCREEN_POSITION_TO_PIXEL_X(Mobile_Joystick.x, Mobile_Joystick.background.width, scale),
+                                            SCREEN_POSITION_TO_PIXEL_Y(Mobile_Joystick.y, Mobile_Joystick.background.height, scale)};
+    
+    Vector2 joystick_centre = (Vector2) { joystick_position.x + Mobile_Joystick.background.width * scale / 2,
+                                            joystick_position.y + Mobile_Joystick.background.height * scale / 2};
+
+    Rectangle joystick_hitbox = (Rectangle) {   joystick_position.x - Mobile_Joystick.background.width * scale / (3/2.), 
+                                                joystick_position.y - Mobile_Joystick.background.height * scale / (3/2.), 
+                                                Mobile_Joystick.background.width * scale * 3, 
+                                                Mobile_Joystick.background.height * scale * 3};
+
+    Vector2 * touch_points = GetInputDown();
+
+    Vector2 velocity = {0};
+    for (uint8_t i = 0; i < MAX_INPUT_POINTS + 1; i++) 
+    {
+        if (touch_points[i].x == NAN) break;
+        if (!CheckCollisionPointRec(touch_points[i], joystick_hitbox)) continue;
+        
+        velocity = (Vector2) {  (-joystick_centre.x + touch_points[i].x) /  (Mobile_Joystick.background.width * scale / 2),
+                                (-joystick_centre.y + touch_points[i].y) /  (Mobile_Joystick.background.height * scale / 2)};
+        
+        if (Vector2Length(velocity) > 1) velocity = Vector2Normalize(velocity);
+    }
+    Mobile_Joystick.velocity = velocity;
+}
+
+void RenderJoystick(void)
+{
+    float scale = GetScreenScale();
+    Vector2 knob_position = (Vector2) { SCREEN_POSITION_TO_PIXEL_X(Mobile_Joystick.x, Mobile_Joystick.background.width, scale),
+                                        SCREEN_POSITION_TO_PIXEL_Y(Mobile_Joystick.y, Mobile_Joystick.background.height, scale)};
+    knob_position.x += Mobile_Joystick.velocity.x * Mobile_Joystick.background.width / 2 * scale;
+    knob_position.y += Mobile_Joystick.velocity.y * Mobile_Joystick.background.height / 2 * scale;
+    
+    RenderUITexture(Mobile_Joystick.background, Mobile_Joystick.x, Mobile_Joystick.y, scale);
+
+    DrawTexturePro( Mobile_Joystick.knob, 
+                    (Rectangle) {0, 0, Mobile_Joystick.knob.width, Mobile_Joystick.knob.height}, 
+                    (Rectangle) {knob_position.x, knob_position.y, Mobile_Joystick.knob.width * scale, Mobile_Joystick.knob.height * scale},
+                    (Vector2) {-Mobile_Joystick.knob.width * scale / 2, -Mobile_Joystick.knob.height * scale / 2},
+                    0,
+                    WHITE);
+}
+
+void PutTouchJoystick(void)
+{
+    UpdateJoystick();
+    RenderJoystick();
+}
+
+void PutTouchUI(void)
+{
+    PutZoneWarp();
+
+    if (GetScreenRatio() <= 81/50.) SetUIScreenScaleMode(WIDTH);
+
+    PutUIButton(&PartyButton);
+    PutUIButton(&ChipsButton);
+    PutUIButton(&BytesButton);
+    PutUIButton(&SaveButton);
+
+    PutTouchJoystick();
+
+    SetUIScreenScaleMode(HEIGHT);
+
+    
 }
 
 void HandleWorldButtonCollision(void)
@@ -1369,6 +1559,7 @@ void PutWorld(void)
 {   
     UpdateMusicStream(CurrentTheme);
     UpdateFreddy();
+    SwitchUI(MOBILE);
     UpdateZoneAssets();
     RenderWorld();
     PutUIParticles();
@@ -1376,6 +1567,6 @@ void PutWorld(void)
     HandleWorldButtonCollision();
     HandleBoxCollisions(ChipBoxes, NUMBER_OF_CHIPS);
     HandleMineCollision();
-    PutDefaultUI();
+    PutTouchUI();
     RenderChipNoteBanner();
 }

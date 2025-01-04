@@ -87,6 +87,12 @@ typedef struct UIButton
     
 } UIButton;
 
+enum UI_SCREEN_SCALE_MODE
+{
+    WIDTH, HEIGHT
+};
+
+extern void SetUIScreenScaleMode(enum UI_SCREEN_SCALE_MODE mode);
 
 // Gets the screen ratio
 extern float GetScreenRatio(void);
