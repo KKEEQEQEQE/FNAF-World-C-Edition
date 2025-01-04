@@ -221,6 +221,9 @@ static void InitJoystick(void)
     Mobile_Joystick.velocity = (Vector2) {0, 0};
     Mobile_Joystick.x = -0.65;
     Mobile_Joystick.y = 0.5;
+
+    SetTextureFilter( Mobile_Joystick.background, TEXTURE_FILTER_BILINEAR);
+    SetTextureFilter( Mobile_Joystick.knob, TEXTURE_FILTER_BILINEAR);
 }
 static void InitMines(void)
 {
@@ -969,15 +972,27 @@ void SpawnBirds(void)
     }
 }
 
-void RenderZoneEffect_Back_Texture(Vector2 offset)
+void RenderZoneEffect_Back_Texture(Vector2 offset, uint8_t stretched)
 {
     float screenRatio = (float) GetScreenWidth() / GetScreenHeight();
-    int vWidth = (WorldCamera.zoom * CurrentTileSize) * screenRatio + 3;
-    int vHeight = WorldCamera.zoom * CurrentTileSize + 3;
+    int vWidth = (WorldCamera.zoom * CurrentTileSize) * screenRatio;
+    int vHeight = WorldCamera.zoom * CurrentTileSize;
 
+    float scale =   GetScreenRatio() > 1.66666666667 ? 
+                        (float) vWidth / LegacyZoneEffect.texture.width + 0.1 :
+                        (float) vHeight / LegacyZoneEffect.texture.height + 0.1;
+
+    uint16_t width = (LegacyZoneEffect.texture.width * scale);
+    uint16_t height = (LegacyZoneEffect.texture.height * scale);
+
+    if (!stretched)
+    {
+        offset.x += vWidth / 2. - width / 2.;
+        offset.y += vHeight / 2. - height / 2.;
+    }
     DrawTexturePro( LegacyZoneEffect.texture, 
                     (Rectangle) {0, 0, LegacyZoneEffect.texture.width, LegacyZoneEffect.texture.height}, 
-                    (Rectangle) {offset.x - 1, offset.y - 1, vWidth, vHeight}, 
+                    (Rectangle) {offset.x, offset.y, stretched ? vWidth : width, stretched ? vHeight : height}, 
                     (Vector2) {0, 0}, 0, 
                     LegacyZoneEffect.tint);
 }
@@ -996,7 +1011,7 @@ void RenderZoneEffect_Zone1(Vector2 offset)
                     (Vector2) {0, 0}, 0, 
                     SKYBLUE);
 
-    RenderZoneEffect_Back_Texture(offset);
+    RenderZoneEffect_Back_Texture(offset, 1);
     EndBlendMode();
 }
 
@@ -1059,7 +1074,7 @@ void RenderZoneEffect(void)
             RenderZoneEffect_Zone3(CameraMinorOffset);
             break;
         case MYSTERIOUSMINES:
-            RenderZoneEffect_Back_Texture(CameraMinorOffset);
+            RenderZoneEffect_Back_Texture(CameraMinorOffset, 0);
             break;
         case FAZBEARHILLS:
         case CHOPPYSWOODS: 
@@ -1208,16 +1223,20 @@ void UpdateFreddy(void)
 
     uint8_t CurrentDirection = 0;
 
-    if (IsKeyDown(KEY_W)) Freddy.velocity.y = -2, CurrentDirection = 1;
-    else if (IsKeyDown(KEY_S)) Freddy.velocity.y = 2, CurrentDirection = 4;
-    else Freddy.velocity.y = 0;
+    if (GetInputType() == KEYBOARD)
+    {
+        if (IsKeyDown(KEY_W)) Freddy.velocity.y = -2, CurrentDirection = 1;
+        else if (IsKeyDown(KEY_S)) Freddy.velocity.y = 2, CurrentDirection = 4;
+        else Freddy.velocity.y = 0;
 
-    if (IsKeyDown(KEY_A)) Freddy.velocity.x = -2, CurrentDirection = 2;
-    else if (IsKeyDown(KEY_D)) Freddy.velocity.x = 2, CurrentDirection = 3;
-    else Freddy.velocity.x = 0;
-
-    Freddy.velocity.x += Mobile_Joystick.velocity.x * 2;
-    Freddy.velocity.y += Mobile_Joystick.velocity.y * 2;
+        if (IsKeyDown(KEY_A)) Freddy.velocity.x = -2, CurrentDirection = 2;
+        else if (IsKeyDown(KEY_D)) Freddy.velocity.x = 2, CurrentDirection = 3;
+        else Freddy.velocity.x = 0;
+    } else if (GetInputType() == TOUCH) {
+        Freddy.velocity.x = Mobile_Joystick.velocity.x * 2;
+        Freddy.velocity.y = Mobile_Joystick.velocity.y * 2;
+    }
+    
 
     if (Freddy.velocity.y > 0) CurrentDirection = 4;
     else if (Freddy.velocity.y < 0) CurrentDirection = 1;
@@ -1300,6 +1319,8 @@ void UpdateZoneAssets(void)
             SetTextureFilter(LegacyZoneEffect.texture, TEXTURE_FILTER_BILINEAR);
     }
     
+    SetTextureFilter( Mobile_Joystick.background, TEXTURE_FILTER_BILINEAR);
+
     CurrentTheme.looping = 1;
     PlayMusicStream(CurrentTheme);
 }
@@ -1413,6 +1434,19 @@ void UpdateJoystick(void)
     Vector2 * touch_points = GetInputDown();
 
     Vector2 velocity = {0};
+
+    if (IsKeyDown(KEY_A)) velocity.x = -1;
+    else if (IsKeyDown(KEY_D)) velocity.x = 1;
+
+    if (IsKeyDown(KEY_W)) velocity.y = -1;
+    else if (IsKeyDown(KEY_S)) velocity.y = 1;
+
+    if ((IsKeyDown(KEY_W) || IsKeyDown(KEY_S)) && (IsKeyDown(KEY_A) || IsKeyDown(KEY_D)))
+    {
+        Mobile_Joystick.velocity = velocity;
+        return;
+    }
+
     for (uint8_t i = 0; i < MAX_INPUT_POINTS + 1; i++) 
     {
         if (touch_points[i].x == NAN) break;
@@ -1420,9 +1454,9 @@ void UpdateJoystick(void)
         
         velocity = (Vector2) {  (-joystick_centre.x + touch_points[i].x) /  (Mobile_Joystick.background.width * scale / 2),
                                 (-joystick_centre.y + touch_points[i].y) /  (Mobile_Joystick.background.height * scale / 2)};
-        
-        if (Vector2Length(velocity) > 1) velocity = Vector2Normalize(velocity);
     }
+
+    if (Vector2Length(velocity) > 1) velocity = Vector2Normalize(velocity);
     Mobile_Joystick.velocity = velocity;
 }
 
@@ -1471,10 +1505,15 @@ void PutTouchUI(void)
 void PutPC_Original_UI(void)
 {
     PutZoneWarp();
+
+    if (GetScreenRatio() <= 81/50.) SetUIScreenScaleMode(WIDTH);
+
     PutUIButton(&PartyButton);
     PutUIButton(&ChipsButton);
     PutUIButton(&BytesButton);
     PutUIButton(&SaveButton);
+
+    SetUIScreenScaleMode(HEIGHT);
 }
 
 void PutDefaultUI(void)
