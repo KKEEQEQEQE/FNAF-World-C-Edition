@@ -23,7 +23,7 @@
 #pragma once
 
 #include "Animation.h"
-#include "Tilemap_JSON_Conversion.h"
+#include "Yellowwood.h"
 #include "UI.h"
 #include <stdint.h>
 
@@ -71,8 +71,6 @@ enum Corner
     TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTONRIGHT
 };
 
-extern Vector2 GetEntityCorner(WORLDEntity * entity, enum Corner corner);
-extern WORLDTile AccessPositionInLayer(uint16_t x, uint16_t y, WORLDTilemapLayer * layer);
 extern void UpdateWorldEntity(WORLDEntity * entity);
 extern void RenderWorld(void);
 extern void PutWorld(void);

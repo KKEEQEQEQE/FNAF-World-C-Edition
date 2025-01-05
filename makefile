@@ -1,5 +1,5 @@
 cc = gcc
-cflags = -std=c17 
+cflags = -std=c17 -Wall -Wextra -Werror
 
 clean:
 	touch bin/temp.o

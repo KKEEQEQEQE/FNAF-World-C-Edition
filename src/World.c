@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "UI.h"
-#include "Tilemap_JSON_Conversion.h"
+#include "Yellowwood.h"
 #include "World_Chip_Note.h"
 #include <math.h>
 #include "../Include/raymath.h"
@@ -661,7 +661,7 @@ void ResetWorld(void)
     PlayMusicStream(CurrentTheme);
 }
 
-Vector2 GetEntityCorner(WORLDEntity * entity, enum Corner corner)
+static Vector2 GetEntityCorner(WORLDEntity * entity, enum Corner corner)
 {
     switch (corner) {
         case TOPLEFT:
@@ -675,18 +675,7 @@ Vector2 GetEntityCorner(WORLDEntity * entity, enum Corner corner)
     }
 }
 
-WORLDTile AccessPositionInLayer(uint16_t x, uint16_t y, WORLDTilemapLayer * layer)
-{
-    x -= layer -> offsetX;
-    y -= layer -> offsetY;
-    if (x >= layer -> sizeX || y >= layer -> sizeY) return 0;
-
-    register WORLDTile (*tiles)[layer -> sizeY][layer -> sizeX] = layer -> tiles;
-    
-    return (*tiles)[y][x];
-}
-
-uint8_t CheckCollisionTilemap(WORLDEntity * entity, WORLDTilemapLayer * layer)
+static uint8_t CheckCollisionTilemap(WORLDEntity * entity, WORLDTilemapLayer * layer)
 {
     if (!(entity -> collisionTargets & layer -> FLAGS)) return 0;
     
@@ -721,7 +710,7 @@ uint8_t CheckCollisionTilemap(WORLDEntity * entity, WORLDTilemapLayer * layer)
     return 0;
 }
 
-Rectangle GetCameraView(void)
+static Rectangle GetCameraView(void)
 {
     Rectangle CameraView = (Rectangle) {    WorldCamera.position.x - WorldCamera.zoom * ((float) GetScreenWidth() / GetScreenHeight()) / 2, 
                                             WorldCamera.position.y - WorldCamera.zoom / 2, 
@@ -737,8 +726,20 @@ Rectangle GetCameraView(void)
     return CameraView;
 }
 
+// Gets the width of the virtual screen used when drawing the overworld
+static uint32_t Get_V_Width(void)
+{
+    return WorldCamera.zoom * CurrentTileSize * GetScreenRatio();
+}
+
+// Gets the height of the virtual screen used when drawing the overworld
+static uint32_t Get_V_Height(void)
+{
+    return WorldCamera.zoom * CurrentTileSize;
+}
+
 // Uses AABB Collision to check if collision has occured between to WORLDEntities
-_Bool CheckEntityCollision(WORLDEntity * collider, WORLDEntity * collidee)
+static _Bool CheckEntityCollision(WORLDEntity * collider, WORLDEntity * collidee)
 {
     Rectangle colliderHitbox = (Rectangle) {collider -> position.x, 
                                             collider -> position.y, 
@@ -753,7 +754,7 @@ _Bool CheckEntityCollision(WORLDEntity * collider, WORLDEntity * collidee)
 }
 
 // Checks entity collision and uses custom collision function if there is one
-void HandleEntityCollision(WORLDEntity * entity)
+static void HandleEntityCollision(WORLDEntity * entity)
 {
     
     for (uint16_t i = 0; i < sizeof(WORLDEntities) / sizeof(WORLDEntity); i++)
@@ -793,7 +794,7 @@ void UpdateWorldEntity(WORLDEntity * entity)
 }
 
 
-// Scales and Renders a Texture2D relitive to the WORLDCamera
+// Scales and Renders a Texture2D relative to the WORLDCamera
 void RenderWorldTexture(Texture2D * texture, Vector2 position, Vector2 offset, float scale)
 {
     Rectangle CameraView = GetCameraView();
@@ -810,6 +811,7 @@ void RenderWorldTexture(Texture2D * texture, Vector2 position, Vector2 offset, f
                     WHITE);
 }
 
+// Scales and Renders a snippet of a Texture2D relative to the WORLDCamera
 void RenderWorldTextureSnippet(Texture2D * atlas, Vector2 position, Rectangle snippet, Vector2 offset, float scale)
 {
     Rectangle CameraView = GetCameraView();
@@ -826,7 +828,7 @@ void RenderWorldTextureSnippet(Texture2D * atlas, Vector2 position, Rectangle sn
                     WHITE);
 }
 
-// Scales and Renders a UIanimationV2 relitive to the WORLDCamera
+// Scales and Renders a UIanimationV2 relative to the WORLDCamera
 void RenderWorldAnimation_V2(Animation_V2 * animation, Vector2 position, Vector2 offset, float scale)
 {
     Rectangle CameraView = GetCameraView();
@@ -950,6 +952,7 @@ void RenderWorldEntities(WORLDEntity * entities, uint16_t depth, enum FLAGS_ENTI
     }
 }
 
+// Spawns Bird Particles on screen every 2 seconds
 void SpawnBirds(void)
 {
     static clock_t timeSinceLastParticle = 0;
@@ -1148,6 +1151,7 @@ void RenderLayer(uint16_t n, Vector2 CameraMinorOffset)
     }
 }
 
+// Renders the entire overworld on-screen
 void RenderWorld(void)
 {
     float screenRatio = (float) GetScreenWidth() / GetScreenHeight();

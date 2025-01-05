@@ -33,11 +33,13 @@ static uint8_t refresh = 0;
 
 static enum Input_Types current_input_style = KEYBOARD;
 
+// Gets the most recent input method
 enum Input_Types GetInputType(void)
 {
     return current_input_style;
 }
 
+// GetInputType is refreshed and on next GetInputTap, a refresh occurs
 void RefreshInput(void)
 {
     if (GetKeyPressed() != 0) current_input_style = KEYBOARD;
@@ -45,6 +47,7 @@ void RefreshInput(void)
     refresh ^= 1;
 }
 
+// Returns a Vector2[MAX_INPUT_POINTS] with all input points on screen (finger touching screen or holding down mouse)
 Vector2 * GetInputDown(void) 
 {
     static Vector2 Input_Points[MAX_INPUT_POINTS] = {0};
@@ -75,7 +78,7 @@ static Vector2 GetInputTap_Ex(uint8_t id)
 }   
 
 
-
+// Gets the position of a tap or mouse click on screen
 Vector2 GetInputTap(void)
 {
     static uint8_t last_refresh = 0;

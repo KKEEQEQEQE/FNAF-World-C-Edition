@@ -25,18 +25,25 @@
 
 #include "../Include/raylib.h"
 #include <math.h>
-#define TERM_INPUT_CORD {NAN, NAN}
+
+// The max number of input points recorded at once
 #define MAX_INPUT_POINTS 11
 
+// Types of supported input methods
 enum Input_Types
 {
     KEYBOARD,
     TOUCH
 };
 
+// Gets the most recent input method
 extern enum Input_Types GetInputType(void);
 
+// GetInputType is refreshed and on next GetInputTap, a refresh occurs
 extern void RefreshInput(void);
 
+// Returns a Vector2[MAX_INPUT_POINTS] with all input points on screen (finger touching screen or holding down mouse)
 extern Vector2 * GetInputDown(void);
+
+// Gets the position of a tap or mouse click on screen
 extern Vector2 GetInputTap(void);

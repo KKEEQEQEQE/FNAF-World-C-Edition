@@ -1,29 +1,29 @@
 /*
-    Zlib License
+    MIT License
 
     Copyright (c) 2024 SpyterDev
 
-    This software is provided 'as-is', without any express or implied
-    warranty. In no event will the authors be held liable for any damages
-    arising from the use of this software.
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
 
-    Permission is granted to anyone to use this software for any purpose,
-    including commercial applications, and to alter it and redistribute it
-    freely, subject to the following restrictions:
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
 
-    1. The origin of this software must not be misrepresented; you must not
-        claim that you wrote the original software. If you use this software
-        in a product, an acknowledgment in the product documentation would be
-        appreciated but is not required.
-    2. Altered source versions must be plainly marked as such, and must not be
-        misrepresented as being the original software.
-    3. This notice may not be removed or altered from any source distribution.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
 */
 
-
 #include "../Include/cJSON.h"
-#include "World.h"
-#include "Settings.h"
+#include "Yellowwood.h"
 #include <stdlib.h>
 #include <memory.h>
 #include <stdint.h>
@@ -70,6 +70,18 @@ void ErrorEncountered(enum ErrorIDs id)
     EncounterError = 1;
 }
 
+// Access a position in a WORLDTilemapLayer and returns a WORLDTile
+WORLDTile AccessPositionInLayer(uint16_t x, uint16_t y, WORLDTilemapLayer * layer)
+{
+    x -= layer -> offsetX;
+    y -= layer -> offsetY;
+    if (x >= layer -> sizeX || y >= layer -> sizeY) return 0;
+
+    register WORLDTile (*tiles)[layer -> sizeY][layer -> sizeX] = layer -> tiles;
+    
+    return (*tiles)[y][x];
+}
+
 // Returns 1 if the base string starts with the substring. I.E base = "Hi There\0", substring = "Hi\0", result = 1
 uint8_t strstcmp(register const char * base, register const char * substring) {
     register uint64_t i = 0;
@@ -111,7 +123,7 @@ void InitLayerFlagFromName(WORLDTilemapLayer * dest, const cJSON * layer, const 
         return;
     }
     flag *= strstcmp(object -> valuestring, jsonFlag);
-    if (flag && !MinimalPrinting) printf("Layer %s Is %s\n", object->valuestring, jsonFlag);
+    if (flag) printf("Layer %s Is %s\n", object->valuestring, jsonFlag);
     cJSON_free(object);
     dest -> FLAGS |= flag;
 }
@@ -247,7 +259,6 @@ void InitTitlemapLayer(WORLDTilemapLayer * dest, const cJSON * layerJSON)
     // Creating variables
 
     uint32_t AmountOfTiles = cJSON_GetArraySize(tiles);
-    if (!MinimalPrinting) printf("There are %u tiles\n", AmountOfTiles);
 
     uint16_t OffsetX = UINT16_MAX;
     uint16_t OffsetY = UINT16_MAX;
@@ -283,7 +294,6 @@ void InitTitlemapLayer(WORLDTilemapLayer * dest, const cJSON * layerJSON)
     SizeX -= OffsetX - 1;
     SizeY -= OffsetY - 1;
 
-    if (!MinimalPrinting) printf("    Offset: %u, %u | Size: %u, %u\n", OffsetX, OffsetY, SizeX, SizeY);
     // Creating 2D Map array
 
     WORLDTile (*map)[SizeY][SizeX] = malloc(sizeof(WORLDTile) * SizeX * SizeY);
@@ -315,8 +325,6 @@ void InitTitlemapLayer(WORLDTilemapLayer * dest, const cJSON * layerJSON)
     dest ->  FLAGS = 0;
     InitLayerFlag(dest, layerJSON, "collider", LAYER_COLLIDABLE);
     InitLayerFlagFromName(dest, layerJSON, "inv_", LAYER_INVISIBLE);
-
-    if (!MinimalPrinting) PrintLayer(dest);
         
 }
 
@@ -379,7 +387,6 @@ WORLDTilemap * CreateTilemap(const char * jsonPath)
     // Parses all layers and converts them to 2D uint16_t arrays
     for (uint16_t i = 0; i < AmountOfLayers; i++)
     {
-        if (!MinimalPrinting) printf("%p, %s\n", cJSON_GetArrayItem(LayersJSON,i), cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(LayersJSON, i), "name") -> valuestring);
         InitTitlemapLayer(tilemap -> layers + i, cJSON_GetArrayItem(LayersJSON,i));
         if (EncounterError) return NULL;
     }

@@ -198,3 +198,5 @@ extern void RenderUITextureSpritesheetEx(Texture2D atlas, float x, float y, uint
 
     // Scales and Renders a snippet from a UItextureSnippet in UI space with addition parameters
     extern void RenderUITextureSnippetEx(Texture2D atlas, float x, float y, Rectangle snippet, float scale, Color tint);
+
+#define RATIO_16_9 1.66666666667
