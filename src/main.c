@@ -23,6 +23,7 @@
 
 #include "../Include/raylib.h"
 #include "Animation.h"
+#include "Battle.h"
 #include "Title_Screen.h"
 #include "UI.h"
 #include "input.h"
@@ -53,8 +54,11 @@ int main(void)
 
     clock_t stop = clock();
     printf("%f\n", (stop-start) / (float)CLOCKS_PER_SEC);
+    InitWorld();
+    ResetWorld();
     SwapGameState(Title);
     SetTargetFPS(240);
+    //ToggleBorderlessWindowed();
 
     // Main Game Loop
     
@@ -72,7 +76,11 @@ int main(void)
             case World:
                 PutWorld();
                 break;
+            case Battle:
+                PutBattle();
+                break;
             default:
+                SetWindowTitle("FNaF World: C Edition - Unknown State");
                 RenderUIText("Unknown / Invalid Game State Entered.\nTap to go back to title screen!", 0, 0, 0.06, CENTRE, (Font) {0}, WHITE);
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SwapGameState(Title);
                 break;

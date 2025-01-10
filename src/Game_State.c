@@ -22,6 +22,7 @@
 
 
 #include "Game_State.h"
+#include "Battle.h"
 #include "Title_Screen.h"
 #include "World.h"
 
@@ -51,15 +52,11 @@ void SwapGameState(enum GameStateTypes state)
             ResetTitleScreen();
             break;
         case World:
-            clock_t start = clock();
-    
             InitWorld();
             ResetWorld();
-
-            clock_t stop = clock();
-            
-            printf("Loaded into Overworld in %f seconds!\n", (stop-start) / (float)CLOCKS_PER_SEC);
             break;
+        case Battle:
+            InitBattle();
         default:
             break;
     }

@@ -74,6 +74,7 @@ void InitTitleScreen(void)
     UIParty.visual.texture = LoadTexture("Assets/Menu/Title_Screen/Party.png");
     SetTextureFilter(UIParty.visual.texture, TEXTURE_FILTER_BILINEAR);
     UIParty.scale = 1.5;
+    SetTextureWrap(UIParty.visual.texture, TEXTURE_WRAP_CLAMP);
 
     UITitleT.visual.texture = LoadTexture("Assets/Menu/Title_Screen/Title.png");
     SetTextureFilter(UITitleT.visual.texture, TEXTURE_FILTER_BILINEAR);
@@ -84,6 +85,7 @@ void InitTitleScreen(void)
 
     ParticleStars = CreateParticleIndexA_V2("Assets/Particles/titlestar.png", 20,8, (Vector2) {12, 12}, 2);
     TitleScreenFont = LoadFont("Assets/Menu/Title_Screen/font.ttf");
+    SetTextureFilter(TitleScreenFont.texture, TEXTURE_FILTER_BILINEAR);
 }
 
 void UninitTitleScreen(void)
@@ -101,6 +103,7 @@ void UninitTitleScreen(void)
 
 void ResetTitleScreen(void) 
 {
+    SetWindowTitle("FNaF World: C Edition - Title Screen");
     InitTitleScreen();
 
     UITitleA.visual.animation.Clock = StartTime;

@@ -556,6 +556,7 @@ void InitWorld(void)
     SetTextureFilter(LegacyZoneEffect.texture, TEXTURE_FILTER_BILINEAR);
 
     SunHeader = LoadTexture("Assets/Overworld/sun_effect_top.png");
+    SetTextureWrap(SunHeader, TEXTURE_WRAP_CLAMP);
     SetTextureFilter(SunHeader, TEXTURE_FILTER_BILINEAR);
 
     InitFreddy();
@@ -647,6 +648,7 @@ void InitWorld(void)
 
 void ResetWorld(void)
 {
+    SetWindowTitle("FNaF World: C Edition - Overworld");
     Freddy.collisionTargets = LAYER_COLLIDABLE;
     Freddy.size = (Vector2) {0.7, 0.45};
     Freddy.scale = 0.95;
@@ -1050,6 +1052,8 @@ void RenderZoneEffect_Zone3(Vector2 offset)
     
 }
 
+
+// Gets the zone Freddy is currently in
 uint8_t GetZone(void)
 {
     static uint16_t ZoneIds[] = {32, 33, 46, 89};

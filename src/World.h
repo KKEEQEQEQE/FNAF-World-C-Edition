@@ -35,6 +35,8 @@ enum WORLDZONES
     MYSTERIOUSMINES
 };
 
+extern uint8_t GetZone(void);
+
 typedef UIVisual WORLDTileDefinition;
 
 typedef uint16_t WORLDTile;
