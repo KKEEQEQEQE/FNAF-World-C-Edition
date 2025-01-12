@@ -22,11 +22,16 @@
 
 #include "Animation.h"
 #include "Background.h"
+#include "Particle.h"
 #include "UI.h"
 #include "Battle.h"
 #include "World.h"
 #include <malloc.h>
+#include <math.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
 
 #define BATTLE_PIXEL_SCALE (100)
 
@@ -35,6 +40,10 @@
 #define BATTLE_POSITION_TO_PIXEL_Y(y) (BATTLE_PIXEL_SCALE * (y + 720. / BATTLE_PIXEL_SCALE / 2))
 
 #define ENTITY_MACRO_BOUNCEPOT (_BattleEntity) {.name = "Bouncepot", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Bouncepot/atlas.png", 30, 10, 250, 250)}
+
+#define ENTITY_MACRO_GEARRAT (_BattleEntity) {.name = "Gearrat", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Gearrat/atlas.png", 30, 10, 200, 200)}
+
+#define ENTITY_MACRO_MECHRAB (_BattleEntity) {.name = "Mechrab", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Mechrab/atlas.png", 30, 10, 200, 200)}
 
 #define ENTITY_MACRO_FREDDY  (_BattleEntity) { .name = "Freddy", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Freddy/idle.png", 30, 10, 250, 250)}
 
@@ -47,6 +56,8 @@ UITexture BattleBackground = {0};
 
 _BattleParty Party_Enemy = {0};
 _BattleParty Party_Player = {0};
+
+uint8_t particle_test = 0;
 
 enum ENTITY_POSITIONS_FIELD 
 {
@@ -125,7 +136,7 @@ void InitBattle(void)
     SetWindowTitle("FNaF World: C Edition - Battle");
     
     SetTraceLogLevel(LOG_NONE);
-
+    particle_test = CreateParticleIndexA_V2("Assets/Particles/bird.png", 30, 10, (Vector2) {50, 50}, 1.5);;
     switch ((enum WORLDZONES) (GetZone() + 1))
     {
         case FAZBEARHILLS:
@@ -135,7 +146,7 @@ void InitBattle(void)
             BattleBackground = LoadTexture("Assets/Battle/Background/Choppys_Woods.png");;
             break;
         case DUSTINGFIELDS:
-            BattleBackground = LoadTexture("Assets/Battle/Background/Dusting_Fields.png");;
+            BattleBackground = LoadTexture("Assets/Battle/Background/Dusting_Fields.png");
             break;
         case MYSTERIOUSMINES:
             BattleBackground = LoadTexture("Assets/Battle/Background/Mines.png");;
@@ -148,10 +159,10 @@ void InitBattle(void)
 
     
 
-    LoadEntity(Party_Enemy.member, ENTITY_MACRO_BOUNCEPOT, L_U);
-    LoadEntity(Party_Enemy.member + 1, ENTITY_MACRO_BOUNCEPOT, L_L);
-    LoadEntity(Party_Enemy.member + 2, ENTITY_MACRO_BOUNCEPOT, L_R);
-    LoadEntity(Party_Enemy.member + 3, ENTITY_MACRO_BOUNCEPOT, L_D);
+    LoadEntity(Party_Enemy.member, ENTITY_MACRO_MECHRAB, L_U);
+    LoadEntity(Party_Enemy.member + 1, ENTITY_MACRO_MECHRAB, L_L);
+    LoadEntity(Party_Enemy.member + 2, ENTITY_MACRO_MECHRAB, L_R);
+    LoadEntity(Party_Enemy.member + 3, ENTITY_MACRO_MECHRAB, L_D);
 
     Party_Player.size = 4;
     
@@ -180,31 +191,86 @@ enum ATTACK_MOVE_INDEX
 
 typedef struct _AttackQueue 
 {
-    _Bool imminnent;
+    _Bool imminent;
+    clock_t start_time;
+    clock_t wait;
     _Attack attack;
     _BattleEntity * target;
     _BattleEntity * source;
 } _AttackQueue;
 
 #define MAX_ATTACKS_IN_QUEUE 15
-
+#define ATTACK_QUEUE_FREE target = NULL
 _AttackQueue attack_queue[MAX_ATTACKS_IN_QUEUE] = {0};
 
 static uint8_t GetAvaliable_attack_queue(void)
 {
-    return 0;
+    uint8_t i = 0;
+    for (; i < MAX_ATTACKS_IN_QUEUE; i++)
+    {
+        if (!attack_queue[i].target) break;
+    }
+    return i;
 }
+
+static uint8_t GetUnavaliable_attack_queue(void)
+{
+    uint8_t i = 0;
+    for (; i < MAX_ATTACKS_IN_QUEUE; i++)
+    {
+        if (attack_queue[i].target) break;
+    }
+    return i;
+}
+
 #define ATTACK_COOLDOWN (3 * CLOCKS_PER_SEC)
 
 #define ATTACK_PARAMETERS _BattleParty * target_party, _BattleEntity * source, _Attack attack
 
+void RunAttackQueue(_AttackQueue * attack)
+{
+    if (!attack || 
+        !attack -> target) return;
+
+    if (!attack -> imminent && 
+        attack -> source -> remaining_health == 0) goto cleanup;
+
+    switch(attack -> attack.type)
+    {
+        case NONE:
+            break;
+        case HIT:
+            break;
+    }
+
+cleanup:
+    attack -> ATTACK_QUEUE_FREE;
+}
+
+void Print_AttackQueue_struct(_AttackQueue * queue)
+{
+    printf("{\n\timminent = %u,\n\tattack %u,\n\ttarget = %p,\n\tsource = %p\n}\n", queue->imminent, queue -> attack.type, queue->target, queue->source);
+}
+
+void Print_All_Attack_Queue(void)
+{
+    printf("\n\nStart\n");
+
+    for (uint8_t i = 0; i < MAX_ATTACKS_IN_QUEUE; i++)
+    {
+        if (!attack_queue[i].target) continue;
+        printf("ID %u:\n", i);
+        Print_AttackQueue_struct(attack_queue + i);
+    }
+}
 static void _BattleEntity_Attack_Push(ATTACK_PARAMETERS)
 {
     if (!target_party) return;
 
     uint8_t array_size = target_party -> size;
 
-    uint16_t potental_targets[array_size] = {0xFF};
+    uint16_t potental_targets[array_size];
+    memset(potental_targets, 0xff, array_size);
 
     uint8_t num_of_potental_targets = 0;
 
@@ -221,6 +287,17 @@ static void _BattleEntity_Attack_Push(ATTACK_PARAMETERS)
     target_id = potental_targets[target_id];
 
     _BattleEntity * target = target_party -> member + target_id;
+
+    uint8_t queue_id = GetAvaliable_attack_queue();
+
+    if (queue_id == MAX_ATTACKS_IN_QUEUE) return;
+
+    attack_queue[queue_id] = (_AttackQueue) {
+        .attack = attack,
+        .imminent = 0,
+        .source = source,
+        .target = target
+    };
 }
 
 void _BattleEntity_Attack(uint8_t id, enum ATTACK_MOVE_INDEX attack_index)
@@ -236,7 +313,7 @@ void _BattleEntity_Attack(uint8_t id, enum ATTACK_MOVE_INDEX attack_index)
     
     _Attack attack = source -> attacks[attack_index - FIRST];
 
-    _BattleEntity_Attack_Push(target_party, source, attack)
+    _BattleEntity_Attack_Push(target_party, source, attack);
 }
 
 void UninitBattle(void)
@@ -261,7 +338,7 @@ void RenderBattleEntity(register _BattleEntity * entity)
 
     if (entity -> remaining_health == 0) return;
     
-    #ifdef DEBUG 
+    #ifdef DEBUG
     
     RenderBattleEntity_Hitbox(register _BattleEntity * entity);
 
@@ -330,8 +407,14 @@ void PutBattle(void)
 {
     UpdateMusicStream(theme);
     RenderBattle();
-    
+    if (IsKeyPressed(KEY_S)) _BattleEntity_Attack_Push(&Party_Enemy, NULL,(_Attack){.type = 1});
+    if (IsKeyPressed(KEY_W))
+    {
+        attack_queue[GetUnavaliable_attack_queue()].target = NULL;
+    }
+
     RenderUIText(Party_Enemy.member[0].name, -0.945, -0.795, 0.06, LEFTMOST, Battle_Font, BLACK);
     RenderUIText(Party_Enemy.member[0].name, -0.95, -0.8, 0.06, LEFTMOST, Battle_Font, WHITE);
+    RenderUIParticles();
     //RenderHealthBar(Party_Player.member, RED, 0, GetScreenScale());
 }

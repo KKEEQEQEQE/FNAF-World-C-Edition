@@ -158,7 +158,7 @@ void CreateTitlestars(void)
     if (clock() - timeSinceLastParticle > 50 && UIParty.y <= 0.26) 
     {
         float degrees = GetRandomValue(0, 200 *PI)/100.;
-        CreateParticle(ParticleStars, 0, 0, cosf(degrees), sinf(degrees));
+        CreateParticle(ParticleStars, 0, 0, cosf(degrees), sinf(degrees), 0);
         timeSinceLastParticle = clock();
     }
 }

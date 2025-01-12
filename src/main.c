@@ -52,11 +52,7 @@ int main(void)
 
     LoadSave("Saves/save1.json");
 
-    clock_t stop = clock();
-    printf("%f\n", (stop-start) / (float)CLOCKS_PER_SEC);
-    InitWorld();
-    ResetWorld();
-    SwapGameState(Title);
+    SwapGameState(Battle);
     SetTargetFPS(240);
     //ToggleBorderlessWindowed();
 
@@ -85,7 +81,7 @@ int main(void)
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SwapGameState(Title);
                 break;
         }
-        DrawFPS(10,10);
+        //DrawFPS(10,10);
         
         // Refreshes Touch Input
         RefreshInput();
