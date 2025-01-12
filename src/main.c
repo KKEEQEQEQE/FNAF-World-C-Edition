@@ -52,7 +52,7 @@ int main(void)
 
     LoadSave("Saves/save1.json");
 
-    SwapGameState(Battle);
+    SwapGameState(World);
     SetTargetFPS(240);
     //ToggleBorderlessWindowed();
 
