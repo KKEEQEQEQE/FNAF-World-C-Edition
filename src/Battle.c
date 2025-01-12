@@ -34,7 +34,7 @@
 #include <time.h>
 
 #define BATTLE_PIXEL_SCALE (100)
-#define DEBUG
+
 #define BATTLE_POSITION_TO_PIXEL_X(x) (BATTLE_PIXEL_SCALE * (x + 1280. / BATTLE_PIXEL_SCALE / 2))
 
 #define BATTLE_POSITION_TO_PIXEL_Y(y) (BATTLE_PIXEL_SCALE * (y + 720. / BATTLE_PIXEL_SCALE / 2))
@@ -157,12 +157,12 @@ void InitBattle(void)
 
     SetTextureFilter(BattleBackground, TEXTURE_FILTER_BILINEAR);
 
-    Party_Enemy.size = 3;
+    Party_Enemy.size = 4;
 
     LoadEntity(Party_Enemy.member, ENTITY_MACRO_MECHRAB, L_U);
-    //LoadEntity(Party_Enemy.member + 1, ENTITY_MACRO_MECHRAB, L_L);
-    LoadEntity(Party_Enemy.member + 1, ENTITY_MACRO_MECHRAB, L_R);
-    LoadEntity(Party_Enemy.member + 2, ENTITY_MACRO_MECHRAB, L_D);
+    LoadEntity(Party_Enemy.member + 1, ENTITY_MACRO_MECHRAB, L_L);
+    LoadEntity(Party_Enemy.member + 2, ENTITY_MACRO_MECHRAB, L_R);
+    LoadEntity(Party_Enemy.member + 3, ENTITY_MACRO_MECHRAB, L_D);
 
     Party_Player.size = 4;
     
@@ -179,6 +179,8 @@ void InitBattle(void)
 
     UITexture damage_particle_atlas = LoadTexture("Assets/Particles/damage.png");
 
+    SetTextureFilter(damage_particle_atlas, TEXTURE_FILTER_BILINEAR);
+    
     damage_particles[0] = CreateParticleIndexT_Snippet(damage_particle_atlas, (Rectangle) {0, 0, 40, 40}, 1.5);
     damage_particles[1] = CreateParticleIndexT_Snippet(damage_particle_atlas, (Rectangle) {40, 0, 40, 40}, 1.5);
     damage_particles[2] = CreateParticleIndexT_Snippet(damage_particle_atlas, (Rectangle) {80, 0, 40, 40}, 1.5);
@@ -278,22 +280,26 @@ void RunAttackQueue(_AttackQueue * attack)
     if (!attack || 
         !attack -> target) return;
 
-    if (!attack -> imminent && 
-        attack -> source -> remaining_health == 0) goto cleanup;
 
-    Rectangle hitbox = attack -> target -> hitbox;
+    if (!attack -> imminent && 
+        attack -> source -> remaining_health == 0)
+        {
+            attack -> ATTACK_QUEUE_FREE;
+            return;
+        }
+
+    uint16_t hitbox = attack -> target->full_health;
 
     switch (attack -> attack.type)
     {
         case NONE:
-            goto cleanup;
+            break;
         case HIT:
-            CreateDamageEffect((Vector2) {hitbox.x + hitbox.width / 2,
-                                          hitbox.y + hitbox.height / 2});
+            CreateDamageEffect((Vector2) {attack -> target -> hitbox.x + attack -> target -> hitbox.width / 2,
+                                          attack -> target -> hitbox.y + attack -> target -> hitbox.height / 2});
             break;
     }
-
-cleanup:
+    printf("oh");
     attack -> ATTACK_QUEUE_FREE;
 }
 
@@ -325,18 +331,18 @@ void Print_All_Attack_Queue(void)
         Print_AttackQueue_struct(attack_queue + i);
     }
 }
-static void _BattleEntity_Attack_Push(ATTACK_PARAMETERS)
+static void _BattleEntity_Attack_Push(_BattleParty *target_party, _BattleEntity *source, _Attack attack)
 {
     if (!target_party) return;
 
     uint8_t array_size = target_party -> size;
 
     uint16_t potental_targets[array_size];
-    memset(potental_targets, 0xff, array_size);
+    memset(potental_targets, 0, array_size);
 
     uint8_t num_of_potental_targets = 0;
 
-    for (uint8_t attempt_index; attempt_index < array_size; attempt_index++)
+    for (uint8_t attempt_index; attempt_index < 4; attempt_index++)
     {
         if (!target_party->member[attempt_index].remaining_health) continue;
 
@@ -345,10 +351,10 @@ static void _BattleEntity_Attack_Push(ATTACK_PARAMETERS)
         num_of_potental_targets++;
     }
 
+    SetRandomSeed(53466546);
     uint8_t target_id = GetRandomValue(0, num_of_potental_targets);
     target_id = potental_targets[target_id];
-
-    _BattleEntity * target = target_party -> member + target_id;
+    printf("%u\n", target_id);
 
     uint8_t queue_id = GetAvaliable_attack_queue();
 
@@ -358,7 +364,7 @@ static void _BattleEntity_Attack_Push(ATTACK_PARAMETERS)
         .attack = attack,
         .imminent = 0,
         .source = source,
-        .target = target,
+        .target = target_party -> member + target_id,
         .start_time = clock(),
         .wait = 0
     };
