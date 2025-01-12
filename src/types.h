@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <time.h>
+#include "Clock.h"
 #include <stdint.h>
 #include "../Include/raylib.h"
 #include "UI.h"

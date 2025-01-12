@@ -32,7 +32,7 @@
 #include "Game_State.h"
 #include <stdint.h>
 #include <stdio.h>
-#include <time.h>
+#include "Clock.h"
 #include "Save.h"
 
 // Well this is the main function and yup that's about what it is
@@ -48,11 +48,11 @@ int main(void)
 
     // Loading important stuff
 
-    clock_t start = clock();
+    ray_clock_t start = ray_clock();
 
     LoadSave("Saves/save1.json");
 
-    SwapGameState(World);
+    SwapGameState(Battle);
     SetTargetFPS(240);
     //ToggleBorderlessWindowed();
 
@@ -81,12 +81,13 @@ int main(void)
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SwapGameState(Title);
                 break;
         }
-        //DrawFPS(10,10);
+        DrawFPS(10,10);
         
         // Refreshes Touch Input
         RefreshInput();
 
         EndDrawing();
+        clock_update();
     }
     
     // Uniniting stuff
