@@ -100,7 +100,23 @@ uint8_t CreateParticleIndexT_Snippet(UITexture atlas, Rectangle snippet, float s
 }
 
 // Creates a Particle instance
-void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY, float angularFrequency)
+void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY)
+{
+    uint8_t id = 0;
+    for (; AllParticles[id].startTime != 0; id++); // Gets the an avaliable index id
+    if (id >= MAX_PARTICLES) id = MAX_PARTICLES-1;
+    AllParticles[id].textureID = textureID;
+    AllParticles[id].x = x;
+    AllParticles[id].y = y;
+    AllParticles[id].velocityX = velocityX;
+    AllParticles[id].velocityY = velocityY;
+    AllParticles[id].startTime = clock();
+    AllParticles[id].angularFrequency = 0;
+    AllParticles[id].additionalUpdater = NULL;
+}
+
+// Creates a Particle instance with extra parameters
+void CreateParticleEx(uint8_t textureID, float x, float y, float velocityX, float velocityY, float angularFrequency, void (*additionalUpdater)(UIParticle *))
 {
     uint8_t id = 0;
     for (; AllParticles[id].startTime != 0; id++); // Gets the an avaliable index id
@@ -112,6 +128,7 @@ void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float 
     AllParticles[id].velocityY = velocityY;
     AllParticles[id].startTime = clock();
     AllParticles[id].angularFrequency = angularFrequency;
+    AllParticles[id].additionalUpdater = additionalUpdater;
 }
 
 // Removes a particle type (NOTE: UItextureSnippet textures don't get unloaded)
@@ -205,7 +222,6 @@ void RenderUIParticle(uint16_t id, register float screenScale)
 
       
     if (rotation < 0) rotation = 360 - absf(rotation);
-    printf("RenderUIParticle = %f | ", rotation);  
     switch (ParticlesIndex[indexID].visual.type) 
     {
         case UIanimation:
@@ -238,6 +254,8 @@ void RenderUIParticle(uint16_t id, register float screenScale)
                                 rotation, 
                                 AllParticles[id].startTime);
             break;
+        default:
+            break;
     }  
 }
 
@@ -247,7 +265,7 @@ void RenderUIParticles(void)
     register float screenScale = GetScreenHeight() / 720.;
     for (uint16_t id = 0; id < MAX_PARTICLES; id++) 
     {
-        if (AllParticles[id].startTime == 0) continue;
+        if (!AllParticles[id].startTime) continue;
         RenderUIParticle(id, screenScale);
     }
 }
@@ -255,16 +273,16 @@ void RenderUIParticles(void)
 // Updates all particles on screen
 void UpdateUIParticles(void)
 {
-    for (int id = 0; id < MAX_PARTICLES; id++) 
+    for (uint16_t id = 0; id < MAX_PARTICLES; id++) 
     {
-check:
-        if (AllParticles[id].startTime == 0) continue;
-        if (AllParticles[id].additionalUpdater) 
-        {
-            AllParticles[id].additionalUpdater(&AllParticles[id]);
-            goto check;
-        }
+        if (!AllParticles[id].startTime) continue;
+        
         UpdateUIParticle(id);
+        
+        if (AllParticles[id].additionalUpdater)
+        {
+            AllParticles[id].additionalUpdater(AllParticles + id);
+        }
     }
 }
 

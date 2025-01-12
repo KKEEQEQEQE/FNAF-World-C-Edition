@@ -478,7 +478,7 @@ void RenderUITextureSnippetPro(Texture2D atlas, float x, float y, Rectangle snip
 {
     scale *= GetScreenScale();
 
-    Rectangle dest = { x + snippet.width * scale / 2., y + snippet.height * scale / 2., snippet.width * scale, snippet.height * scale};
+    Rectangle dest = { SCREEN_POSITION_TO_PIXEL_X(x, 0, scale), SCREEN_POSITION_TO_PIXEL_Y(y, 0, scale), snippet.width * scale, snippet.height * scale};
 
     DrawTexturePro(atlas, snippet, dest, (Vector2) {snippet.width / 2 * scale, snippet.height / 2 * scale}, rotation, tint);
 }

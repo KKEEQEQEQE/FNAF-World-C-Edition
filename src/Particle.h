@@ -51,8 +51,14 @@ extern uint8_t CreateParticleIndexA_V2(const char * path, const uint8_t targetFP
 // Creates a Particle type with an UItexture
 extern uint8_t CreateParticleIndexT(const char * path, float scale);
 
+// Creates a Particle type with an UItexture
+extern uint8_t CreateParticleIndexT_Snippet(UITexture atlas, Rectangle snippet, float scale);
+
 // Creates a Particle instance
-extern void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY, float angularFrequency);
+extern void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY);
+
+// Creates a Particle instance with extra parameters
+extern void CreateParticleEx(uint8_t textureID, float x, float y, float velocityX, float velocityY, float angularFrequency, void (*additionalUpdater)(UIParticle *));
 
 // Removes a particle type
 extern void RemoveParticleIndex(uint16_t id);

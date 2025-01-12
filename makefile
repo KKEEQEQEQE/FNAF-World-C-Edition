@@ -1,5 +1,5 @@
 cc = gcc
-cflags = -std=c17 -Wall -Wextra -Werror
+cflags = -std=c17 -Wall -Wextra -O0
 
 clean:
 	touch bin/temp.o
@@ -7,7 +7,7 @@ clean:
 
 
 compile: 
-	gcc -c src/*.c
+	gcc $(cflags) -c src/*.c
 	ld -relocatable *.o -o FNAF_World_C.o
 	cp FNAF_World_C.o bin/FNAF_World_C.o
 	rm *.o

@@ -970,7 +970,7 @@ void SpawnBirds(void)
             start.x = start.y;
             start.y = 1;
         }
-        CreateParticle(BirdParticle, start.x, start.y, cosf(degrees)/2.5, sinf(degrees)/2.5, 0);
+        CreateParticle(BirdParticle, start.x, start.y, cosf(degrees)/2.5, sinf(degrees)/2.5);
 
         timeSinceLastParticle = clock();
         wait = GetRandomValue(50, 400) / 100.;
@@ -1058,7 +1058,7 @@ uint8_t GetZone(void)
 {
     static uint16_t ZoneIds[] = {32, 33, 46, 89};
     Vector2 ZoneCheck = (Vector2) {Freddy.position.x + Freddy.size.x / 2, Freddy.position.y + Freddy.size.y / 2};
-    
+
     if (!CurrentWorld) return 0;
 
     uint16_t Zone = AccessPositionInLayer((uint16_t) ZoneCheck.x, (uint16_t) ZoneCheck.y, CurrentWorld->layers + 0);

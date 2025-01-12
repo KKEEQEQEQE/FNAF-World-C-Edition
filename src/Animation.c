@@ -164,7 +164,6 @@ void DrawAnimation_V2Ex(const Animation_V2 *animation, int16_t x, int16_t y, flo
                                     GetCurrentAnimationFrameC(  animation -> Clock,
                                                                 animation -> Amount, 
                                                                 animation -> FPS);
-    printf("\n%f | ", rotation);                                               
     DrawUITextureSpritesheetPro(   animation -> Atlas, 
                                 x, y, 
                                 frame, 
@@ -183,7 +182,6 @@ void DrawAnimation_V2(const Animation_V2 *animation, int16_t x, int16_t y, float
 void RenderAnimation_V2Ex(const Animation_V2 *animation, float x, float y, float scale, float rotation, clock_t timeOverride)
 {
     scale *= GetScreenScale();
-    printf("RenderAnimation_V2Ex = %f | ", rotation);
     DrawAnimation_V2Ex(animation, 
         SCREEN_POSITION_TO_PIXEL_X(x, animation -> TileSize_x, scale),
         SCREEN_POSITION_TO_PIXEL_Y(y, animation -> TileSize_y, scale),

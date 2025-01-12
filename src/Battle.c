@@ -34,7 +34,7 @@
 #include <time.h>
 
 #define BATTLE_PIXEL_SCALE (100)
-
+#define DEBUG
 #define BATTLE_POSITION_TO_PIXEL_X(x) (BATTLE_PIXEL_SCALE * (x + 1280. / BATTLE_PIXEL_SCALE / 2))
 
 #define BATTLE_POSITION_TO_PIXEL_Y(y) (BATTLE_PIXEL_SCALE * (y + 720. / BATTLE_PIXEL_SCALE / 2))
@@ -131,6 +131,8 @@ static char * __fastcall uintstr(uint64_t number)
     return stringLocation;
 }
 
+uint8_t damage_particles[5] = {0};
+
 void InitBattle(void)
 {
     SetWindowTitle("FNaF World: C Edition - Battle");
@@ -155,14 +157,12 @@ void InitBattle(void)
 
     SetTextureFilter(BattleBackground, TEXTURE_FILTER_BILINEAR);
 
-    Party_Enemy.size = 4;
-
-    
+    Party_Enemy.size = 3;
 
     LoadEntity(Party_Enemy.member, ENTITY_MACRO_MECHRAB, L_U);
-    LoadEntity(Party_Enemy.member + 1, ENTITY_MACRO_MECHRAB, L_L);
-    LoadEntity(Party_Enemy.member + 2, ENTITY_MACRO_MECHRAB, L_R);
-    LoadEntity(Party_Enemy.member + 3, ENTITY_MACRO_MECHRAB, L_D);
+    //LoadEntity(Party_Enemy.member + 1, ENTITY_MACRO_MECHRAB, L_L);
+    LoadEntity(Party_Enemy.member + 1, ENTITY_MACRO_MECHRAB, L_R);
+    LoadEntity(Party_Enemy.member + 2, ENTITY_MACRO_MECHRAB, L_D);
 
     Party_Player.size = 4;
     
@@ -176,6 +176,15 @@ void InitBattle(void)
     
     Battle_Font = LoadFont("Assets/Battle/font.ttf");
     SetTextureFilter(Battle_Font.texture, TEXTURE_FILTER_BILINEAR);
+
+    UITexture damage_particle_atlas = LoadTexture("Assets/Particles/damage.png");
+
+    damage_particles[0] = CreateParticleIndexT_Snippet(damage_particle_atlas, (Rectangle) {0, 0, 40, 40}, 1.5);
+    damage_particles[1] = CreateParticleIndexT_Snippet(damage_particle_atlas, (Rectangle) {40, 0, 40, 40}, 1.5);
+    damage_particles[2] = CreateParticleIndexT_Snippet(damage_particle_atlas, (Rectangle) {80, 0, 40, 40}, 1.5);
+    damage_particles[3] = CreateParticleIndexT_Snippet(damage_particle_atlas, (Rectangle) {120, 0, 40, 40}, 1.5);
+    damage_particles[4] = CreateParticleIndexT_Snippet(damage_particle_atlas, (Rectangle) {160, 0, 40, 40}, 1.5);
+
     PlayMusicStream(theme);
     
     SetTraceLogLevel(LOG_ALL);
@@ -223,6 +232,43 @@ static uint8_t GetUnavaliable_attack_queue(void)
     return i;
 }
 
+Vector2 BattleSpaceToUiSpace(Vector2 position)
+{
+    float scale = GetScreenRatio() <= RATIO_16_9 ? GetScreenWidth() / 1280. : GetScreenHeight() / 720.;
+
+    Vector2 Vscreen_offset = (Vector2) {GetScreenWidth() / 2. - 640. * scale, 
+                                        GetScreenHeight() / 2. - 360. * scale };
+
+    Vector2 pixel_position = (Vector2) { scale * BATTLE_POSITION_TO_PIXEL_X(position.x) + Vscreen_offset.x, 
+                                         scale * BATTLE_POSITION_TO_PIXEL_Y(position.y) + Vscreen_offset.y };
+    
+    return (Vector2) {  (pixel_position.x / (float) GetScreenWidth()) * 2 - 1,
+                        (pixel_position.y / (float) GetScreenHeight()) * 2 - 1  };
+}
+
+#include "Particle_Updaters.h"
+
+void CreateDamageEffect(Vector2 position)
+{
+    float scale = GetScreenRatio() <= RATIO_16_9 ? GetScreenWidth() / 1280. : GetScreenHeight() / 720.;
+
+    Vector2 Vscreen_offset = (Vector2) {(GetScreenWidth() - 1280 * scale) / 2, (GetScreenHeight() - 720 * scale) / 2};
+    Vector2 start_position = BattleSpaceToUiSpace((Vector2) {-3.5, -3});
+    uint8_t num_of_particles = GetRandomValue(4, 8);
+
+    for (uint8_t i = 0; i < num_of_particles; i++)
+    {
+        Vector2 random_offset = (Vector2) { GetRandomValue(-10000, 10000) / 1e5, 
+                                            GetRandomValue(-10000, 10000) / 1e5};
+
+        CreateParticleEx(   damage_particles[i % 5], 
+                            start_position.x + random_offset.x, start_position.y + random_offset.y, 
+                            GetRandomValue(-10000, 10000) / 2e4, 1,
+                            720,
+                            Updater_DeleteAfterQuarterSecond);
+    }
+}
+
 #define ATTACK_COOLDOWN (3 * CLOCKS_PER_SEC)
 
 #define ATTACK_PARAMETERS _BattleParty * target_party, _BattleEntity * source, _Attack attack
@@ -235,11 +281,15 @@ void RunAttackQueue(_AttackQueue * attack)
     if (!attack -> imminent && 
         attack -> source -> remaining_health == 0) goto cleanup;
 
-    switch(attack -> attack.type)
+    Rectangle hitbox = attack -> target -> hitbox;
+
+    switch (attack -> attack.type)
     {
         case NONE:
-            break;
+            goto cleanup;
         case HIT:
+            CreateDamageEffect((Vector2) {hitbox.x + hitbox.width / 2,
+                                          hitbox.y + hitbox.height / 2});
             break;
     }
 
@@ -247,6 +297,18 @@ cleanup:
     attack -> ATTACK_QUEUE_FREE;
 }
 
+void UpdateAttackQueue(void)
+{
+    for (uint8_t i = 0; i < MAX_ATTACKS_IN_QUEUE; i++)
+    {
+        if (!attack_queue[i].start_time || 
+            clock() < attack_queue[i].wait + attack_queue[i].start_time) continue;
+
+        printf("hi");
+        RunAttackQueue(attack_queue + i);
+        printf("bye");
+    }
+}
 void Print_AttackQueue_struct(_AttackQueue * queue)
 {
     printf("{\n\timminent = %u,\n\tattack %u,\n\ttarget = %p,\n\tsource = %p\n}\n", queue->imminent, queue -> attack.type, queue->target, queue->source);
@@ -296,7 +358,9 @@ static void _BattleEntity_Attack_Push(ATTACK_PARAMETERS)
         .attack = attack,
         .imminent = 0,
         .source = source,
-        .target = target
+        .target = target,
+        .start_time = clock(),
+        .wait = 0
     };
 }
 
@@ -327,7 +391,7 @@ void RenderBattleEntity_Hitbox(register _BattleEntity * entity)
     DrawRectangle(  BATTLE_POSITION_TO_PIXEL_X(entity -> hitbox.x), 
                     BATTLE_POSITION_TO_PIXEL_Y(entity -> hitbox.y), 
                     BATTLE_PIXEL_SCALE * entity -> hitbox.width, 
-                    BATTLE_PIXEL_SCALE * entity -> hitbox.height, RED);
+                    BATTLE_PIXEL_SCALE * entity -> hitbox.height, BLUE);
 }
 
 void RenderBattleEntity(register _BattleEntity * entity)
@@ -340,7 +404,7 @@ void RenderBattleEntity(register _BattleEntity * entity)
     
     #ifdef DEBUG
     
-    RenderBattleEntity_Hitbox(register _BattleEntity * entity);
+    RenderBattleEntity_Hitbox(entity);
 
     #endif
 
@@ -406,8 +470,11 @@ void RenderHealthBar(_BattleEntity * entity, Color colour, uint8_t id, float sca
 void PutBattle(void)
 {
     UpdateMusicStream(theme);
+
+    UpdateAttackQueue();
+
     RenderBattle();
-    if (IsKeyPressed(KEY_S)) _BattleEntity_Attack_Push(&Party_Enemy, NULL,(_Attack){.type = 1});
+    if (IsKeyPressed(KEY_S)) _BattleEntity_Attack_Push(&Party_Enemy, NULL, (_Attack){.type = HIT});
     if (IsKeyPressed(KEY_W))
     {
         attack_queue[GetUnavaliable_attack_queue()].target = NULL;
@@ -415,6 +482,7 @@ void PutBattle(void)
 
     RenderUIText(Party_Enemy.member[0].name, -0.945, -0.795, 0.06, LEFTMOST, Battle_Font, BLACK);
     RenderUIText(Party_Enemy.member[0].name, -0.95, -0.8, 0.06, LEFTMOST, Battle_Font, WHITE);
-    RenderUIParticles();
+    if (IsKeyPressed(KEY_SPACE)) CreateDamageEffect((Vector2) {0,0});
+    PutUIParticles();
     //RenderHealthBar(Party_Player.member, RED, 0, GetScreenScale());
 }
