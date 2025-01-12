@@ -26,12 +26,11 @@
 #include "UI.h"
 #include "Battle.h"
 #include "World.h"
-#include <malloc.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
+#include "Clock.h"
 
 #define BATTLE_PIXEL_SCALE (100)
 
@@ -118,7 +117,7 @@ void LoadEntity(_BattleEntity * dest, _BattleEntity entity, enum ENTITY_POSITION
 }
 
 // Turns a Unsigned Long into a Stack Allocated String
-static char * __fastcall uintstr(uint64_t number) 
+static char * uintstr(uint64_t number)
 {
     uint64_t temp = number;
     uint64_t length = 1;
@@ -203,8 +202,8 @@ enum ATTACK_MOVE_INDEX
 typedef struct _AttackQueue 
 {
     _Bool imminent;
-    clock_t start_time;
-    clock_t wait;
+    ray_clock_t start_time;
+    ray_clock_t wait;
     _Attack attack;
     _BattleEntity * target;
     _BattleEntity * source;
@@ -308,7 +307,7 @@ void UpdateAttackQueue(void)
     for (uint8_t i = 0; i < MAX_ATTACKS_IN_QUEUE; i++)
     {
         if (!attack_queue[i].start_time || 
-            clock() < attack_queue[i].wait + attack_queue[i].start_time) continue;
+            ray_clock() < attack_queue[i].wait + attack_queue[i].start_time) continue;
 
         RunAttackQueue(&attack_queue[i]);
     }
@@ -365,7 +364,7 @@ static void _BattleEntity_Attack_Push(_BattleParty *target_party, _BattleEntity 
         .imminent = 1,
         .source = source,
         .target = target_party -> member + target_id,
-        .start_time = clock(),
+        .start_time = ray_clock(),
         .wait = 0
     };
 }

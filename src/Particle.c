@@ -27,7 +27,7 @@
 #include <memory.h>
 #include <math.h>
 #include <stdio.h>
-#include <time.h>
+#include "Clock.h"
 
 UIParticleIndex ParticlesIndex[255] = {0};
 UIParticle AllParticles[MAX_PARTICLES] = {0};
@@ -110,7 +110,7 @@ void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float 
     AllParticles[id].y = y;
     AllParticles[id].velocityX = velocityX;
     AllParticles[id].velocityY = velocityY;
-    AllParticles[id].startTime = clock();
+    AllParticles[id].startTime = ray_clock();
     AllParticles[id].angularFrequency = 0;
     AllParticles[id].additionalUpdater = NULL;
 }
@@ -126,7 +126,7 @@ void CreateParticleEx(uint8_t textureID, float x, float y, float velocityX, floa
     AllParticles[id].y = y;
     AllParticles[id].velocityX = velocityX;
     AllParticles[id].velocityY = velocityY;
-    AllParticles[id].startTime = clock();
+    AllParticles[id].startTime = ray_clock();
     AllParticles[id].angularFrequency = angularFrequency;
     AllParticles[id].additionalUpdater = additionalUpdater;
 }
@@ -218,7 +218,7 @@ void RenderUIParticle(uint16_t id, register float screenScale)
 {
     uint8_t indexID = AllParticles[id].textureID;
 
-    float rotation = fmodf((float) (clock() - AllParticles[id].startTime) / CLOCKS_PER_SEC * AllParticles[id].angularFrequency, 360.);
+    float rotation = fmodf((float) (ray_clock() - AllParticles[id].startTime) / CLOCKS_PER_SEC * AllParticles[id].angularFrequency, 360.);
 
       
     if (rotation < 0) rotation = 360 - absf(rotation);

@@ -28,7 +28,7 @@
 #include <memory.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <time.h>
+#include "Clock.h"
 
 
 _Bool EncounterError = 0;

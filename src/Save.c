@@ -114,7 +114,7 @@ void CreateSave(const char * path)
 {
     // Sets current save path
 
-    if (path) strcpy_s(Selected_Save, sizeof(Selected_Save), path);
+    if (path) strcpy(Selected_Save, path);
 
     SaveJSON = cJSON_CreateObject();
 
@@ -152,7 +152,7 @@ void LoadSave(const char * path)
     
     // Loads all save values
 
-    if (path) strcpy_s(Selected_Save, sizeof(Selected_Save), path);
+    if (path) strcpy(Selected_Save, path);
 
     SaveJSON = cJSON_LoadJSON(path);
     printf("\nLoaded at %p\n", SaveJSON);
