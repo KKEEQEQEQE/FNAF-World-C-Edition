@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include "input.h"
 #include <math.h>
+#include "../Include/rlgl.h"
 #include <string.h>
 #include <stdio.h>
 #include "Particle.h"
@@ -127,6 +128,24 @@ void RenderUITexture(UITexture texture, float x, float y, float scale)
                     0, 
                     scale, 
                     WHITE);
+}
+
+// Scales and Renders a UITexture in UI Space
+void RenderUITextureEx(UITexture texture, float x, float y, float scale)
+{
+    DrawTextureEx(  texture, 
+                    (Vector2) { (float) SCREEN_POSITION_TO_PIXEL_X(x, texture.width, scale), 
+                                 (float) SCREEN_POSITION_TO_PIXEL_Y(y, texture.height, scale) },
+                    0, 
+                    scale, 
+                    WHITE);
+}
+
+// Scales and Renders a UITexture in UI Space
+void RenderUITexturePro(UITexture texture, float x, float y, float scale, float rotation)
+{
+    RenderUITextureSnippetPro(texture, x, y, (Rectangle){0, 0, texture.width, texture.height}, scale, rotation, WHITE);
+        
 }
 
 // Copies a UIVisual to the heap and returns the address
@@ -377,6 +396,21 @@ void DrawUITextureSpritesheetEx(Texture2D atlas, int16_t x, int16_t y, uint16_t 
     DrawTexturePro(atlas, source, dest, (Vector2) {0, 0}, 0, tint);
 }
 
+// Draws a Sprite from a UITexture Spritesheet with extra addition parameters
+void DrawUITextureSpritesheetPro(Texture2D atlas, int16_t x, int16_t y, uint16_t index, Vector2 tileSize, float scale, float rotation, Color tint)
+{
+    uint16_t adjustedWidth = atlas.width / (uint16_t) tileSize.x;
+    adjustedWidth *= (uint16_t) tileSize.x; 
+    Rectangle source = {    (index * (uint16_t) tileSize.x) % adjustedWidth, 
+                            (uint16_t)((float) (index * (uint16_t) tileSize.x) / adjustedWidth) * tileSize.y,
+                            tileSize.x,
+                            tileSize.y   };
+    
+    Rectangle dest = { x + tileSize.x * scale / 2., y + tileSize.y * scale / 2., tileSize.x * scale, tileSize.y * scale};
+
+    DrawTexturePro(atlas, source, dest, (Vector2) {tileSize.x / 2 * scale, tileSize.y / 2 * scale}, rotation, tint);
+}
+
 // Scales and Renders a Sprite from a UITexture Spritesheet in UI space
 void RenderUITextureSpritesheet(Texture2D atlas, float x, float y, uint16_t index, uint16_t tileSize)
 {
@@ -437,4 +471,14 @@ void RenderUITextureSnippetEx(Texture2D atlas, float x, float y, Rectangle snipp
                                 snippet, 
                                 scale,  
                                 WHITE);
+}
+
+// Scales and Renders a snippet from a UItextureSnippet in UI space with addition parameters
+void RenderUITextureSnippetPro(Texture2D atlas, float x, float y, Rectangle snippet, float scale, float rotation, Color tint)
+{
+    scale *= GetScreenScale();
+
+    Rectangle dest = { x + snippet.width * scale / 2., y + snippet.height * scale / 2., snippet.width * scale, snippet.height * scale};
+
+    DrawTexturePro(atlas, snippet, dest, (Vector2) {snippet.width / 2 * scale, snippet.height / 2 * scale}, rotation, tint);
 }

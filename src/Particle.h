@@ -37,8 +37,9 @@ typedef struct UIParticleIndex
 typedef struct UIParticle 
 {
     uint8_t textureID;
-    float x, y, velocityX, velocityY;
+    float x, y, velocityX, velocityY, angularFrequency;
     clock_t startTime;
+    void (*additionalUpdater)(struct UIParticle *);
 } UIParticle;
 
 // Creates a Particle type with an UIanimation
@@ -51,7 +52,7 @@ extern uint8_t CreateParticleIndexA_V2(const char * path, const uint8_t targetFP
 extern uint8_t CreateParticleIndexT(const char * path, float scale);
 
 // Creates a Particle instance
-extern void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY);
+extern void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY, float angularFrequency);
 
 // Removes a particle type
 extern void RemoveParticleIndex(uint16_t id);

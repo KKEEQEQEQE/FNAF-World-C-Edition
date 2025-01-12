@@ -154,6 +154,15 @@ extern void FreeUIElement(UIElement * element);
 // Scales and Renders a UITexture in UI Space
 extern void RenderUITexture(UITexture texture, float x, float y, float scale);
 
+// Scales and Renders a UITexture in UI Space with addition parameters
+extern void RenderUITextureEx(UITexture texture, float x, float y, float scale);
+
+// Scales and Renders a UITexture in UI Space with extra addition parameters
+extern void RenderUITexturePro(UITexture texture, float x, float y, float scale, float rotation);
+
+// Draws a Sprite from a UITexture Spritesheet with extra addition parameters
+extern void DrawUITextureSpritesheetPro(Texture2D atlas, int16_t x, int16_t y, uint16_t index, Vector2 tileSize, float scale, float rotation, Color tint);
+
 // Scales and Renders a UIElement
 extern void RenderUIElement(const UIElement * element);
 
@@ -198,5 +207,8 @@ extern void RenderUITextureSpritesheetEx(Texture2D atlas, float x, float y, uint
 
     // Scales and Renders a snippet from a UItextureSnippet in UI space with addition parameters
     extern void RenderUITextureSnippetEx(Texture2D atlas, float x, float y, Rectangle snippet, float scale, Color tint);
+
+    // Scales and Renders a snippet from a UItextureSnippet in UI space with extra addition parameters
+    extern void RenderUITextureSnippetPro(Texture2D atlas, float x, float y, Rectangle snippet, float scale, float rotation, Color tint);
 
 #define RATIO_16_9 1.66666666667

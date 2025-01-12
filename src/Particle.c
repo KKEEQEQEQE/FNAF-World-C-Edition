@@ -25,6 +25,8 @@
 #include "UI.h"
 #include <stdint.h>
 #include <memory.h>
+#include <math.h>
+#include <stdio.h>
 #include <time.h>
 
 UIParticleIndex ParticlesIndex[255] = {0};
@@ -81,8 +83,24 @@ uint8_t CreateParticleIndexT(const char * path, float scale)
     return id;
 }
 
+// Creates a Particle type with an UItexture
+uint8_t CreateParticleIndexT_Snippet(UITexture atlas, Rectangle snippet, float scale)
+{
+    uint8_t id = 0;
+    for (; ParticlesIndex[id].visual.type != UInotype && id < MAX_PARTICLES; id++); // Gets the an avaliable index id
+    
+    if (id == MAX_PARTICLES) return 0; // There are no avaliable index ids so 0 is returned
+    
+    ParticlesIndex[id].visual.type = UItextureSnippet;
+    ParticlesIndex[id].visual.texture = atlas;
+    ParticlesIndex[id].visual.snippet = snippet;
+    ParticlesIndex[id].scale = scale;
+
+    return id;
+}
+
 // Creates a Particle instance
-void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY)
+void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY, float angularFrequency)
 {
     uint8_t id = 0;
     for (; AllParticles[id].startTime != 0; id++); // Gets the an avaliable index id
@@ -93,9 +111,10 @@ void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float 
     AllParticles[id].velocityX = velocityX;
     AllParticles[id].velocityY = velocityY;
     AllParticles[id].startTime = clock();
+    AllParticles[id].angularFrequency = angularFrequency;
 }
 
-// Removes a particle type
+// Removes a particle type (NOTE: UItextureSnippet textures don't get unloaded)
 void RemoveParticleIndex(uint16_t id)
 {
     if (ParticlesIndex[id].visual.type == UInotype) return;
@@ -105,9 +124,11 @@ void RemoveParticleIndex(uint16_t id)
             break;
         case UItexture:
             UnloadTexture(ParticlesIndex[id].visual.texture);
+            break;
         case UIanimationV2:
             FreeAnimation_V2(&ParticlesIndex[id].visual.animation_V2);
             break;
+        case UItextureSnippet:
         default:
             break;
     }
@@ -136,22 +157,37 @@ void UpdateUIParticle(uint16_t id)
     AllParticles[id].y += AllParticles[id].velocityY * GetFrameTime();
 
     Vector2 size = (Vector2) {0, 0};
-    Texture2D texture;
+
     switch (ParticlesIndex[id].visual.type) 
     {
         case UIanimation:
+        {
             Animation * animation = &ParticlesIndex[AllParticles[id].textureID].visual.animation;
-            texture = animation -> Frames[GetCurrentAnimationFrame(animation)];
+            Texture2D texture = animation -> Frames[GetCurrentAnimationFrame(animation)];
             size = (Vector2) {texture.width, texture.height};
             break;
+        }
+            
         case UItexture:
-            texture = ParticlesIndex[AllParticles[id].textureID].visual.texture;
+        {
+            Texture2D texture = ParticlesIndex[AllParticles[id].textureID].visual.texture;
             size = (Vector2) {texture.width, texture.height};
             break;
+        }
+        
+        case UItextureSnippet:
+        {
+            size = (Vector2) {  ParticlesIndex[AllParticles[id].textureID].visual.snippet.width,
+                                ParticlesIndex[AllParticles[id].textureID].visual.snippet.height  };
+            break;
+        }
+
         case UIanimationV2:
+        {
             size = (Vector2) {  ParticlesIndex[AllParticles[id].textureID].visual.animation_V2.TileSize_x, 
                                 ParticlesIndex[AllParticles[id].textureID].visual.animation_V2.TileSize_y};
             break;
+        }   
     }
     if (absf(AllParticles[id].x) > GetOutsideWindowX_u16(size.x) ||
         absf(AllParticles[id].y) > GetOutsideWindowY_u16(size.y))
@@ -164,6 +200,12 @@ void UpdateUIParticle(uint16_t id)
 void RenderUIParticle(uint16_t id, register float screenScale)
 {
     uint8_t indexID = AllParticles[id].textureID;
+
+    float rotation = fmodf((float) (clock() - AllParticles[id].startTime) / CLOCKS_PER_SEC * AllParticles[id].angularFrequency, 360.);
+
+      
+    if (rotation < 0) rotation = 360 - absf(rotation);
+    printf("RenderUIParticle = %f | ", rotation);  
     switch (ParticlesIndex[indexID].visual.type) 
     {
         case UIanimation:
@@ -174,17 +216,27 @@ void RenderUIParticle(uint16_t id, register float screenScale)
                             AllParticles[id].startTime);
             break;
         case UItexture:
-            RenderUITexture(ParticlesIndex[indexID].visual.texture, 
+            RenderUITexturePro(ParticlesIndex[indexID].visual.texture, 
                             AllParticles[id].x, 
                             AllParticles[id].y, 
-                            ParticlesIndex[indexID].scale * screenScale);
+                            ParticlesIndex[indexID].scale * screenScale,
+                            rotation);
+            break;
+        case UItextureSnippet:
+            RenderUITextureSnippetPro(  ParticlesIndex[indexID].visual.texture,
+                                        AllParticles[id].x, 
+                                        AllParticles[id].y, 
+                                        ParticlesIndex[indexID].visual.snippet, 
+                                        ParticlesIndex[indexID].scale, 
+                                        rotation, WHITE);
             break;
         case UIanimationV2:
-            RenderAnimation_V2(&ParticlesIndex[indexID].visual.animation_V2,
-                               AllParticles[id].x, 
-                               AllParticles[id].y, 
-                               ParticlesIndex[indexID].scale, 
-                               AllParticles[id].startTime);
+            RenderAnimation_V2Ex(&ParticlesIndex[indexID].visual.animation_V2,
+                                AllParticles[id].x, 
+                                AllParticles[id].y, 
+                                ParticlesIndex[indexID].scale,
+                                rotation, 
+                                AllParticles[id].startTime);
             break;
     }  
 }
@@ -205,7 +257,13 @@ void UpdateUIParticles(void)
 {
     for (int id = 0; id < MAX_PARTICLES; id++) 
     {
+check:
         if (AllParticles[id].startTime == 0) continue;
+        if (AllParticles[id].additionalUpdater) 
+        {
+            AllParticles[id].additionalUpdater(&AllParticles[id]);
+            goto check;
+        }
         UpdateUIParticle(id);
     }
 }

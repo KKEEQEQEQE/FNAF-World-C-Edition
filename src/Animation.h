@@ -77,5 +77,7 @@ extern void DrawAnimation_V2(const Animation_V2 *animation, int16_t x, int16_t y
 // Scales and Renders a UIanimationV2 in UI space
 extern void RenderAnimation_V2(const Animation_V2 *animation, float x, float y, float scale, clock_t timeOverride);
 
+extern void RenderAnimation_V2Ex(const Animation_V2 *animation, float x, float y, float scale, float rotation, clock_t timeOverride);
+
 // Free a UIanimationV2's variables
 extern void FreeAnimation_V2(Animation_V2 * animation);
