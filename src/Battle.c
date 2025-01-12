@@ -255,14 +255,14 @@ void CreateDamageEffect(Vector2 position)
     float scale = GetScreenRatio() <= RATIO_16_9 ? GetScreenWidth() / 1280. : GetScreenHeight() / 720.;
 
     Vector2 Vscreen_offset = (Vector2) {(GetScreenWidth() - 1280 * scale) / 2, (GetScreenHeight() - 720 * scale) / 2};
-    Vector2 start_position = BattleSpaceToUiSpace((Vector2) {-3.5, -3});
+    Vector2 start_position = BattleSpaceToUiSpace(position);
     uint8_t num_of_particles = GetRandomValue(4, 8);
 
     for (uint8_t i = 0; i < num_of_particles; i++)
     {
         Vector2 random_offset = (Vector2) { GetRandomValue(-10000, 10000) / 1e5, 
                                             GetRandomValue(-10000, 10000) / 1e5};
-
+        
         CreateParticleEx(   damage_particles[i % 5], 
                             start_position.x + random_offset.x, start_position.y + random_offset.y, 
                             GetRandomValue(-10000, 10000) / 2e4, 1,
@@ -280,26 +280,26 @@ void RunAttackQueue(_AttackQueue * attack)
     if (!attack || 
         !attack -> target) return;
 
-
     if (!attack -> imminent && 
         attack -> source -> remaining_health == 0)
         {
             attack -> ATTACK_QUEUE_FREE;
             return;
         }
+    
+    Rectangle hitbox = attack->target->hitbox;
 
-    uint16_t hitbox = attack -> target->full_health;
+    hitbox.x += hitbox.width / 2;
+    hitbox.y += hitbox.height / 2;
 
     switch (attack -> attack.type)
     {
         case NONE:
             break;
         case HIT:
-            CreateDamageEffect((Vector2) {attack -> target -> hitbox.x + attack -> target -> hitbox.width / 2,
-                                          attack -> target -> hitbox.y + attack -> target -> hitbox.height / 2});
+            CreateDamageEffect((Vector2) {hitbox.x, hitbox.y});
             break;
     }
-    printf("oh");
     attack -> ATTACK_QUEUE_FREE;
 }
 
@@ -310,14 +310,12 @@ void UpdateAttackQueue(void)
         if (!attack_queue[i].start_time || 
             clock() < attack_queue[i].wait + attack_queue[i].start_time) continue;
 
-        printf("hi");
-        RunAttackQueue(attack_queue + i);
-        printf("bye");
+        RunAttackQueue(&attack_queue[i]);
     }
 }
 void Print_AttackQueue_struct(_AttackQueue * queue)
 {
-    printf("{\n\timminent = %u,\n\tattack %u,\n\ttarget = %p,\n\tsource = %p\n}\n", queue->imminent, queue -> attack.type, queue->target, queue->source);
+    printf("{\n\timminent = %u,\n\tattack %u,\n\ttarget = %p,\n\tsource = %p\n}\n", queue->imminent, queue -> attack.type, queue -> target, queue->source);
 }
 
 void Print_All_Attack_Queue(void)
@@ -354,6 +352,8 @@ static void _BattleEntity_Attack_Push(_BattleParty *target_party, _BattleEntity 
     SetRandomSeed(53466546);
     uint8_t target_id = GetRandomValue(0, num_of_potental_targets);
     target_id = potental_targets[target_id];
+
+    if (target_id >= target_party->size) target_id = target_party->size;
     printf("%u\n", target_id);
 
     uint8_t queue_id = GetAvaliable_attack_queue();
@@ -362,7 +362,7 @@ static void _BattleEntity_Attack_Push(_BattleParty *target_party, _BattleEntity 
 
     attack_queue[queue_id] = (_AttackQueue) {
         .attack = attack,
-        .imminent = 0,
+        .imminent = 1,
         .source = source,
         .target = target_party -> member + target_id,
         .start_time = clock(),
