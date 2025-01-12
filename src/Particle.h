@@ -24,7 +24,7 @@
 
 #include "UI.h"
 #include <stdint.h>
-#include "Clock.h"
+#include <time.h>
 
 #define MAX_PARTICLES 100
 
@@ -38,7 +38,7 @@ typedef struct UIParticle
 {
     uint8_t textureID;
     float x, y, velocityX, velocityY, angularFrequency;
-    ray_clock_t startTime;
+    clock_t startTime;
     void (*additionalUpdater)(struct UIParticle *);
 } UIParticle;
 

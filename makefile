@@ -1,5 +1,5 @@
 cc = gcc
-cflags = -std=c17 -O3
+cflags = -std=c17 -O0
 
 clean:
 	touch bin/temp.o
@@ -8,8 +8,9 @@ clean:
 
 compile: 
 	gcc $(cflags) -c src/*.c
+	ld -relocatable *.o -o FNAF_World_C.o
+	cp FNAF_World_C.o bin/FNAF_World_C.o
+	rm *.o
 
-build_mac:
-	eval $(cc) src/*.c Lib/cJSON.c -framework IOKit -framework Cocoa -framework OpenGL Lib/libraylib.a -I Include/
 build_windows: compile
-	$(cc) -o FNAF_World_C src/*.c Lib/cJSON.c -lraylib -I include/ -L lib/
+	$(cc) -o FNAF_World_C.exe bin/FNAF_World_C.o Lib/cJSON.c -lraylib -lgdi32 -lwinmm -I include/ -L lib/

@@ -25,7 +25,7 @@
 
 #include "Animation.h"
 #include <stdint.h>
-#include "Clock.h"
+#include <time.h>
 
 enum _Battle_Attacks_Types
 {
@@ -54,7 +54,7 @@ typedef struct _BattleEntity
 {
     uint32_t remaining_health, full_health;
     char name[20];
-    ray_clock_t last_attack;
+    clock_t last_attack;
     Animation_V2 sprite_idle;
     Animation_V2 sprite_attack;
     Rectangle hitbox;

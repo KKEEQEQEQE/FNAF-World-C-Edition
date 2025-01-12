@@ -22,12 +22,13 @@
 
 #include "World_Chip_Note.h"
 #include "UI.h"
+#include <malloc.h>
 #include <stdint.h>
 #include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Clock.h"
+#include <time.h>
 
 #define MAX_CHIPS_IN_QUEUE 10
 #define CHIP_NOTE_SCREEN_TIME 2
@@ -39,7 +40,7 @@ static UIElement current_chip_banner = {{0}, 0, -0.8f, 1};
 static Sound note_sfx = {0};
 
 // Turns a Unsigned Long into a Stack Allocated String
-static char * uintstr(uint64_t number) 
+static char * __fastcall uintstr(uint64_t number) 
 {
     uint64_t temp = number;
     uint64_t length = 1;
@@ -107,7 +108,7 @@ void LoadNewChipBanner(void)
 
 void UpdateChipNoteBanner(void)
 {
-    static ray_clock_t cooldown = 0;
+    static clock_t cooldown = 0;
     static uint8_t last_queue = 0;
 
     if (!wait_queue) return;
@@ -116,12 +117,12 @@ void UpdateChipNoteBanner(void)
     {
         current_queue = GetUnavailableChipQueue();
         LoadNewChipBanner();
-        cooldown = ray_clock() + CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC;
+        cooldown = clock() + CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC;
         last_queue = wait_queue;
         return;
     }
     
-    if (ray_clock() + CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC - cooldown >= CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC)
+    if (clock() + CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC - cooldown >= CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC)
     {
         chip_queue[current_queue] = 0;
         wait_queue--;
@@ -136,7 +137,7 @@ void UpdateChipNoteBanner(void)
             return;
         }
         LoadNewChipBanner();
-        cooldown = ray_clock() + CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC;
+        cooldown = clock() + CHIP_NOTE_SCREEN_TIME * CLOCKS_PER_SEC;
     }
     
     last_queue = wait_queue;

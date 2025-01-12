@@ -24,15 +24,16 @@
 #include "Animation.h"
 #include "UI.h"
 #include "types.h"
+#include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <memory.h>
-#include "Clock.h"
+#include <time.h>
 
 // Turns a Unsigned Long into a Stack Allocated String
-static char * uintstr(uint64_t number) 
+static char * __fastcall uintstr(uint64_t number) 
 {
     uint64_t temp = number;
     uint64_t length = 1;
@@ -71,16 +72,15 @@ uint16_t GetFrameAmount(const char * directory)
 // Gets current animation frame from an animation struct
 uint16_t GetCurrentAnimationFrame(const Animation * animation)
 {
-    float currentFrame =  (float)(ray_clock() - animation -> Clock) / CLOCKS_PER_SEC;
+    float currentFrame =  (float)(clock() - animation -> Clock) / CLOCKS_PER_SEC;
     currentFrame /= 1. / animation -> FPS;
     return (uint16_t)currentFrame % animation -> Amount;
 }
 
-// Gets current animation frame from ray_clock_t, entered frames, and entered FPS
-uint16_t GetCurrentAnimationFrameC(ray_clock_t startTime, uint16_t frames, uint8_t FPS)
+// Gets current animation frame from clock_t, entered frames, and entered FPS
+uint16_t GetCurrentAnimationFrameC(clock_t startTime, uint16_t frames, uint8_t FPS)
 {
-    FPS*=1.5;
-    float currentFrame =  (float)(ray_clock() - startTime) / CLOCKS_PER_SEC;
+    float currentFrame =  (float)(clock() - startTime) / CLOCKS_PER_SEC;
     currentFrame /= 1. / FPS;
     return (uint16_t) currentFrame % frames;
 }
@@ -119,14 +119,14 @@ void FreeAnimation(Animation * animation)
     free(animation -> Frames);
 }
 
-// Returns a ray_clock_t in seconds
-static ray_clock_t ClockSeconds(ray_clock_t time) 
+// Returns a clock_t in seconds
+static clock_t ClockSeconds(clock_t time) 
 {
     return (time / CLOCKS_PER_SEC);
 }
 
 // Scales and Renders a UIanimation
-void RenderAnimation(const Animation * animation, float x, float y, float scale, ray_clock_t timeOverride) 
+void RenderAnimation(const Animation * animation, float x, float y, float scale, clock_t timeOverride) 
 {
     static uint16_t windowWidth = 0;
     static uint16_t windowHeight = 0;
@@ -150,7 +150,7 @@ Animation_V2 CreateAnimation_V2(const char * path, const uint8_t targetFPS, cons
     animation.Atlas = LoadTexture(path);
     SetTextureFilter(animation.Atlas, TEXTURE_FILTER_BILINEAR);
     animation.Amount = amount;
-    animation.Clock = ray_clock();
+    animation.Clock = clock();
     animation.FPS = targetFPS;
     animation.TileSize_x = tileSize_x;
     animation.TileSize_y = tileSize_y;
@@ -158,7 +158,7 @@ Animation_V2 CreateAnimation_V2(const char * path, const uint8_t targetFPS, cons
 }
 
 // Draws a UIanimationV2 in pixel space
-void DrawAnimation_V2Ex(const Animation_V2 *animation, int16_t x, int16_t y, float scale, float rotation, ray_clock_t timeOverride)
+void DrawAnimation_V2Ex(const Animation_V2 *animation, int16_t x, int16_t y, float scale, float rotation, clock_t timeOverride)
 {
     uint16_t frame = timeOverride ? timeOverride : 
                                     GetCurrentAnimationFrameC(  animation -> Clock,
@@ -173,13 +173,13 @@ void DrawAnimation_V2Ex(const Animation_V2 *animation, int16_t x, int16_t y, flo
 }
 
 // Draws a UIanimationV2 in pixel space
-void DrawAnimation_V2(const Animation_V2 *animation, int16_t x, int16_t y, float scale, ray_clock_t timeOverride)
+void DrawAnimation_V2(const Animation_V2 *animation, int16_t x, int16_t y, float scale, clock_t timeOverride)
 {
     DrawAnimation_V2Ex(animation, x, y, scale, 0, timeOverride);
 }
 
 // Scales and Renders a UIanimationV2 in UI space
-void RenderAnimation_V2Ex(const Animation_V2 *animation, float x, float y, float scale, float rotation, ray_clock_t timeOverride)
+void RenderAnimation_V2Ex(const Animation_V2 *animation, float x, float y, float scale, float rotation, clock_t timeOverride)
 {
     scale *= GetScreenScale();
     DrawAnimation_V2Ex(animation, 
@@ -189,7 +189,7 @@ void RenderAnimation_V2Ex(const Animation_V2 *animation, float x, float y, float
 }
 
 // Scales and Renders a UIanimationV2 in UI space
-void RenderAnimation_V2(const Animation_V2 *animation, float x, float y, float scale, ray_clock_t timeOverride)
+void RenderAnimation_V2(const Animation_V2 *animation, float x, float y, float scale, clock_t timeOverride)
 {
     scale *= GetScreenScale();
     DrawAnimation_V2(animation, 

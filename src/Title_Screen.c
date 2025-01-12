@@ -27,7 +27,7 @@
 #include "UI.h"
 #include <stdint.h>
 #include <stdio.h>
-#include "Clock.h"
+#include <time.h>
 
 #define TITLE_SECONDS_TO_CENTRE 3
 #define PARTY_SECONDS_TO_CENTRE 3
@@ -120,13 +120,13 @@ void ResetTitleScreen(void)
     UIPlay.graphic.x = 0;
     UIPlay.graphic.y = 0.8125;
     PlayMusicStream(Theme);
-    StartTime = ray_clock();
+    StartTime = clock();
 }
 
 void RenderTitle(void) 
 {
-    register float timeSinceStart = (float)(ray_clock() - StartTime) / CLOCKS_PER_SEC;
-    if (ray_clock() - StartTime < 3 * CLOCKS_PER_SEC) 
+    register float timeSinceStart = (float)(clock() - StartTime) / CLOCKS_PER_SEC;
+    if (clock() - StartTime < 3 * CLOCKS_PER_SEC) 
     {
         UITitleA.x = -GetOutsideWindowX(UITitleA.visual.animation.Frames[0]) + timeSinceStart*(GetOutsideWindowX(UITitleA.visual.animation.Frames[0]) / TITLE_SECONDS_TO_CENTRE);
         RenderUIElement(&UITitleA);
@@ -140,26 +140,26 @@ void RenderTitle(void)
 
 void UpdateParty(void) 
 {
-    register float timeSinceStart = (float)(ray_clock() - StartTime) / CLOCKS_PER_SEC;
+    register float timeSinceStart = (float)(clock() - StartTime) / CLOCKS_PER_SEC;
     UIParty.y = GetOutsideWindowY(UIParty.visual.texture) + timeSinceStart * -(GetOutsideWindowY(UIParty.visual.texture) / PARTY_SECONDS_TO_CENTRE);
     UIParty.y = UIParty.y <= 0.26 ? 0.26 : UIParty.y;
 }
 
 void UpdatePlay(void) 
 {
-    register float timeSinceStart = (float)(ray_clock() - StartTime) / CLOCKS_PER_SEC;
+    register float timeSinceStart = (float)(clock() - StartTime) / CLOCKS_PER_SEC;
     UIPlay.graphic.x = GetOutsideWindowX(UIPlay.graphic.visual.texture) + timeSinceStart * -(GetOutsideWindowX(UIPlay.graphic.visual.texture) / START_SECONDS_TO_CENTRE);
     UIPlay.graphic.x = UIPlay.graphic.x < 0 ? 0: UIPlay.graphic.x;
 }
 
 void CreateTitlestars(void)
 {
-    static ray_clock_t timeSinceLastParticle = 0;
-    if (ray_clock() - timeSinceLastParticle > 50 && UIParty.y <= 0.26) 
+    static clock_t timeSinceLastParticle = 0;
+    if (clock() - timeSinceLastParticle > 50 && UIParty.y <= 0.26) 
     {
         float degrees = GetRandomValue(0, 200 *PI)/100.;
         CreateParticle(ParticleStars, 0, 0, cosf(degrees), sinf(degrees));
-        timeSinceLastParticle = ray_clock();
+        timeSinceLastParticle = clock();
     }
 }
 

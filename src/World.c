@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include "Save.h"
 #include "input.h"
-#include "Clock.h"
+#include <time.h>
 #include "World.h"
 
 #define WORLD_SIZE_X 1000
@@ -869,7 +869,6 @@ void RenderWorldEntity(WORLDEntity * entity)
 
     switch (entity-> visual -> type) {
         case UIanimation:
-        {
             uint16_t i = GetCurrentAnimationFrame(&entity -> visual -> animation);
             Texture2D * frame = entity -> visual -> animation.Frames + i;
             RenderWorldTexture( frame, 
@@ -877,29 +876,21 @@ void RenderWorldEntity(WORLDEntity * entity)
                                 entity -> visualOffset,
                                 entity -> scale);
             break;
-        }
-            
         case UItexture:
-        {
             Texture2D * texture = &entity -> visual -> texture;
             RenderWorldTexture( texture, 
                                 position, 
                                 entity -> visualOffset,
                                 entity -> scale);
             break;
-        }
-            
 
         case UItextureSnippet:
-        {
-            Texture2D * texture = &entity -> visual -> texture;
+            texture = &entity -> visual -> texture;
             RenderWorldTextureSnippet(  texture,
                                         position,
                                         entity -> visual -> snippet,
                                         entity -> visualOffset,
                                         entity -> scale);
-        }
-            
             break;
         case UIanimationV2:
             RenderWorldAnimation_V2(&entity -> visual -> animation_V2, 
@@ -966,11 +957,11 @@ void RenderWorldEntities(WORLDEntity * entities, uint16_t depth, enum FLAGS_ENTI
 // Spawns Bird Particles on screen every 2 seconds
 void SpawnBirds(void)
 {
-    static ray_clock_t timeSinceLastParticle = 0;
+    static clock_t timeSinceLastParticle = 0;
     static float wait = 2;
     uint8_t count = GetRandomValue(1,7);
     
-    if (ray_clock() - timeSinceLastParticle > CLOCKS_PER_SEC * wait) 
+    if (clock() - timeSinceLastParticle > CLOCKS_PER_SEC * wait) 
     {
         float degrees = 225/180.*PI;
         Vector2 start = (Vector2) {1, GetRandomValue(50, 150) / 100. - 1};
@@ -981,7 +972,7 @@ void SpawnBirds(void)
         }
         CreateParticle(BirdParticle, start.x, start.y, cosf(degrees)/2.5, sinf(degrees)/2.5);
 
-        timeSinceLastParticle = ray_clock();
+        timeSinceLastParticle = clock();
         wait = GetRandomValue(50, 400) / 100.;
     }
 }

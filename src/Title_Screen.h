@@ -25,7 +25,7 @@
 
 #include "../Include/raylib.h"
 #include <stdint.h>
-#include "Clock.h"
+#include <time.h>
 #include <stdio.h>
 #include "UI.h"
 #include "types.h"

@@ -22,11 +22,11 @@
 
 #include "Particle.h"
 #include <stdio.h>
-#include "Clock.h"
+#include <time.h>
 
 void Updater_DeleteAfterQuarterSecond(UIParticle * particle)
 {
-    if (ray_clock() - particle -> startTime > CLOCKS_PER_SEC / 4) 
+    if (clock() - particle -> startTime > CLOCKS_PER_SEC / 4) 
     {
         particle -> startTime = 0;
     }
@@ -34,7 +34,7 @@ void Updater_DeleteAfterQuarterSecond(UIParticle * particle)
 
 void Updater_DeleteAfterHalfSecond(UIParticle * particle)
 {
-    if (ray_clock() - particle -> startTime > CLOCKS_PER_SEC / 2) 
+    if (clock() - particle -> startTime > CLOCKS_PER_SEC / 2) 
     {
         particle -> startTime = 0;
     }
@@ -42,7 +42,7 @@ void Updater_DeleteAfterHalfSecond(UIParticle * particle)
 
 void Updater_DeleteAfterSecond(UIParticle * particle)
 {
-    if (ray_clock() - particle -> startTime > 1 * CLOCKS_PER_SEC) 
+    if (clock() - particle -> startTime > 1 * CLOCKS_PER_SEC) 
     {
         particle -> startTime = 0;
     }
@@ -50,7 +50,7 @@ void Updater_DeleteAfterSecond(UIParticle * particle)
 
 void Updater_DeleteAfter2Seconds(UIParticle * particle)
 {
-    if (ray_clock() - particle -> startTime > 2 * CLOCKS_PER_SEC) 
+    if (clock() - particle -> startTime > 2 * CLOCKS_PER_SEC) 
     {
         particle -> startTime = 0;
     }
@@ -58,7 +58,7 @@ void Updater_DeleteAfter2Seconds(UIParticle * particle)
 
 void Updater_DeleteAfter3Seconds(UIParticle * particle)
 {
-    if (ray_clock() - particle -> startTime > 3 * CLOCKS_PER_SEC) 
+    if (clock() - particle -> startTime > 3 * CLOCKS_PER_SEC) 
     {
         particle -> startTime = 0;
     }
@@ -66,7 +66,7 @@ void Updater_DeleteAfter3Seconds(UIParticle * particle)
 
 void Updater_DeleteAfter5Seconds(UIParticle * particle)
 {
-    if (ray_clock() - particle -> startTime > 5 * CLOCKS_PER_SEC) 
+    if (clock() - particle -> startTime > 5 * CLOCKS_PER_SEC) 
     {
         particle -> startTime = 0;
     }

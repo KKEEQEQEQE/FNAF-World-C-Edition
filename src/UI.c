@@ -334,22 +334,16 @@ void UpdateUIButton(const UIButton * button)
     switch (button -> graphic.visual.type)
     {
         case UIanimation: 
-        {
             uint16_t currentFrame = GetCurrentAnimationFrame(&button -> graphic.visual.animation);
             buttonTexture = button -> graphic.visual.animation.Frames[currentFrame];
             break;
-        }
         case UItextureSnippet:
-        {
             buttonTexture.width = button -> graphic.visual.snippet.width;
             buttonTexture.height = button -> graphic.visual.snippet.height;
             break;
-        }   
         case UItexture:
-        {
             buttonTexture = button -> graphic.visual.texture;
             break;
-        }
         default:
         return;
     }
