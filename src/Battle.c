@@ -22,6 +22,7 @@
 
 #include "Animation.h"
 #include "Background.h"
+#include "Game_State.h"
 #include "Particle.h"
 #include "UI.h"
 #include "Battle.h"
@@ -38,16 +39,6 @@
 #define BATTLE_POSITION_TO_PIXEL_X(x) (BATTLE_PIXEL_SCALE * (x + 1280. / BATTLE_PIXEL_SCALE / 2))
 
 #define BATTLE_POSITION_TO_PIXEL_Y(y) (BATTLE_PIXEL_SCALE * (y + 720. / BATTLE_PIXEL_SCALE / 2))
-
-#define ENTITY_MACRO_BOUNCEPOT (_BattleEntity) {.name = "Bouncepot", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Bouncepot/atlas.png", 30, 10, 250, 250)}
-
-#define ENTITY_MACRO_GEARRAT (_BattleEntity) {.name = "Gearrat", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Gearrat/atlas.png", 30, 10, 200, 200)}
-
-#define ENTITY_MACRO_MECHRAB (_BattleEntity) {.name = "Mechrab", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Mechrab/atlas.png", 30, 10, 200, 200)}
-
-#define ENTITY_MACRO_FREDDY  (_BattleEntity) { .name = "Freddy", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Freddy/idle.png", 30, 10, 250, 250)}
-
-#define ENTITY_MACRO_BONNIE  (_BattleEntity) { .name = "Bonnie", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Bonnie/idle.png", 30, 10, 250, 250)}
 
 Font Battle_Font = {0};
 Music theme = {0};
@@ -118,20 +109,81 @@ void LoadEntity(_BattleEntity * dest, _BattleEntity entity, enum ENTITY_POSITION
 }
 
 // Turns a Unsigned Long into a Stack Allocated String
-static char * __fastcall uintstr(uint64_t number) 
+static char * __fastcall uintstr(char * dest, uint8_t len, uint64_t number) 
 {
     uint64_t temp = number;
     uint64_t length = 1;
     while (temp > 9) temp /= 10, length++; // Checks number of digits and length of string
-    char * string = alloca(length);
+    if (length > len) length = len;
     temp = 0;
-    while (temp < length) string[length-temp-1] = '0' + number - (number / 10) * 10, number/=10, temp++;
-    string[temp] = '\0';
-    char * stringLocation = string;
+    while (temp < length) dest[length-temp-1] = '0' + number - (number / 10) * 10, number/=10, temp++;
+    dest[temp] = '\0';
+    char * stringLocation = dest;
     return stringLocation;
 }
 
+#define ENTITY_MACRO_BOUNCEPOT (_BattleEntity) {.name = "Bouncepot", \
+                                                .full_health = 30, .remaining_health = 30, \
+                                                .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, \
+                                                .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Bouncepot/atlas.png", 30, 10, 250, 250), \
+                                                .attacks = {{.type=HIT, .damage={8, 12}, .delay=0}}, \
+                                                .num_of_attacks = 1}
+
+#define ENTITY_MACRO_GEARRAT (_BattleEntity) {.name = "Gearrat", \
+                                                .full_health = 30, .remaining_health = 30, \
+                                                .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, \
+                                                .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Gearrat/atlas.png", 30, 10, 200, 200), \
+                                                .attacks = {{HIT, {8, 12}}}, \
+                                                .num_of_attacks = 1}
+
+#define ENTITY_MACRO_MECHRAB (_BattleEntity) {.name = "Mechrab", \
+                                                .full_health = 30, .remaining_health = 30, \
+                                                .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, \
+                                                .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Mechrab/atlas.png", 30, 10, 200, 200), \
+                                                .attacks = {(_Attack){.damage={8, 12}, .type=HIT, .delay=CLOCKS_PER_SEC}}, \
+                                                .num_of_attacks = 1}
+
+#define ENTITY_MACRO_FREDDY  (_BattleEntity) { .name = "Freddy", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Freddy/idle.png", 30, 10, 250, 250)}
+
+#define ENTITY_MACRO_BONNIE  (_BattleEntity) { .name = "Bonnie", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Bonnie/idle.png", 30, 10, 250, 250)}
+
+enum ENTITY_IDs
+{
+    UNKNOWN,
+    FREDDY,
+    BONNIE,
+    CHICA,
+    FOXY,
+    BOUNCEPOT,
+    GEARRAT,
+    MECHRAB
+};
+
+_BattleEntity GetBattleEntity(enum ENTITY_IDs id)
+{
+    _BattleEntity entity;
+    switch (id) {
+        case UNKNOWN:
+            return entity = ENTITY_MACRO_FREDDY;
+        case FREDDY:
+            return entity = ENTITY_MACRO_FREDDY;
+        case BONNIE:
+            return entity = ENTITY_MACRO_BONNIE;
+        case CHICA:
+        case FOXY:
+        case BOUNCEPOT:
+            return ENTITY_MACRO_BOUNCEPOT;
+        case GEARRAT:
+            return ENTITY_MACRO_GEARRAT;
+        case MECHRAB:
+            return ENTITY_MACRO_MECHRAB;
+    }
+}
 uint8_t damage_particles[5] = {0};
+
+#define ATTACK_COOLDOWN (5 * CLOCKS_PER_SEC)
+
+Animation_V2 grave = {0};
 
 void InitBattle(void)
 {
@@ -159,18 +211,28 @@ void InitBattle(void)
 
     Party_Enemy.size = 4;
 
-    LoadEntity(Party_Enemy.member, ENTITY_MACRO_MECHRAB, L_U);
-    LoadEntity(Party_Enemy.member + 1, ENTITY_MACRO_MECHRAB, L_L);
-    LoadEntity(Party_Enemy.member + 2, ENTITY_MACRO_MECHRAB, L_R);
-    LoadEntity(Party_Enemy.member + 3, ENTITY_MACRO_MECHRAB, L_D);
+    LoadEntity(Party_Enemy.member, GetBattleEntity(MECHRAB), L_U);
+    LoadEntity(Party_Enemy.member + 1, GetBattleEntity(MECHRAB), L_L);
+    LoadEntity(Party_Enemy.member + 2, GetBattleEntity(MECHRAB), L_R);
+    LoadEntity(Party_Enemy.member + 3, GetBattleEntity(MECHRAB), L_D);
 
     Party_Player.size = 4;
     
-    LoadEntity(Party_Player.member, ENTITY_MACRO_FREDDY, R_U);
-    LoadEntity(Party_Player.member + 1, ENTITY_MACRO_BONNIE, R_L);
-    LoadEntity(Party_Player.member + 2, ENTITY_MACRO_FREDDY, R_R);
-    LoadEntity(Party_Player.member + 3, ENTITY_MACRO_BONNIE, R_D);
+    LoadEntity(Party_Player.member, GetBattleEntity(FREDDY), R_U);
+    LoadEntity(Party_Player.member + 1, GetBattleEntity(FREDDY), R_L);
+    LoadEntity(Party_Player.member + 2, GetBattleEntity(FREDDY), R_R);
+    LoadEntity(Party_Player.member + 3, GetBattleEntity(FREDDY), R_D);
     
+    for (uint8_t i = 0; i < Party_Enemy.size; i++)
+    {
+        Party_Enemy.member[i].last_attack = clock() + (i * 0.5 * CLOCKS_PER_SEC);
+    }
+
+    for (uint8_t i = 0; i < Party_Player.size; i++)
+    {
+        Party_Player.member[i].last_attack = clock() + (i * 0.5 * CLOCKS_PER_SEC);
+    }
+
     theme = LoadMusicStream("Assets/Themes/battle_normal.wav");
     theme.looping = 1;
     
@@ -190,6 +252,7 @@ void InitBattle(void)
     PlayMusicStream(theme);
     
     SetTraceLogLevel(LOG_ALL);
+    grave = CreateAnimation_V2("Assets/Battle/Entity_Sprites/grave.png", 1, 1, 112, 140);
 }
 
 enum ATTACK_MOVE_INDEX
@@ -204,7 +267,7 @@ typedef struct _AttackQueue
 {
     _Bool imminent;
     clock_t start_time;
-    clock_t wait;
+    clock_t delay;
     _Attack attack;
     _BattleEntity * target;
     _BattleEntity * source;
@@ -271,8 +334,6 @@ void CreateDamageEffect(Vector2 position)
     }
 }
 
-#define ATTACK_COOLDOWN (3 * CLOCKS_PER_SEC)
-
 #define ATTACK_PARAMETERS _BattleParty * target_party, _BattleEntity * source, _Attack attack
 
 void RunAttackQueue(_AttackQueue * attack)
@@ -291,15 +352,25 @@ void RunAttackQueue(_AttackQueue * attack)
 
     hitbox.x += hitbox.width / 2;
     hitbox.y += hitbox.height / 2;
-
+    
     switch (attack -> attack.type)
     {
         case NONE:
+            CreateDamageEffect((Vector2) {hitbox.x, hitbox.y});
+            attack->target->remaining_health -= GetRandomValue(attack->attack.damage.min, attack->attack.damage.max);
             break;
         case HIT:
             CreateDamageEffect((Vector2) {hitbox.x, hitbox.y});
+            attack->target->remaining_health -= GetRandomValue(attack->attack.damage.min, attack->attack.damage.max);
+            printf("Hi");
             break;
     }
+
+    if (attack -> target -> remaining_health > attack -> target -> full_health) 
+    {
+        attack -> target -> remaining_health = 0;
+    }
+
     attack -> ATTACK_QUEUE_FREE;
 }
 
@@ -308,7 +379,7 @@ void UpdateAttackQueue(void)
     for (uint8_t i = 0; i < MAX_ATTACKS_IN_QUEUE; i++)
     {
         if (!attack_queue[i].start_time || 
-            clock() < attack_queue[i].wait + attack_queue[i].start_time) continue;
+            clock() < attack_queue[i].delay + attack_queue[i].start_time) continue;
 
         RunAttackQueue(&attack_queue[i]);
     }
@@ -320,7 +391,7 @@ void Print_AttackQueue_struct(_AttackQueue * queue)
 
 void Print_All_Attack_Queue(void)
 {
-    printf("\n\nStart\n");
+    printf("\n\n");
 
     for (uint8_t i = 0; i < MAX_ATTACKS_IN_QUEUE; i++)
     {
@@ -335,27 +406,25 @@ static void _BattleEntity_Attack_Push(_BattleParty *target_party, _BattleEntity 
 
     uint8_t array_size = target_party -> size;
 
-    uint16_t potental_targets[array_size];
+    uint8_t potental_targets[array_size];
     memset(potental_targets, 0, array_size);
 
     uint8_t num_of_potental_targets = 0;
 
-    for (uint8_t attempt_index; attempt_index < 4; attempt_index++)
+    for (uint8_t attempt_index = 0; attempt_index < target_party -> size; attempt_index++)
     {
-        if (!target_party->member[attempt_index].remaining_health) continue;
+        if (!target_party -> member[attempt_index].remaining_health) continue;
 
         potental_targets[num_of_potental_targets] = attempt_index;
 
         num_of_potental_targets++;
     }
 
-    SetRandomSeed(53466546);
-    uint8_t target_id = GetRandomValue(0, num_of_potental_targets);
+    if (num_of_potental_targets == 0) return;
+    
+    uint8_t target_id = GetRandomValue(0, num_of_potental_targets - 1);
     target_id = potental_targets[target_id];
-
-    if (target_id >= target_party->size) target_id = target_party->size;
-    printf("%u\n", target_id);
-
+    
     uint8_t queue_id = GetAvaliable_attack_queue();
 
     if (queue_id == MAX_ATTACKS_IN_QUEUE) return;
@@ -366,7 +435,7 @@ static void _BattleEntity_Attack_Push(_BattleParty *target_party, _BattleEntity 
         .source = source,
         .target = target_party -> member + target_id,
         .start_time = clock(),
-        .wait = 0
+        .delay = attack.delay
     };
 }
 
@@ -400,19 +469,27 @@ void RenderBattleEntity_Hitbox(register _BattleEntity * entity)
                     BATTLE_PIXEL_SCALE * entity -> hitbox.height, BLUE);
 }
 
-void RenderBattleEntity(register _BattleEntity * entity)
+void RenderBattleEntity(register _BattleEntity * entity, _Bool is_player)
 {
     static float entity_scale = 1.5;
     Vector2 position = (Vector2) {  BATTLE_POSITION_TO_PIXEL_X(entity -> hitbox.x),
                                     BATTLE_POSITION_TO_PIXEL_Y(entity -> hitbox.y)};
 
-    if (entity -> remaining_health == 0) return;
+
     
     #ifdef DEBUG
     
     RenderBattleEntity_Hitbox(entity);
 
     #endif
+ 
+    if (!entity -> remaining_health && is_player)
+    {
+        DrawAnimation_V2(   &grave, 
+                        position.x + (entity -> hitbox.width * BATTLE_PIXEL_SCALE / 2.) - grave.TileSize_x / 2.f * entity_scale, 
+                        position.y + (entity -> hitbox.height * BATTLE_PIXEL_SCALE / 2.) - grave.TileSize_y / 2.f * entity_scale, entity_scale, 0);
+        return;
+    } else if (!entity -> remaining_health) return;
 
     DrawAnimation_V2(   &entity -> sprite_idle, 
                         position.x + (entity -> hitbox.width * BATTLE_PIXEL_SCALE / 2.) - entity -> sprite_idle.TileSize_x / 2.f * entity_scale, 
@@ -431,12 +508,12 @@ void RenderBattle(void)
     ClearBackground(BLANK);
     for (uint8_t i = 0; i < Party_Enemy.size; i++)
     {
-        RenderBattleEntity(Party_Enemy.member + i);
+        RenderBattleEntity(Party_Enemy.member + i, 0);
     }
 
     for (uint8_t i = 0; i < Party_Player.size; i++)
     {
-        RenderBattleEntity(Party_Player.member + i);
+        RenderBattleEntity(Party_Player.member + i, 1);
     }
 
     EndTextureMode();
@@ -458,26 +535,115 @@ void RenderBattle(void)
 void RenderHealthBar(_BattleEntity * entity, Color colour, uint8_t id, float scale)
 {
     static float border_facter = 0.025;
-    Rectangle dest = (Rectangle) { GetScreenWidth() - 210 * scale, 60 * id * scale + 10 * scale, 200 * scale, 50 * scale};
+    static UITexture background = {0};
 
-    Rectangle health_back_rec = (Rectangle) {dest.x + dest.width * border_facter, dest.y + dest.width * border_facter, dest.width * (1-border_facter*2), dest.height - dest.width * (border_facter * 2)};
+    if (!background.width) 
+    {
+        background = LoadTexture("Assets/Battle/UI/Health_Bar.png");
+        SetTextureFilter(background, TEXTURE_FILTER_BILINEAR);
+    }
+    Rectangle dest = (Rectangle) {  GetScreenWidth() - background.width * scale - 10 * scale, 
+                                    background.height * id * scale + 10 * scale, 
+                                    background.width * scale, background.height * scale     };
+
+    Rectangle health_back_rec = (Rectangle) {   dest.x + dest.width * border_facter, 
+                                                dest.y + dest.width * border_facter, 
+                                                dest.width * (1-border_facter*2), 
+                                                dest.height - dest.width * (border_facter * 2)};
     Rectangle health_rec = (Rectangle) {dest.x + dest.width * border_facter, dest.y + dest.width * border_facter, dest.width * (1-border_facter*2), dest.height - dest.width * (border_facter * 2)};
-    health_rec.width *= (float) entity->remaining_health / entity->full_health;
+    
+    DrawRectangleRec(health_rec, (Color){0,0,0,100});
 
-    DrawRectangleRounded(dest, 0.1, 10, WHITE);
-    DrawRectangleRec(health_back_rec, BLACK);
+    health_rec.width *= (float) entity->remaining_health / entity->full_health;
+    
     DrawRectangleRec(health_rec, colour);
+    
+    DrawTextureEx(background, (Vector2){dest.x, dest.y}, 0, scale, WHITE);
+    char number[5];
+    uintstr(number, 5, entity->remaining_health);
+    
 
     DrawTextPro( (Font){0}, 
-                "100", 
-                (Vector2) { health_back_rec.x + health_back_rec.width, health_back_rec.y + health_back_rec.height / 2.}, (Vector2){MeasureText("100", 48), 48/2.}, 0, 48, 1, WHITE);
+                number, 
+                (Vector2) { health_back_rec.x + health_back_rec.width, health_back_rec.y + health_back_rec.height / 2.}, (Vector2){MeasureText("100", 30), 30/2.}, 0, 30, 1, WHITE);
 }
 
+float enemy_speed = 10;
+
+void UpdateEnemyParty(void)
+{
+    for (uint8_t i = 0; i < Party_Enemy.size; i++)
+    {
+        if (clock() - Party_Enemy.member[i].last_attack < (1 / enemy_speed) * ATTACK_COOLDOWN
+            || !Party_Enemy.member[i].num_of_attacks) continue;
+        
+        int8_t attack_id = GetRandomValue(0, Party_Enemy.member[i].num_of_attacks - 1);
+
+        _BattleEntity_Attack_Push(&Party_Player, Party_Enemy.member + i, Party_Enemy.member[i].attacks[attack_id]);
+        Party_Enemy.member[i].last_attack = clock();
+    }
+}
+
+_Bool GetGameOver(void)
+{
+    uint8_t i = 0;
+    for (; i < Party_Player.size; i++)
+    {
+        if (Party_Player.member[i].remaining_health) break;
+    }
+    return (i == Party_Player.size);
+}
+
+#define NO_ATTACK_ANIMATION_ANIMATION_LENGTH 1
+
+float GetBattleEntityAnimationPercentage(_BattleEntity * entity)
+{
+    _Bool has_attack_animation = entity -> sprite_attack.Amount > 0;
+
+    clock_t animation_frame_len = has_attack_animation ? 
+                                    CLOCKS_PER_SEC * (1 / entity -> sprite_attack.FPS) :
+                                    NO_ATTACK_ANIMATION_ANIMATION_LENGTH * CLOCKS_PER_SEC;   
+
+    clock_t animation_len = has_attack_animation ? animation_frame_len * entity -> sprite_attack.Amount :
+                                animation_frame_len * 1;
+    return (float) (clock() - entity -> last_attack) / animation_len;
+}
+
+_Bool IsBattleEntityInAttackAnimation(_BattleEntity * entity)
+{
+    return GetBattleEntityAnimationPercentage(entity) <= 1;
+}
+
+Vector2 GetNoAnimationPosition(float percentage)
+{
+    float unit = (cosf(PI * percentage + PI) + 1) / 2;
+
+    return (Vector2) {2 * unit, 1 * unit};
+}
+
+void UpdateBattleParty_Animations(_BattleParty * target_party)
+{
+    
+    for (uint8_t i = 0; i < target_party -> size; i++)
+    {
+        _Bool has_attack_animation = target_party -> member[i].sprite_attack.Amount > 0;
+
+        if (has_attack_animation) continue;
+
+        if (!IsBattleEntityInAttackAnimation(target_party -> member + i)) continue;
+
+        target_party->member[i].hitbox.x;
+
+        target_party->member[i].hitbox.y;
+    }
+}
 void PutBattle(void)
 {
     UpdateMusicStream(theme);
 
     UpdateAttackQueue();
+
+    UpdateEnemyParty();
 
     RenderBattle();
     if (IsKeyPressed(KEY_S)) _BattleEntity_Attack_Push(&Party_Enemy, NULL, (_Attack){.type = HIT});
@@ -490,5 +656,11 @@ void PutBattle(void)
     RenderUIText(Party_Enemy.member[0].name, -0.95, -0.8, 0.06, LEFTMOST, Battle_Font, WHITE);
     if (IsKeyPressed(KEY_SPACE)) CreateDamageEffect((Vector2) {0,0});
     PutUIParticles();
-    //RenderHealthBar(Party_Player.member, RED, 0, GetScreenScale());
+
+    for (uint8_t i = 0; i < Party_Player.size; i++)
+    {
+        RenderHealthBar(Party_Player.member + i, RED, i, GetScreenScale() * 1.5);
+    }
+
+    if (GetGameOver()) SwapGameState(Title);
 }

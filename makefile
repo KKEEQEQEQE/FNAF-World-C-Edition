@@ -1,5 +1,5 @@
 cc = gcc
-cflags = -std=c17 -O0
+cflags = -std=c17
 
 clean:
 	touch bin/temp.o

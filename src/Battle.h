@@ -39,19 +39,23 @@ typedef struct _Damage_Range
 
 typedef struct _Battle_Projectile 
 {
+    clock_t max_lifetime;
     _Damage_Range damage;
+    Vector2 velocity;
     Rectangle hitbox;
     Animation_V2 sprite;
 } _Battle_Projectile;
 
 typedef struct _Attack 
 {
-    enum _Battle_Attacks_Types type;
     _Damage_Range damage;
+    enum _Battle_Attacks_Types type;
+    clock_t delay;
 } _Attack;
 
 typedef struct _BattleEntity 
 {
+    uint8_t num_of_attacks; // Mostly for Enemies
     uint32_t remaining_health, full_health;
     char name[20];
     clock_t last_attack;
@@ -59,7 +63,6 @@ typedef struct _BattleEntity
     Animation_V2 sprite_attack;
     Rectangle hitbox;
     _Attack attacks[3];
-    _Damage_Range hit_damage;
 } _BattleEntity;
 
 typedef struct _BattleParty
