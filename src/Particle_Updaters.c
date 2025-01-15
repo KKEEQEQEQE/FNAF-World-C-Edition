@@ -71,3 +71,21 @@ void Updater_DeleteAfter5Seconds(UIParticle * particle)
         particle -> startTime = 0;
     }
 }
+
+void Updater_WeakGravity(UIParticle * particle)
+{
+    particle->velocityX  -= particle->velocityX / 0.1 * GetFrameTime();
+    particle->velocityY  += 0.981 * GetFrameTime();
+}
+
+void Updater_MediumGravity(UIParticle * particle)
+{
+    particle->velocityX  -= particle->velocityX / 0.1 * GetFrameTime();
+    particle->velocityY  += 9.81 * GetFrameTime();
+}
+
+void Updater_StrongGravity(UIParticle * particle)
+{
+    particle->velocityX  -= particle->velocityX / 0.1 * GetFrameTime();
+    particle->velocityY  += 9.81 * GetFrameTime() / 2;
+}

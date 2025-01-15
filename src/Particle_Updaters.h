@@ -30,3 +30,6 @@ extern void Updater_DeleteAfterSecond(UIParticle * particle);
 extern void Updater_DeleteAfter2Seconds(UIParticle * particle);
 extern void Updater_DeleteAfter3Seconds(UIParticle * particle);
 extern void Updater_DeleteAfter5Seconds(UIParticle * particle);
+
+extern void Updater_WeakGravity(UIParticle * particle);
+extern void Updater_StrongGravity(UIParticle * particle);
