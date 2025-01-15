@@ -22,6 +22,7 @@
 
 #include "Animation.h"
 #include "Background.h"
+#include "Game_State.h"
 #include "Particle.h"
 #include "Settings.h"
 #include <stdlib.h>
@@ -1637,6 +1638,7 @@ void PutWorld(void)
     HandleWorldButtonCollision();
     HandleBoxCollisions(ChipBoxes, NUMBER_OF_CHIPS);
     HandleMineCollision();
+    if (IsKeyPressed(KEY_F)) SwapGameState(Battle);
     PutDefaultUI();
     RenderChipNoteBanner();
 }

@@ -32,3 +32,11 @@ enum GameStateTypes
 
 extern void SwapGameState(enum GameStateTypes state);
 extern enum GameStateTypes GetGameState(void);
+
+enum TransitionAnimationTypes
+{
+    NOCURRENT, FADE
+};
+
+extern void SwapGameState_Animated(enum TransitionAnimationTypes type, enum GameStateTypes state, float duration);
+extern void PutTransitionAnimation(void);

@@ -24,6 +24,7 @@
 #include "Battle.h"
 #include "Title_Screen.h"
 #include "World.h"
+#include <time.h>
 
 enum GameStateTypes GameState = 1000;
 
@@ -60,6 +61,61 @@ void SwapGameState(enum GameStateTypes state)
             break;
     }
     GameState = state;
+}
+
+enum TransitionAnimationTypes animation = NOCURRENT;
+enum GameStateTypes target_gamestate = 0;
+clock_t start_time = 0;
+clock_t end_time = 0;
+
+void SwapGameState_Animated(enum TransitionAnimationTypes type, enum GameStateTypes state, float duration)
+{
+    animation = type;
+    start_time = clock();
+    end_time = start_time + CLOCKS_PER_SEC * duration;
+    target_gamestate = state;
+}
+
+void UpdateTransitionAnimation(void)
+{
+    if (clock() >= end_time) 
+    {
+        SwapGameState(target_gamestate);
+        start_time = 0;
+        end_time = 0;
+        target_gamestate = 0;
+    }
+}
+
+float GetAnimationPercentage(void)
+{
+    return (float) (clock() - start_time) / (end_time - start_time);
+}
+
+void animation_RenderFade(void)
+{
+    DrawRectangle(  0, 0, 
+                    GetScreenWidth(), GetScreenHeight(), 
+                    (Color) {0, 0, 0, 255 * GetAnimationPercentage()});
+}
+
+void RenderTransitionAnimation(void)
+{
+    switch (animation) 
+    {
+        case NOCURRENT:
+            break;
+        case FADE:
+            animation_RenderFade();
+            break;
+    }
+}
+
+void PutTransitionAnimation(void)
+{
+    if (!start_time) return;
+    UpdateTransitionAnimation();
+    RenderTransitionAnimation();
 }
 
 enum GameStateTypes GetGameState(void)

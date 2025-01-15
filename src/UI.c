@@ -51,6 +51,7 @@ float GetScreenScaleW(void)
     return GetScreenWidth()/1280.;
 }
 
+// The current scaling is relative to 720p / Scale_Mode, DEFAULT VALUE: HEIGHT
 enum UI_SCREEN_SCALE_MODE Scale_Mode = HEIGHT;
 
 void SetUIScreenScaleMode(enum UI_SCREEN_SCALE_MODE mode)
@@ -58,6 +59,7 @@ void SetUIScreenScaleMode(enum UI_SCREEN_SCALE_MODE mode)
     Scale_Mode = mode;
 }
 
+// Sets UI Scaling Mode (for improved scaling on smaller aspect ratios)
 float GetScreenScale(void)
 {
     switch (Scale_Mode) {

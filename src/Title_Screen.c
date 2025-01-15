@@ -52,7 +52,7 @@ void FreeTitleScreen(void)
 void ButtonPlayPressed(UIButton * button)
 {
     printf("Play Button Pressed!\n");
-    SwapGameState(World);
+    SwapGameState_Animated(FADE, World, 0.25);
 }
 
 UIButton UIPlay = {(UIElement){UIanimation,0}, ButtonPlayPressed, 0};
@@ -86,6 +86,7 @@ void InitTitleScreen(void)
     ParticleStars = CreateParticleIndexA_V2("Assets/Particles/titlestar.png", 20,8, (Vector2) {12, 12}, 2);
     TitleScreenFont = LoadFont("Assets/Menu/Title_Screen/font.ttf");
     SetTextureFilter(TitleScreenFont.texture, TEXTURE_FILTER_BILINEAR);
+    ResetTitleScreen();
 }
 
 void UninitTitleScreen(void)
@@ -104,8 +105,9 @@ void UninitTitleScreen(void)
 void ResetTitleScreen(void) 
 {
     SetWindowTitle("FNaF World: C Edition - Title Screen");
-    InitTitleScreen();
 
+    StartTime = clock();
+    
     UITitleA.visual.animation.Clock = StartTime;
 
     UITitleA.x = GetOutsideWindowX(UITitleA.visual.animation.Frames[0]);
@@ -120,7 +122,7 @@ void ResetTitleScreen(void)
     UIPlay.graphic.x = 0;
     UIPlay.graphic.y = 0.8125;
     PlayMusicStream(Theme);
-    StartTime = clock();
+    
 }
 
 void RenderTitle(void) 

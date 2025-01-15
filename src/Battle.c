@@ -34,11 +34,11 @@
 #include <string.h>
 #include <time.h>
 
-#define BATTLE_PIXEL_SCALE (100)
+#define BATTLE_PIXEL_SCALE (66.6666666667)
 
-#define BATTLE_POSITION_TO_PIXEL_X(x) (BATTLE_PIXEL_SCALE * (x + 1280. / BATTLE_PIXEL_SCALE / 2))
+#define BATTLE_POSITION_TO_PIXEL_X(x) (BATTLE_PIXEL_SCALE * (x + 854. / BATTLE_PIXEL_SCALE / 2))
 
-#define BATTLE_POSITION_TO_PIXEL_Y(y) (BATTLE_PIXEL_SCALE * (y + 720. / BATTLE_PIXEL_SCALE / 2))
+#define BATTLE_POSITION_TO_PIXEL_Y(y) (BATTLE_PIXEL_SCALE * (y + 480. / BATTLE_PIXEL_SCALE / 2))
 
 Font Battle_Font = {0};
 Music theme = {0};
@@ -299,10 +299,10 @@ static uint8_t GetUnavaliable_attack_queue(void)
 
 Vector2 BattleSpaceToUiSpace(Vector2 position)
 {
-    float scale = GetScreenRatio() <= RATIO_16_9 ? GetScreenWidth() / 1280. : GetScreenHeight() / 720.;
+    float scale = GetScreenRatio() <= RATIO_16_9 ? GetScreenWidth() / 854. : GetScreenHeight() / 480.;
 
-    Vector2 Vscreen_offset = (Vector2) {GetScreenWidth() / 2. - 640. * scale, 
-                                        GetScreenHeight() / 2. - 360. * scale };
+    Vector2 Vscreen_offset = (Vector2) {GetScreenWidth() / 2. - 427. * scale, 
+                                        GetScreenHeight() / 2. - 240. * scale };
 
     Vector2 pixel_position = (Vector2) { scale * BATTLE_POSITION_TO_PIXEL_X(position.x) + Vscreen_offset.x, 
                                          scale * BATTLE_POSITION_TO_PIXEL_Y(position.y) + Vscreen_offset.y };
@@ -315,9 +315,9 @@ Vector2 BattleSpaceToUiSpace(Vector2 position)
 
 void CreateDamageEffect(Vector2 position)
 {
-    float scale = GetScreenRatio() <= RATIO_16_9 ? GetScreenWidth() / 1280. : GetScreenHeight() / 720.;
+    float scale = GetScreenRatio() <= RATIO_16_9 ? GetScreenWidth() / 854. : GetScreenHeight() / 480.;
 
-    Vector2 Vscreen_offset = (Vector2) {(GetScreenWidth() - 1280 * scale) / 2, (GetScreenHeight() - 720 * scale) / 2};
+    Vector2 Vscreen_offset = (Vector2) {(GetScreenWidth() - 854 * scale) / 2, (GetScreenHeight() - 480 * scale) / 2};
     Vector2 start_position = BattleSpaceToUiSpace(position);
     uint8_t num_of_particles = GetRandomValue(4, 8);
 
@@ -329,7 +329,7 @@ void CreateDamageEffect(Vector2 position)
         CreateParticleEx(   damage_particles[i % 5], 
                             start_position.x + random_offset.x, start_position.y + random_offset.y, 
                             GetRandomValue(-10000, 10000) / 2e4, 1,
-                            720,
+                            480,
                             Updater_DeleteAfterQuarterSecond);
     }
 }
@@ -471,7 +471,7 @@ void RenderBattleEntity_Hitbox(register _BattleEntity * entity)
 
 void RenderBattleEntity(register _BattleEntity * entity, _Bool is_player)
 {
-    static float entity_scale = 1.5;
+    static float entity_scale = 1;
     Vector2 position = (Vector2) {  BATTLE_POSITION_TO_PIXEL_X(entity -> hitbox.x),
                                     BATTLE_POSITION_TO_PIXEL_Y(entity -> hitbox.y)};
 
@@ -498,11 +498,12 @@ void RenderBattleEntity(register _BattleEntity * entity, _Bool is_player)
 
 void RenderBattle(void)
 {
+    SetTextureFilter(BattleBackground, TEXTURE_FILTER_BILINEAR);
     RenderBackground(BattleBackground);
 
     static RenderTexture2D virtual_screen = {0};
 
-    if (virtual_screen.texture.height == 0) virtual_screen = LoadRenderTexture(1280, 720);
+    if (virtual_screen.texture.height == 0) virtual_screen = LoadRenderTexture(854, 480);
 
     BeginTextureMode(virtual_screen);
     ClearBackground(BLANK);
@@ -518,9 +519,10 @@ void RenderBattle(void)
 
     EndTextureMode();
 
-    SetTextureFilter(BattleBackground, TEXTURE_FILTER_BILINEAR);
-
-    float scale = GetScreenRatio() <= RATIO_16_9 ? GetScreenWidth() / 1280. : GetScreenHeight() / 720.;
+    float scale = GetScreenRatio() <= RATIO_16_9 ? GetScreenWidth() / 854. : GetScreenHeight() / 480.;
+    
+    SetTextureFilter(virtual_screen.texture, TEXTURE_FILTER_BILINEAR);
+    
     DrawTexturePro( virtual_screen.texture, 
                     (Rectangle) {0, -virtual_screen.texture.height, (float) virtual_screen.texture.width, (float) -virtual_screen.texture.height}, 
                     (Rectangle) {   GetScreenWidth() / 2. - virtual_screen.texture.width / 2. * scale, 
@@ -565,10 +567,12 @@ void RenderHealthBar(_BattleEntity * entity, Color colour, uint8_t id, float sca
 
     DrawTextPro( (Font){0}, 
                 number, 
-                (Vector2) { health_back_rec.x + health_back_rec.width, health_back_rec.y + health_back_rec.height / 2.}, (Vector2){MeasureText("100", 30), 30/2.}, 0, 30, 1, WHITE);
+                (Vector2) { health_back_rec.x + health_back_rec.width, health_back_rec.y + health_back_rec.height / 2.}, 
+                (Vector2){MeasureText("100", 30), 30/2.}, 
+                0, 30, 1, WHITE);
 }
 
-float enemy_speed = 10;
+float enemy_speed = 1;
 
 void UpdateEnemyParty(void)
 {
@@ -632,11 +636,11 @@ void UpdateBattleParty_Animations(_BattleParty * target_party)
 
         if (!IsBattleEntityInAttackAnimation(target_party -> member + i)) continue;
 
-        target_party->member[i].hitbox.x;
-
-        target_party->member[i].hitbox.y;
+        target_party -> member[i].hitbox.x;
+        target_party -> member[i].hitbox.y;
     }
 }
+
 void PutBattle(void)
 {
     UpdateMusicStream(theme);
