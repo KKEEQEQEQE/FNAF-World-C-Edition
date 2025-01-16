@@ -22,6 +22,7 @@
 
 
 #include "Title_Screen.h"
+#include "Background.h"
 #include "Game_State.h"
 #include "Particle.h"
 #include "UI.h"

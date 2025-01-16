@@ -29,15 +29,8 @@
 #include <stdio.h>
 #include <time.h>
 
-typedef struct _ParticlePoolObject 
-{
-    UIParticle object;
-    struct _ParticlePoolObject * next;
-} _ParticlePoolObject;
-
 UIParticleIndex ParticlesIndex[255] = {0};
-_ParticlePoolObject AllParticles[MAX_PARTICLES] = {0};
-_ParticlePoolObject * Particle_Free_List = NULL;
+UIParticle AllParticles[MAX_PARTICLES] = {0};
 
 static float absf(float x)
 {
@@ -106,47 +99,36 @@ uint8_t CreateParticleIndexT_Snippet(UITexture atlas, Rectangle snippet, float s
     return id;
 }
 
-void __attribute__((constructor)) InitParticleFreeList(void)
-{
-    for (uint16_t i = 0; i < MAX_PARTICLES - 1; i++)
-    {
-        AllParticles[i].next = AllParticles + i + 1;
-    }
-    Particle_Free_List = AllParticles;
-}
-
 // Creates a Particle instance
 void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY)
 {
-    if (!Particle_Free_List) return;
-
-    Particle_Free_List->object.textureID = textureID;
-    Particle_Free_List->object.x = x;
-    Particle_Free_List->object.y = y;
-    Particle_Free_List->object.velocityX = velocityX;
-    Particle_Free_List->object.velocityY = velocityY;
-    Particle_Free_List->object.startTime = clock();
-    Particle_Free_List->object.angularFrequency = 0;
-    Particle_Free_List->object.additionalUpdater = NULL;
-
-    Particle_Free_List = Particle_Free_List -> next;
+    uint8_t id = 0;
+    for (; AllParticles[id].startTime != 0; id++); // Gets the an avaliable index id
+    if (id >= MAX_PARTICLES) id = MAX_PARTICLES-1;
+    AllParticles[id].textureID = textureID;
+    AllParticles[id].x = x;
+    AllParticles[id].y = y;
+    AllParticles[id].velocityX = velocityX;
+    AllParticles[id].velocityY = velocityY;
+    AllParticles[id].startTime = clock();
+    AllParticles[id].angularFrequency = 0;
+    AllParticles[id].additionalUpdater = NULL;
 }
 
 // Creates a Particle instance with extra parameters
 void CreateParticleEx(uint8_t textureID, float x, float y, float velocityX, float velocityY, float angularFrequency, void (*additionalUpdater)(UIParticle *))
 {
-    if (!Particle_Free_List) return;
-
-    Particle_Free_List->object.textureID = textureID;
-    Particle_Free_List->object.x = x;
-    Particle_Free_List->object.y = y;
-    Particle_Free_List->object.velocityX = velocityX;
-    Particle_Free_List->object.velocityY = velocityY;
-    Particle_Free_List->object.startTime = clock();
-    Particle_Free_List->object.angularFrequency = 0;
-    Particle_Free_List->object.additionalUpdater = NULL;
-
-    Particle_Free_List = Particle_Free_List -> next;
+    uint8_t id = 0;
+    for (; AllParticles[id].startTime != 0; id++); // Gets the an avaliable index id
+    if (id >= MAX_PARTICLES) id = MAX_PARTICLES-1;
+    AllParticles[id].textureID = textureID;
+    AllParticles[id].x = x;
+    AllParticles[id].y = y;
+    AllParticles[id].velocityX = velocityX;
+    AllParticles[id].velocityY = velocityY;
+    AllParticles[id].startTime = clock();
+    AllParticles[id].angularFrequency = angularFrequency;
+    AllParticles[id].additionalUpdater = additionalUpdater;
 }
 
 // Removes a particle type (NOTE: UItextureSnippet textures don't get unloaded)
@@ -176,11 +158,7 @@ void RemoveParticleIndex(uint16_t id)
 // Deletes a Particle instance
 void DeleteParticle(uint16_t id)
 {
-    AllParticles[id].object.startTime = 0;
-
-    _ParticlePoolObject * temp = Particle_Free_List;
-    Particle_Free_List = AllParticles + id;
-    Particle_Free_List -> next = temp;
+    AllParticles[id].startTime = 0;
 }
 
 // Deletes all Particle instance
@@ -192,8 +170,8 @@ void FlushParticles(void)
 // Updates a UIParticle position with its velocity
 void UpdateUIParticle(uint16_t id) 
 {
-    AllParticles[id].object.x += AllParticles[id].object.velocityX * GetFrameTime();
-    AllParticles[id].object.y += AllParticles[id].object.velocityY * GetFrameTime();
+    AllParticles[id].x += AllParticles[id].velocityX * GetFrameTime();
+    AllParticles[id].y += AllParticles[id].velocityY * GetFrameTime();
 
     Vector2 size = (Vector2) {0, 0};
 
@@ -201,7 +179,7 @@ void UpdateUIParticle(uint16_t id)
     {
         case UIanimation:
         {
-            Animation * animation = &ParticlesIndex[AllParticles[id].object.textureID].visual.animation;
+            Animation * animation = &ParticlesIndex[AllParticles[id].textureID].visual.animation;
             Texture2D texture = animation -> Frames[GetCurrentAnimationFrame(animation)];
             size = (Vector2) {texture.width, texture.height};
             break;
@@ -209,27 +187,27 @@ void UpdateUIParticle(uint16_t id)
             
         case UItexture:
         {
-            Texture2D texture = ParticlesIndex[AllParticles[id].object.textureID].visual.texture;
+            Texture2D texture = ParticlesIndex[AllParticles[id].textureID].visual.texture;
             size = (Vector2) {texture.width, texture.height};
             break;
         }
         
         case UItextureSnippet:
         {
-            size = (Vector2) {  ParticlesIndex[AllParticles[id].object.textureID].visual.snippet.width,
-                                ParticlesIndex[AllParticles[id].object.textureID].visual.snippet.height  };
+            size = (Vector2) {  ParticlesIndex[AllParticles[id].textureID].visual.snippet.width,
+                                ParticlesIndex[AllParticles[id].textureID].visual.snippet.height  };
             break;
         }
 
         case UIanimationV2:
         {
-            size = (Vector2) {  ParticlesIndex[AllParticles[id].object.textureID].visual.animation_V2.TileSize_x, 
-                                ParticlesIndex[AllParticles[id].object.textureID].visual.animation_V2.TileSize_y};
+            size = (Vector2) {  ParticlesIndex[AllParticles[id].textureID].visual.animation_V2.TileSize_x, 
+                                ParticlesIndex[AllParticles[id].textureID].visual.animation_V2.TileSize_y};
             break;
         }   
     }
-    if (absf(AllParticles[id].object.x) > GetOutsideWindowX_u16(size.x) ||
-        absf(AllParticles[id].object.y) > GetOutsideWindowY_u16(size.y))
+    if (absf(AllParticles[id].x) > GetOutsideWindowX_u16(size.x) ||
+        absf(AllParticles[id].y) > GetOutsideWindowY_u16(size.y))
     {
         DeleteParticle(id); // Marks particle to be overwritten
     }
@@ -238,9 +216,9 @@ void UpdateUIParticle(uint16_t id)
 // Renders a Particle instance
 void RenderUIParticle(uint16_t id, register float screenScale)
 {
-    uint8_t indexID = AllParticles[id].object.textureID;
+    uint8_t indexID = AllParticles[id].textureID;
 
-    float rotation = fmodf((float) (clock() - AllParticles[id].object.startTime) / CLOCKS_PER_SEC * AllParticles[id].object.angularFrequency, 360.);
+    float rotation = fmodf((float) (clock() - AllParticles[id].startTime) / CLOCKS_PER_SEC * AllParticles[id].angularFrequency, 360.);
 
       
     if (rotation < 0) rotation = 360 - absf(rotation);
@@ -248,33 +226,33 @@ void RenderUIParticle(uint16_t id, register float screenScale)
     {
         case UIanimation:
             RenderAnimation(&ParticlesIndex[indexID].visual.animation, 
-                            AllParticles[id].object.x, 
-                            AllParticles[id].object.y, 
+                            AllParticles[id].x, 
+                            AllParticles[id].y, 
                             ParticlesIndex[indexID].scale * screenScale, 
-                            AllParticles[id].object.startTime);
+                            AllParticles[id].startTime);
             break;
         case UItexture:
             RenderUITexturePro(ParticlesIndex[indexID].visual.texture, 
-                            AllParticles[id].object.x, 
-                            AllParticles[id].object.y, 
+                            AllParticles[id].x, 
+                            AllParticles[id].y, 
                             ParticlesIndex[indexID].scale * screenScale,
                             rotation);
             break;
         case UItextureSnippet:
             RenderUITextureSnippetPro(  ParticlesIndex[indexID].visual.texture,
-                                        AllParticles[id].object.x, 
-                                        AllParticles[id].object.y, 
+                                        AllParticles[id].x, 
+                                        AllParticles[id].y, 
                                         ParticlesIndex[indexID].visual.snippet, 
                                         ParticlesIndex[indexID].scale, 
                                         rotation, WHITE);
             break;
         case UIanimationV2:
             RenderAnimation_V2Ex(&ParticlesIndex[indexID].visual.animation_V2,
-                                AllParticles[id].object.x, 
-                                AllParticles[id].object.y, 
+                                AllParticles[id].x, 
+                                AllParticles[id].y, 
                                 ParticlesIndex[indexID].scale,
                                 rotation, 
-                                AllParticles[id].object.startTime);
+                                AllParticles[id].startTime);
             break;
         default:
             break;
@@ -287,7 +265,7 @@ void RenderUIParticles(void)
     register float screenScale = GetScreenHeight() / 720.;
     for (uint16_t id = 0; id < MAX_PARTICLES; id++) 
     {
-        if (!AllParticles[id].object.startTime) continue;
+        if (!AllParticles[id].startTime) continue;
         RenderUIParticle(id, screenScale);
     }
 }
@@ -297,13 +275,13 @@ void UpdateUIParticles(void)
 {
     for (uint16_t id = 0; id < MAX_PARTICLES; id++) 
     {
-        if (!AllParticles[id].object.startTime) continue;
+        if (!AllParticles[id].startTime) continue;
         
         UpdateUIParticle(id);
         
-        if (AllParticles[id].object.additionalUpdater)
+        if (AllParticles[id].additionalUpdater)
         {
-            AllParticles[id].object.additionalUpdater(&AllParticles[id].object);
+            AllParticles[id].additionalUpdater(AllParticles + id);
         }
     }
 }

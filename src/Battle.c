@@ -133,7 +133,7 @@ static char * __fastcall uintstr(char * dest, uint8_t len, uint64_t number)
                                                 .full_health = 30, .remaining_health = 30, \
                                                 .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, \
                                                 .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Gearrat/atlas.png", 30, 10, 200, 200), \
-                                                .attacks = {{HIT, {8, 12}}}, \
+                                                .attacks = {{.type=HIT, .damage={8, 12}, .delay=0}}, \
                                                 .num_of_attacks = 1}
 
 #define ENTITY_MACRO_MECHRAB (_BattleEntity) {.name = "Mechrab", \
@@ -362,7 +362,6 @@ void RunAttackQueue(_AttackQueue * attack)
         case HIT:
             CreateDamageEffect((Vector2) {hitbox.x, hitbox.y});
             attack->target->remaining_health -= GetRandomValue(attack->attack.damage.min, attack->attack.damage.max);
-            printf("Hi");
             break;
     }
 
@@ -627,7 +626,7 @@ Vector2 GetNoAnimationPosition(float percentage)
 
 void UpdateBattleParty_Animations(_BattleParty * target_party)
 {
-    
+    static Vector2 original_positions;
     for (uint8_t i = 0; i < target_party -> size; i++)
     {
         _Bool has_attack_animation = target_party -> member[i].sprite_attack.Amount > 0;
@@ -650,11 +649,6 @@ void PutBattle(void)
     UpdateEnemyParty();
 
     RenderBattle();
-    if (IsKeyPressed(KEY_S)) _BattleEntity_Attack_Push(&Party_Enemy, NULL, (_Attack){.type = HIT});
-    if (IsKeyPressed(KEY_W))
-    {
-        attack_queue[GetUnavaliable_attack_queue()].target = NULL;
-    }
 
     RenderUIText(Party_Enemy.member[0].name, -0.945, -0.795, 0.06, LEFTMOST, Battle_Font, BLACK);
     RenderUIText(Party_Enemy.member[0].name, -0.95, -0.8, 0.06, LEFTMOST, Battle_Font, WHITE);
