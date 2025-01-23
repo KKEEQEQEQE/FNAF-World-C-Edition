@@ -29,6 +29,7 @@
 #include "World.h"
 #include <malloc.h>
 #include <math.h>
+#include "../Include/raymath.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -140,12 +141,12 @@ static char * __fastcall uintstr(char * dest, uint8_t len, uint64_t number)
                                                 .full_health = 30, .remaining_health = 30, \
                                                 .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, \
                                                 .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Mechrab/atlas.png", 30, 10, 200, 200), \
-                                                .attacks = {(_Attack){.damage={8, 12}, .type=HIT, .delay=CLOCKS_PER_SEC}}, \
+                                                .attacks = {(_Attack){.damage={8, 12}, .type=HIT, .delay=0.25f*CLOCKS_PER_SEC}}, \
                                                 .num_of_attacks = 1}
 
-#define ENTITY_MACRO_FREDDY  (_BattleEntity) { .name = "Freddy", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Freddy/idle.png", 30, 10, 250, 250)}
+#define ENTITY_MACRO_FREDDY  (_BattleEntity) { .name = "Freddy", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Freddy/idle.png", 25, 10, 250, 250)}
 
-#define ENTITY_MACRO_BONNIE  (_BattleEntity) { .name = "Bonnie", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Bonnie/idle.png", 30, 10, 250, 250)}
+#define ENTITY_MACRO_BONNIE  (_BattleEntity) { .name = "Bonnie", .full_health = 100, .remaining_health = 100, .hitbox = (Rectangle) {0, 0, 1.75, 2.75}, .sprite_idle = CreateAnimation_V2("Assets/Battle/Entity_Sprites/Bonnie/idle.png", 25, 10, 250, 250)}
 
 enum ENTITY_IDs
 {
@@ -164,11 +165,14 @@ _BattleEntity GetBattleEntity(enum ENTITY_IDs id)
     _BattleEntity entity;
     switch (id) {
         case UNKNOWN:
-            return entity = ENTITY_MACRO_FREDDY;
+            entity = ENTITY_MACRO_FREDDY;
+            break;
         case FREDDY:
-            return entity = ENTITY_MACRO_FREDDY;
+            entity = ENTITY_MACRO_FREDDY;
+            break;
         case BONNIE:
-            return entity = ENTITY_MACRO_BONNIE;
+            entity = ENTITY_MACRO_BONNIE;
+            break;
         case CHICA:
         case FOXY:
         case BOUNCEPOT:
@@ -178,12 +182,35 @@ _BattleEntity GetBattleEntity(enum ENTITY_IDs id)
         case MECHRAB:
             return ENTITY_MACRO_MECHRAB;
     }
+    return entity;
 }
+
 uint8_t damage_particles[5] = {0};
 
 #define ATTACK_COOLDOWN (5 * CLOCKS_PER_SEC)
 
 Animation_V2 grave = {0};
+
+Vector2 original_positions[8] = {0};
+
+void Init_original_positions(void)
+{
+    memset(original_positions, 0, sizeof(original_positions));
+
+    register Rectangle temp = {0};
+
+    for (uint8_t i = 0; i < Party_Enemy.size; i++)
+    {
+        temp = Party_Enemy.member[i].hitbox;
+        original_positions[i] = (Vector2) {temp.x, temp.y};
+    }
+
+    for (uint8_t i = 0; i < Party_Player.size; i++)
+    {
+        temp = Party_Player.member[i].hitbox;
+        original_positions[i - Party_Enemy.size] = (Vector2) {temp.x, temp.y};
+    }
+}
 
 void InitBattle(void)
 {
@@ -222,16 +249,22 @@ void InitBattle(void)
     LoadEntity(Party_Player.member + 1, GetBattleEntity(FREDDY), R_L);
     LoadEntity(Party_Player.member + 2, GetBattleEntity(FREDDY), R_R);
     LoadEntity(Party_Player.member + 3, GetBattleEntity(FREDDY), R_D);
-    
+
+#define NO_ATTACK_ANIMATION_ANIMATION_LENGTH 0.5
+
     for (uint8_t i = 0; i < Party_Enemy.size; i++)
     {
-        Party_Enemy.member[i].last_attack = clock() + (i * 0.5 * CLOCKS_PER_SEC);
+        Party_Enemy.member[i].last_attack = clock() + (i * NO_ATTACK_ANIMATION_ANIMATION_LENGTH 
+                                                        * CLOCKS_PER_SEC / 2);
     }
 
     for (uint8_t i = 0; i < Party_Player.size; i++)
     {
-        Party_Player.member[i].last_attack = clock() + (i * 0.5 * CLOCKS_PER_SEC);
+        Party_Player.member[i].last_attack = clock() + (i * NO_ATTACK_ANIMATION_ANIMATION_LENGTH 
+                                                        * CLOCKS_PER_SEC / 2);
     }
+
+    Init_original_positions();
 
     theme = LoadMusicStream("Assets/Themes/battle_normal.wav");
     theme.looping = 1;
@@ -254,6 +287,8 @@ void InitBattle(void)
     SetTraceLogLevel(LOG_ALL);
     grave = CreateAnimation_V2("Assets/Battle/Entity_Sprites/grave.png", 1, 1, 112, 140);
 }
+
+// Battle system
 
 enum ATTACK_MOVE_INDEX
 {
@@ -323,13 +358,13 @@ void CreateDamageEffect(Vector2 position)
 
     for (uint8_t i = 0; i < num_of_particles; i++)
     {
-        Vector2 random_offset = (Vector2) { GetRandomValue(-10000, 10000) / 1e5, 
-                                            GetRandomValue(-10000, 10000) / 1e5};
+        Vector2 random_offset = (Vector2) { GetRandomValue(-7000, 7000) / 1e5, 
+                                            GetRandomValue(-12000, 7000) / 1e5};
         
         CreateParticleEx(   damage_particles[i % 5], 
                             start_position.x + random_offset.x, start_position.y + random_offset.y, 
                             GetRandomValue(-10000, 10000) / 2e4, 1,
-                            480,
+                            1080,
                             Updater_DeleteAfterQuarterSecond);
     }
 }
@@ -399,6 +434,7 @@ void Print_All_Attack_Queue(void)
         Print_AttackQueue_struct(attack_queue + i);
     }
 }
+
 static void _BattleEntity_Attack_Push(_BattleParty *target_party, _BattleEntity *source, _Attack attack)
 {
     if (!target_party) return;
@@ -459,6 +495,8 @@ void UninitBattle(void)
     UnloadTexture(BattleBackground);
     UnloadFont(Battle_Font);
 }
+
+// UI and Rendering functions
 
 void RenderBattleEntity_Hitbox(register _BattleEntity * entity)
 {
@@ -571,6 +609,89 @@ void RenderHealthBar(_BattleEntity * entity, Color colour, uint8_t id, float sca
                 0, 30, 1, WHITE);
 }
 
+// Enemy related function
+
+float GetBattleEntityAnimationPercentage(_BattleEntity * entity)
+{
+    _Bool has_attack_animation = entity -> sprite_attack.Amount > 0;
+
+    clock_t animation_frame_len = has_attack_animation ? 
+                                    CLOCKS_PER_SEC * (1. / entity -> sprite_attack.FPS) :
+                                    NO_ATTACK_ANIMATION_ANIMATION_LENGTH * CLOCKS_PER_SEC;   
+
+    clock_t animation_len = has_attack_animation ? animation_frame_len * entity -> sprite_attack.Amount :
+                                animation_frame_len * 1;
+    return (float) (clock() - entity -> last_attack) / animation_len;
+}
+
+_Bool IsBattleEntityInAttackAnimation(_BattleEntity * entity)
+{
+    return GetBattleEntityAnimationPercentage(entity) <= 1;
+}
+
+static float absf(float x)
+{
+    *(int *)&x &= 0x7fffffff;
+    return x;
+}
+
+Vector2 GetNoAnimationPosition(float percentage)
+{
+    float unit_x = absf(sinf(percentage * PI));
+    float unit_y = absf(cosf(percentage *  2 * PI - PI / 2.));
+    return (Vector2) {1.5 * unit_x, 0.5 * -unit_y};
+}
+
+enum PARTY_TYPES
+{
+    ENTITY_PARTY, PLAYER_PARTY
+};
+
+static Vector2 GetHitboxCentre(Rectangle hitbox)
+{
+    return (Vector2){hitbox.x + hitbox.width / 2, hitbox.y + hitbox.height / 2};
+}
+
+void UpdateBatteParty_Animations(enum PARTY_TYPES party)
+{
+    _BattleParty * target_party;
+    Vector2 * selected_og_pos;
+
+    switch (party) 
+    {
+        case ENTITY_PARTY:
+            target_party = &Party_Enemy;
+            selected_og_pos = original_positions;
+            break;
+        case PLAYER_PARTY:
+            target_party = &Party_Player;
+            selected_og_pos = original_positions + target_party -> size;
+            break;
+        default:
+            return;
+    }
+
+    for (uint8_t i = 0; i < target_party -> size; i++)
+    {
+        _Bool has_attack_animation = target_party -> member[i].sprite_attack.Amount > 0;
+
+        if (has_attack_animation) continue;
+
+        float animation_percentage = GetBattleEntityAnimationPercentage(target_party -> member + i);
+        if (animation_percentage >= 1) continue;
+        Vector2 current_offset = GetNoAnimationPosition(animation_percentage);
+
+        Vector2 mult_vals = GetHitboxCentre(target_party -> member[i].hitbox);
+        mult_vals.x = mult_vals.x / absf(mult_vals.x);
+        mult_vals.y = -1;
+
+        Vector2Multiply(current_offset, mult_vals);
+
+        target_party -> member[i].hitbox.x = selected_og_pos[i].x + current_offset.x;
+        target_party -> member[i].hitbox.y = selected_og_pos[i].y + current_offset.y;
+    }
+}
+
 float enemy_speed = 1;
 
 void UpdateEnemyParty(void)
@@ -585,6 +706,7 @@ void UpdateEnemyParty(void)
         _BattleEntity_Attack_Push(&Party_Player, Party_Enemy.member + i, Party_Enemy.member[i].attacks[attack_id]);
         Party_Enemy.member[i].last_attack = clock();
     }
+    UpdateBatteParty_Animations(ENTITY_PARTY);
 }
 
 _Bool GetGameOver(void)
@@ -595,49 +717,6 @@ _Bool GetGameOver(void)
         if (Party_Player.member[i].remaining_health) break;
     }
     return (i == Party_Player.size);
-}
-
-#define NO_ATTACK_ANIMATION_ANIMATION_LENGTH 1
-
-float GetBattleEntityAnimationPercentage(_BattleEntity * entity)
-{
-    _Bool has_attack_animation = entity -> sprite_attack.Amount > 0;
-
-    clock_t animation_frame_len = has_attack_animation ? 
-                                    CLOCKS_PER_SEC * (1 / entity -> sprite_attack.FPS) :
-                                    NO_ATTACK_ANIMATION_ANIMATION_LENGTH * CLOCKS_PER_SEC;   
-
-    clock_t animation_len = has_attack_animation ? animation_frame_len * entity -> sprite_attack.Amount :
-                                animation_frame_len * 1;
-    return (float) (clock() - entity -> last_attack) / animation_len;
-}
-
-_Bool IsBattleEntityInAttackAnimation(_BattleEntity * entity)
-{
-    return GetBattleEntityAnimationPercentage(entity) <= 1;
-}
-
-Vector2 GetNoAnimationPosition(float percentage)
-{
-    float unit = (cosf(PI * percentage + PI) + 1) / 2;
-
-    return (Vector2) {2 * unit, 1 * unit};
-}
-
-void UpdateBattleParty_Animations(_BattleParty * target_party)
-{
-    static Vector2 original_positions;
-    for (uint8_t i = 0; i < target_party -> size; i++)
-    {
-        _Bool has_attack_animation = target_party -> member[i].sprite_attack.Amount > 0;
-
-        if (has_attack_animation) continue;
-
-        if (!IsBattleEntityInAttackAnimation(target_party -> member + i)) continue;
-
-        target_party -> member[i].hitbox.x;
-        target_party -> member[i].hitbox.y;
-    }
 }
 
 void PutBattle(void)

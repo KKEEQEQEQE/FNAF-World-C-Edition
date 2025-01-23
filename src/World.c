@@ -588,29 +588,35 @@ void InitWorld(void)
     ZoneHeader[2] = LoadTexture("Assets/Overworld/UI/Zone_Names/3.png"); 
     ZoneHeader[3] = LoadTexture("Assets/Overworld/UI/Zone_Names/4.png"); 
 
-    WarpButtons[0] = (_WarpButton) {    {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Zone_Buttons/1.png", 
-                                                                WHITE), 
-                                            0.90, -0.8, 1.5),
-                                        WarpButton_1,
-                                        NULL, 
-                                        0},
-                                    1};
+    WarpButtons[0] = (_WarpButton) {.button = {   
+                                        CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Zone_Buttons/1.png", 
+                                                            WHITE), 
+                                        0.90, -0.8, 1.5),
+                                        .press = WarpButton_1,
+                                        .hover=NULL, 
+                                        0
+                                    },
+                                    .zoneRequirement = 1};
 
-    WarpButtons[1] = (_WarpButton) {    {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Zone_Buttons/2.png", 
-                                                                WHITE), 
-                                            0.90, -0.6, 1.5),
-                                        WarpButton_2,
-                                        NULL, 
-                                        0},
-                                    1};
+    WarpButtons[1] = (_WarpButton) {.button = {   
+                                        CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Zone_Buttons/2.png", 
+                                                            WHITE), 
+                                        0.90, -0.6, 1.5),
+                                        .press = WarpButton_2,
+                                        .hover=NULL, 
+                                        0
+                                    },
+                                    .zoneRequirement = 1};
     
-    WarpButtons[2] = (_WarpButton) {    {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Zone_Buttons/3.png", 
-                                                                WHITE), 
-                                            0.90, -0.4, 1.5),
-                                        WarpButton_3,
-                                        NULL, 
-                                        0},
-                                    1};
+    WarpButtons[2] = (_WarpButton) {.button = {   
+                                        CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Zone_Buttons/3.png", 
+                                                            WHITE), 
+                                        0.90, -0.4, 1.5),
+                                        .press = WarpButton_3,
+                                        .hover=NULL, 
+                                        0
+                                    },
+                                    .zoneRequirement = 1};
 
     JumpVisual = CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Zone_Buttons/Jump.png", 
                                                                 WHITE), 
@@ -619,29 +625,31 @@ void InitWorld(void)
     PartyButton =  (UIButton)   {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Party.png", 
                                                     WHITE), 
                                                     -0.8, 0.9, 1.5),
-                                    NULL,
-                                    NULL, 
+                                    .press = NULL,
+                                    .hover = NULL, 
                                     0};
 
     ChipsButton =  (UIButton)   {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Chips.png", 
                                                     WHITE), 
                                                     -0.525, 0.9, 1.5),
-                                    NULL,
-                                    NULL, 
+                                    .press = NULL,
+                                    .hover = NULL, 
                                     0};
+
 
     BytesButton =  (UIButton)   {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Bytes.png", 
                                                     WHITE), 
                                                     -0.25, 0.9, 1.5),
-                                    NULL,
-                                    NULL, 
+                                    .press = NULL,
+                                    .hover = NULL, 
                                     0};
 
-    SaveButton =  (UIButton)    {   CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Save.png", 
+
+    SaveButton =  (UIButton)    {   .graphic = CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Save.png", 
                                                     WHITE), 
                                                     0.025, 0.9, 1.5),
-                                    SaveButtonPress,
-                                    NULL, 
+                                    .press = SaveButtonPress,
+                                    .hover = NULL, 
                                     0};
 
     SetTraceLogLevel(LOG_ALL);

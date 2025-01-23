@@ -25,6 +25,7 @@
 #include "Animation.h"
 #include "Battle.h"
 #include "Particle.h"
+#include "Particle_Updaters.h"
 #include "Title_Screen.h"
 #include "UI.h"
 #include "input.h"
@@ -53,12 +54,12 @@ int main(void)
 
     LoadSave("Saves/save1.json");
 
-    SwapGameState(Title);
+    SwapGameState(Title);    
     SetTargetFPS(240);
     //ToggleBorderlessWindowed();
 
     // Main Game Loop
-    uint8_t temp = CreateParticleIndexA_V2("Assets/Particles/titlestar.png", 20,8, (Vector2) {12, 12}, 2);
+    uint8_t temp = CreateParticleIndexA_V2("Assets/Particles/titlestar.png", 3,8, (Vector2) {12, 12}, 2);
     while (!WindowShouldClose())
     {
         
@@ -77,10 +78,26 @@ int main(void)
                 PutBattle();
                 break;
             default:
+                
+                CreateParticleEx(temp, 0, 0, cosf(clock()/1000.) / 3, sinf(clock()/1000.) / 3, 0, NULL);
+                CreateParticleEx(temp, 0, 0, -cosf(clock()/1000.) / 3, -sinf(clock()/1000.) / 3, 0, NULL);
+
+                CreateParticleEx(temp, 0.5, 0.5, cosf(clock()/1000.) / 3, sinf(clock()/1000.) / 3, 0, NULL);
+                CreateParticleEx(temp, 0, 0, -cosf(clock()/1000.) / 3, -sinf(clock()/1000.) / 3, 0, NULL);
+
+                CreateParticleEx(temp, -0.5, 0.5, cosf(clock()/1000.) / 3, sinf(clock()/1000.) / 3, 0, NULL);
+                CreateParticleEx(temp, 0, 0, -cosf(clock()/1000.) / 3, -sinf(clock()/1000.) / 3, 0, NULL);
+
+                CreateParticleEx(temp, 0.5, -0.5, cosf(clock()/1000.) / 3, sinf(clock()/1000.) / 3, 0, NULL);
+                CreateParticleEx(temp, 0, 0, -cosf(clock()/1000.) / 3, -sinf(clock()/1000.) / 3, 0, NULL);
+
+                CreateParticleEx(temp, 0, 0, cosf(clock()/1000.) / 3, sinf(clock()/1000.) / 3, 0, NULL);
+                CreateParticleEx(temp, -0.5, -0.5, -cosf(clock()/1000.) / 3, -sinf(clock()/1000.) / 3, 0, NULL);
+                PutUIParticles();
+                
                 SetWindowTitle("FNaF World: C Edition - Unknown State");
                 RenderUIText("Unknown / Invalid Game State Entered.\nTap to go back to title screen!", 0, 0, 0.06, CENTRE, (Font) {0}, WHITE);
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SwapGameState(Title);
-                PutUIParticles();
                 break;
         }
         DrawFPS(10,10);

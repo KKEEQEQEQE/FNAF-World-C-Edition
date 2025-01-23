@@ -160,7 +160,9 @@ Animation_V2 CreateAnimation_V2(const char * path, const uint8_t targetFPS, cons
 // Draws a UIanimationV2 in pixel space
 void DrawAnimation_V2Ex(const Animation_V2 *animation, int16_t x, int16_t y, float scale, float rotation, clock_t timeOverride)
 {
-    uint16_t frame = timeOverride ? timeOverride : 
+    uint16_t frame = timeOverride ? GetCurrentAnimationFrameC(  timeOverride,
+                                                                animation -> Amount, 
+                                                                animation -> FPS) : 
                                     GetCurrentAnimationFrameC(  animation -> Clock,
                                                                 animation -> Amount, 
                                                                 animation -> FPS);
@@ -185,7 +187,7 @@ void RenderAnimation_V2Ex(const Animation_V2 *animation, float x, float y, float
     DrawAnimation_V2Ex(animation, 
         SCREEN_POSITION_TO_PIXEL_X(x, animation -> TileSize_x, scale),
         SCREEN_POSITION_TO_PIXEL_Y(y, animation -> TileSize_y, scale),
-        scale, rotation, 0);
+        scale, rotation, timeOverride);
 }
 
 // Scales and Renders a UIanimationV2 in UI space
@@ -195,7 +197,7 @@ void RenderAnimation_V2(const Animation_V2 *animation, float x, float y, float s
     DrawAnimation_V2(animation, 
         SCREEN_POSITION_TO_PIXEL_X(x, animation -> TileSize_x, scale),
         SCREEN_POSITION_TO_PIXEL_Y(y, animation -> TileSize_y, scale),
-        scale, 0);
+        scale, timeOverride);
 }
 
 // Free a UIanimationV2's variables

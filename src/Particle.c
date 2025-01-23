@@ -38,10 +38,15 @@ static float absf(float x)
     return x;
 }
 
+UIParticleIndex GetParticleIndex(uint8_t indexID)
+{
+    return ParticlesIndex[indexID];
+}
+
 // Creates a Particle type with an UIanimation
 uint8_t CreateParticleIndexA(const char * path, const uint8_t targetFPS, float scale)
 {
-    uint8_t id = 0;
+    uint16_t id = 0;
     for (; ParticlesIndex[id].visual.type != UInotype && id < MAX_PARTICLES; id++); // Gets the an avaliable index id
 
     ParticlesIndex[id].visual.type = UIanimation;
@@ -49,14 +54,14 @@ uint8_t CreateParticleIndexA(const char * path, const uint8_t targetFPS, float s
     ParticlesIndex[id].scale = scale;
 
     if (id == MAX_PARTICLES) return 0; // There are no avaliable index ids so 0 is returned
-
+    
     return id;
 }
 
 // Creates a Particle type with an UIanimationV2
 uint8_t CreateParticleIndexA_V2(const char * path, const uint8_t targetFPS, uint16_t amount, Vector2 spriteSize, float scale)
 {
-    uint8_t id = 0;
+    uint16_t id = 0;
     for (; ParticlesIndex[id].visual.type != UInotype && id < MAX_PARTICLES; id++); // Gets the an avaliable index id
 
     ParticlesIndex[id].visual.type = UIanimationV2;
@@ -71,7 +76,7 @@ uint8_t CreateParticleIndexA_V2(const char * path, const uint8_t targetFPS, uint
 // Creates a Particle type with an UItexture
 uint8_t CreateParticleIndexT(const char * path, float scale)
 {
-    uint8_t id = 0;
+    uint16_t id = 0;
     for (; ParticlesIndex[id].visual.type != UInotype && id < MAX_PARTICLES; id++); // Gets the an avaliable index id
 
     ParticlesIndex[id].visual.type = UItexture;
@@ -86,7 +91,7 @@ uint8_t CreateParticleIndexT(const char * path, float scale)
 // Creates a Particle type with an UItexture
 uint8_t CreateParticleIndexT_Snippet(UITexture atlas, Rectangle snippet, float scale)
 {
-    uint8_t id = 0;
+    uint16_t id = 0;
     for (; ParticlesIndex[id].visual.type != UInotype && id < MAX_PARTICLES; id++); // Gets the an avaliable index id
     
     if (id == MAX_PARTICLES) return 0; // There are no avaliable index ids so 0 is returned
@@ -102,7 +107,7 @@ uint8_t CreateParticleIndexT_Snippet(UITexture atlas, Rectangle snippet, float s
 // Creates a Particle instance
 void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float velocityY)
 {
-    uint8_t id = 0;
+    uint16_t id = 0;
     for (; AllParticles[id].startTime != 0; id++); // Gets the an avaliable index id
     if (id >= MAX_PARTICLES) id = MAX_PARTICLES-1;
     AllParticles[id].textureID = textureID;
@@ -113,12 +118,13 @@ void CreateParticle(uint8_t textureID, float x, float y, float velocityX, float 
     AllParticles[id].startTime = clock();
     AllParticles[id].angularFrequency = 0;
     AllParticles[id].additionalUpdater = NULL;
+    AllParticles[id].terminationUpdate = NULL;
 }
 
 // Creates a Particle instance with extra parameters
 void CreateParticleEx(uint8_t textureID, float x, float y, float velocityX, float velocityY, float angularFrequency, void (*additionalUpdater)(UIParticle *))
 {
-    uint8_t id = 0;
+    uint16_t id = 0;
     for (; AllParticles[id].startTime != 0; id++); // Gets the an avaliable index id
     if (id >= MAX_PARTICLES) id = MAX_PARTICLES-1;
     AllParticles[id].textureID = textureID;
@@ -129,7 +135,27 @@ void CreateParticleEx(uint8_t textureID, float x, float y, float velocityX, floa
     AllParticles[id].startTime = clock();
     AllParticles[id].angularFrequency = angularFrequency;
     AllParticles[id].additionalUpdater = additionalUpdater;
+    AllParticles[id].terminationUpdate = NULL;
 }
+
+// Creates a Particle instance with extra extra parameters
+void CreateParticlePro(uint8_t textureID, float x, float y, float velocityX, float velocityY, float angularFrequency, void (*additionalUpdater)(UIParticle *), void (*terminationUpdate)(void))
+{
+    uint16_t id = 0;
+    for (; AllParticles[id].startTime != 0; id++); // Gets the an avaliable index id
+    if (id >= MAX_PARTICLES) id = MAX_PARTICLES-1;
+    AllParticles[id].textureID = textureID;
+    AllParticles[id].x = x;
+    AllParticles[id].y = y;
+    AllParticles[id].velocityX = velocityX;
+    AllParticles[id].velocityY = velocityY;
+    AllParticles[id].startTime = clock();
+    AllParticles[id].angularFrequency = angularFrequency;
+    AllParticles[id].additionalUpdater = additionalUpdater;
+    AllParticles[id].terminationUpdate = terminationUpdate;
+}
+
+
 
 // Removes a particle type (NOTE: UItextureSnippet textures don't get unloaded)
 void RemoveParticleIndex(uint16_t id)
@@ -155,9 +181,20 @@ void RemoveParticleIndex(uint16_t id)
     ParticlesIndex[id].visual.type = UInotype; 
 }
 
+// Removes all particle type (NOTE: UItextureSnippet textures don't get unloaded)
+void FlushParticleIndex(void)
+{
+    for (uint16_t i = 0; i < 255; i++) RemoveParticleIndex(i);
+}
+
 // Deletes a Particle instance
 void DeleteParticle(uint16_t id)
 {
+    if (AllParticles[id].terminationUpdate != NULL) 
+    {
+        printf("WOW!\n");
+        AllParticles[id].terminationUpdate();
+    }
     AllParticles[id].startTime = 0;
 }
 
@@ -219,9 +256,8 @@ void RenderUIParticle(uint16_t id, register float screenScale)
     uint8_t indexID = AllParticles[id].textureID;
 
     float rotation = fmodf((float) (clock() - AllParticles[id].startTime) / CLOCKS_PER_SEC * AllParticles[id].angularFrequency, 360.);
-
-      
     if (rotation < 0) rotation = 360 - absf(rotation);
+    
     switch (ParticlesIndex[indexID].visual.type) 
     {
         case UIanimation:

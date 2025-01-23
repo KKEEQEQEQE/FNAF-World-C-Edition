@@ -25,6 +25,7 @@
 
 
 #include <stdint.h>
+#include <time.h>
 #define SCREEN_POSITION_TO_PIXEL_X(x, width, scale) ((int)GetScreenWidth()/2 + x * GetScreenWidth() / 2 - (int) (width * scale) / 2)
 #define SCREEN_POSITION_TO_PIXEL_Y(y, height, scale) ((int)GetScreenHeight()/2 + y * GetScreenHeight() / 2 - (int) (height * scale) / 2)
 
@@ -81,10 +82,13 @@ typedef struct UIFont
 typedef struct UIButton 
 {
     UIElement graphic;
+    UIVisual pressed_visual;
+    clock_t pressed_visual_duration;
+    clock_t press_update_delay;
+    clock_t last_press;
     void (* press)(struct UIButton * button);
     void (* hover)(struct UIButton * hover);
     GamepadButton controllerBinding;
-    
 } UIButton;
 
 enum UI_SCREEN_SCALE_MODE
@@ -173,13 +177,13 @@ extern void RenderUIVisual(float x, float y, UIVisual * visual, float scale);
 extern void RenderUIText(const char * text, float x, float y, float fontSize, enum UITextAlignment allignment, Font font, Color color);
 
 // Scales and Renders a UIButton
-extern void RenderUIButton(const UIButton * button);
+extern void RenderUIButton(UIButton * button);
 
 // Checks and updates a button if it has been pressed
-extern void UpdateUIButton(const UIButton * button);
+extern void UpdateUIButton(UIButton * button);
 
 // Updates and Renders a UIButton
-extern void PutUIButton(const UIButton * button);
+extern void PutUIButton(UIButton * button);
 
 // Draws a Sprite from a UITexture Spritesheet
 extern void DrawUITextureSpritesheet(Texture2D atlas, int16_t x, int16_t y, uint16_t index, uint16_t tileSize);

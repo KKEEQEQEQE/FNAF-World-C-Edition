@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include "Particle.h"
 #include <stdint.h>
+#include <time.h>
 
 // Gets the screen ratio
 float GetScreenRatio(void)
@@ -288,15 +289,20 @@ void RenderUIElement(const UIElement * element)
 }
 
 // Scales and Renders a UIButton
-void RenderUIButton(const UIButton * button)
+void RenderUIButton(UIButton * button)
 {
-    RenderUIElement(&button -> graphic);
+    if (button -> last_press && clock() - button -> last_press < button -> pressed_visual_duration)
+    {
+        RenderUIVisual( button -> graphic.x, button -> graphic.y, 
+                        &button -> pressed_visual, 
+                        button -> graphic.scale);
+    } else RenderUIElement(&button -> graphic);
 }
 
 // Scales and Renders a UIVisual at X, Y scaled
 void RenderUIVisual(float x, float y, UIVisual * visual, float scale)
 {
-    UIElement temp = (UIElement) {visual -> type, visual -> texture, x, y, scale};
+    UIElement temp = (UIElement) {.visual=*visual, .x=x, .y=y, .scale=scale};
     RenderUIElement(&temp);
 }
 
@@ -324,54 +330,70 @@ void RenderUIText(const char * text, float x, float y, float fontSize, enum UITe
 }
 
 // Checks and updates a button if it has been pressed
-void UpdateUIButton(const UIButton * button) 
+void UpdateUIButton(UIButton * button) 
 {
-    register uint16_t inputX = 0;
-    register uint16_t inputY = 0;
-
     register float scale = button -> graphic.scale * GetScreenScale();
 
-    UITexture buttonTexture = {0};
+    Rectangle button_rect = {0};
 
     switch (button -> graphic.visual.type)
     {
         case UIanimation: 
+        {
             uint16_t currentFrame = GetCurrentAnimationFrame(&button -> graphic.visual.animation);
-            buttonTexture = button -> graphic.visual.animation.Frames[currentFrame];
+            button_rect.width = button -> graphic.visual.animation.Frames[currentFrame].width;
+            button_rect.height = button -> graphic.visual.animation.Frames[currentFrame].height;
             break;
+        } 
+
+        case UIanimationV2:
+        {
+            button_rect.width = button -> graphic.visual.animation_V2.TileSize_x;
+            button_rect.height = button -> graphic.visual.animation_V2.TileSize_y;
+            break;
+        }
+
         case UItextureSnippet:
-            buttonTexture.width = button -> graphic.visual.snippet.width;
-            buttonTexture.height = button -> graphic.visual.snippet.height;
+        {
+            button_rect.width = button -> graphic.visual.snippet.width;
+            button_rect.height = button -> graphic.visual.snippet.height;
             break;
+        }
+
         case UItexture:
-            buttonTexture = button -> graphic.visual.texture;
+        {
+            button_rect.width = button -> graphic.visual.texture.width;
+            button_rect.height = button -> graphic.visual.texture.height;
             break;
+        }
+
         default:
-        return;
+            return;
     }
 
-    register uint16_t buttonX = SCREEN_POSITION_TO_PIXEL_X(button -> graphic.x, buttonTexture.width, scale);
-    register uint16_t buttonY = SCREEN_POSITION_TO_PIXEL_Y(button -> graphic.y, buttonTexture.height, scale);
+    button_rect.x = SCREEN_POSITION_TO_PIXEL_X(button -> graphic.x, button_rect.width, scale);
+    button_rect.y = SCREEN_POSITION_TO_PIXEL_Y(button -> graphic.y, button_rect.height, scale);
+    button_rect.width *= scale;
+    button_rect.height *= scale;
 
-    register uint16_t buttonW = buttonTexture.width * scale;
-    register uint16_t buttonH = buttonTexture.height * scale;
-    
-    Vector2 inputs[2] = {GetInputTap(), (Vector2){NAN, NAN}};
-    for (uint8_t i = 0; inputs[i].x != NAN && inputs[i].y != NAN && i < MAX_INPUT_POINTS; i++) 
+    if (CheckCollisionPointRec(GetInputTap(), button_rect) && !button -> last_press)
     {
-        inputX = (uint16_t) inputs[i].x;
-        inputY = (uint16_t) inputs[i].y;
-
-        if ((inputX > buttonX &&  inputX <= buttonX + buttonW) &&
-            (inputY > buttonY && inputY <= buttonY + buttonH) )
+        button -> last_press = clock();
+        if (button -> pressed_visual.type == UIanimationV2)
         {
-            if (button -> press) button -> press(button);
+            button -> pressed_visual.animation_V2.Clock = button -> last_press;
         }
+    }
+
+    if (button -> last_press && clock() - button -> last_press >= button -> press_update_delay)
+    {
+        button -> press(button);
+        button -> last_press = 0;
     }
 }
 
 // Updates and Renders a UIButton
-void PutUIButton(const UIButton * button)
+void PutUIButton(UIButton * button)
 {
     UpdateUIButton(button);
     RenderUIButton(button);

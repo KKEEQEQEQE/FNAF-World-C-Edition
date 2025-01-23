@@ -25,6 +25,7 @@
 #include "Title_Screen.h"
 #include "World.h"
 #include <time.h>
+#include "Particle.h"
 
 enum GameStateTypes GameState = 1000;
 
@@ -44,7 +45,10 @@ void SwapGameState(enum GameStateTypes state)
         case Bytes:
         case Battle:
           break;
-        }
+    }
+
+    FlushParticles();
+    
     switch (state) 
     {
         case Title:
@@ -90,6 +94,11 @@ void UpdateTransitionAnimation(void)
 float GetAnimationPercentage(void)
 {
     return (float) (clock() - start_time) / (end_time - start_time);
+}
+
+_Bool IsGameStateSwitching(void)
+{
+    return end_time != 0;
 }
 
 void animation_RenderFade(void)

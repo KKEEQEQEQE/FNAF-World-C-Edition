@@ -40,3 +40,5 @@ enum TransitionAnimationTypes
 
 extern void SwapGameState_Animated(enum TransitionAnimationTypes type, enum GameStateTypes state, float duration);
 extern void PutTransitionAnimation(void);
+
+extern _Bool IsGameStateSwitching(void);

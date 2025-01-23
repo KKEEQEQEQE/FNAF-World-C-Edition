@@ -20,6 +20,7 @@
     3. This notice may not be removed or altered from any source distribution.
 */
 
+#include "Animation.h"
 #include "Particle.h"
 #include <stdio.h>
 #include <time.h>
@@ -88,4 +89,13 @@ void Updater_StrongGravity(UIParticle * particle)
 {
     particle->velocityX  -= particle->velocityX / 0.1 * GetFrameTime();
     particle->velocityY  += 9.81 * GetFrameTime() / 2;
+}
+
+void Updater_DeleteAfterAnimation(UIParticle * particle)
+{
+    Animation_V2 animation = GetParticleIndex(particle->textureID).visual.animation_V2;
+
+    clock_t end_time = animation.Amount * (1. / animation.FPS) + particle -> startTime;
+
+    if (clock() >= end_time) particle -> startTime = 0;
 }

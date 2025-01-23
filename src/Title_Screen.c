@@ -25,6 +25,7 @@
 #include "Background.h"
 #include "Game_State.h"
 #include "Particle.h"
+#include "Particle_Updaters.h"
 #include "UI.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -36,34 +37,26 @@
 
 
 Font TitleScreenFont = {0};
-UIElement UIBackground = {UItexture, 0};
-UIElement UIParty = {UItexture, 0};
-UIElement UITitleA = {UIanimation, 0};
-UIElement UITitleT = {UItexture, 0};
+UIElement UIBackground = {0};
+UIElement UIParty = {0};
+UIElement UITitle = {0};
+
+uint8_t ButtonClicked = 0;
 
 Music Theme = {0};
 
-void FreeTitleScreen(void)
-{
-    FreeUIElement(&UIBackground);
-    FreeUIElement(&UIParty);
-    FreeUIElement(&UITitleA);
-    FreeUIElement(&UITitleT);
-}
 void ButtonPlayPressed(UIButton * button)
 {
-    printf("Play Button Pressed!\n");
-    SwapGameState_Animated(FADE, World, 0.25);
+    SwapGameState_Animated(FADE, World, 0.5);
+    button -> graphic.scale = 0;
 }
 
-UIButton UIPlay = {(UIElement){UIanimation,0}, ButtonPlayPressed, 0};
+UIButton UIPlay = {0};
 anim_t StartTime = 0;
 uint8_t ParticleStars = 0;
 
 void InitTitleScreen(void) 
 {
-    UITitleA.visual.animation = CreateAnimation("Assets/Menu/Title_Screen/Animations/Title/", 10);
-    UITitleA.scale = 1.3;
 
     Theme = LoadMusicStream("Assets/Themes/theme.wav");
     Theme.looping = 1;
@@ -72,19 +65,26 @@ void InitTitleScreen(void)
 
     UIBackground.visual.texture = LoadTexture("Assets/Menu/Title_Screen/Background.png");
     SetTextureFilter(UIBackground.visual.texture, TEXTURE_FILTER_BILINEAR);
-    UIParty.visual.texture = LoadTexture("Assets/Menu/Title_Screen/Party.png");
+    
+    UIParty.visual = CreateUIVisual_UITexture_P("Assets/Menu/Title_Screen/Party.png", WHITE);
     SetTextureFilter(UIParty.visual.texture, TEXTURE_FILTER_BILINEAR);
     UIParty.scale = 1.5;
+    
     SetTextureWrap(UIParty.visual.texture, TEXTURE_WRAP_CLAMP);
 
-    UITitleT.visual.texture = LoadTexture("Assets/Menu/Title_Screen/Title.png");
-    SetTextureFilter(UITitleT.visual.texture, TEXTURE_FILTER_BILINEAR);
-    UITitleT.scale = 1.3;
+    UITitle.visual = CreateUIVisual_UIAnimation_V2("Assets/Menu/Title_Screen/Title.png", 3, 3, (Vector2){650, 127}, WHITE);
+    SetTextureWrap(UITitle.visual.animation_V2.Atlas, TEXTURE_WRAP_CLAMP);
+    UITitle.scale = 1.3;
 
-    UIPlay.graphic.visual.animation = CreateAnimation("Assets/Menu/Title_Screen/Buttons/Start/Animations/", 30);
+    UIPlay.graphic.visual = CreateUIVisual_UIAnimation_V2("Assets/Menu/Title_Screen/play_button.png", 30, 11, (Vector2) {269, 66}, WHITE);
     UIPlay.graphic.scale = 1.5;
 
-    ParticleStars = CreateParticleIndexA_V2("Assets/Particles/titlestar.png", 20,8, (Vector2) {12, 12}, 2);
+    UIPlay.pressed_visual = CreateUIVisual_UIAnimation_V2("Assets/button_pressed.png", 60, 11, (Vector2) {489, 120}, WHITE);
+    UIPlay.pressed_visual_duration = 11 * CLOCKS_PER_SEC / 60;
+    UIPlay.press_update_delay = 11 * CLOCKS_PER_SEC / 60;
+    UIPlay.press = ButtonPlayPressed;
+
+    ParticleStars = CreateParticleIndexA_V2("Assets/Particles/titlestar2.png", 20,8, (Vector2) {90, 90}, 0.5);
     TitleScreenFont = LoadFont("Assets/Menu/Title_Screen/font.ttf");
     SetTextureFilter(TitleScreenFont.texture, TEXTURE_FILTER_BILINEAR);
     ResetTitleScreen();
@@ -92,8 +92,7 @@ void InitTitleScreen(void)
 
 void UninitTitleScreen(void)
 {
-    FreeUIElement(&UITitleA);
-    FreeUIElement(&UITitleT);
+    FreeUIElement(&UITitle);
     FreeUIElement(&UIBackground);
     FreeUIElement(&UIParty);
     FreeUIElement(&UIPlay.graphic);
@@ -109,13 +108,10 @@ void ResetTitleScreen(void)
 
     StartTime = clock();
     
-    UITitleA.visual.animation.Clock = StartTime;
+    UITitle.visual.animation.Clock = StartTime;
 
-    UITitleA.x = GetOutsideWindowX(UITitleA.visual.animation.Frames[0]);
-    UITitleA.y = -0.775;
-
-    UITitleT.x = 0;
-    UITitleT.y = -0.775;
+    UITitle.x = GetOutsideWindowX_u16(UITitle.visual.animation_V2.TileSize_x);
+    UITitle.y = -0.775;
 
     UIParty.x = 0;
     UIParty.y = GetOutsideWindowY(UIParty.visual.texture);
@@ -126,19 +122,17 @@ void ResetTitleScreen(void)
     
 }
 
-void RenderTitle(void) 
+void UpdateTitle(void) 
 {
     register float timeSinceStart = (float)(clock() - StartTime) / CLOCKS_PER_SEC;
-    if (clock() - StartTime < 3 * CLOCKS_PER_SEC) 
+    UITitle.x = -GetOutsideWindowX_u16(UITitle.visual.animation_V2.TileSize_x) + timeSinceStart * (GetOutsideWindowY_u16(UITitle.visual.animation_V2.TileSize_y) / TITLE_SECONDS_TO_CENTRE);
+
+    if (UITitle.x > 0)
     {
-        UITitleA.x = -GetOutsideWindowX(UITitleA.visual.animation.Frames[0]) + timeSinceStart*(GetOutsideWindowX(UITitleA.visual.animation.Frames[0]) / TITLE_SECONDS_TO_CENTRE);
-        RenderUIElement(&UITitleA);
+        UITitle.x = 0;
+        UITitle.visual.animation_V2.FPS = 0;
+        UITitle.visual.animation_V2.Clock = 0;
     }
-    else 
-    {
-        RenderUIElement(&UITitleT);
-    }
-    
 }
 
 void UpdateParty(void) 
@@ -161,23 +155,36 @@ void CreateTitlestars(void)
     if (clock() - timeSinceLastParticle > 50 && UIParty.y <= 0.26) 
     {
         float degrees = GetRandomValue(0, 200 *PI)/100.;
-        CreateParticle(ParticleStars, 0, 0, cosf(degrees), sinf(degrees));
+        CreateParticleEx(ParticleStars, 0, 0, cosf(degrees), sinf(degrees), 80, NULL);
         timeSinceLastParticle = clock();
     }
 }
 
-void PutTitleScreen(void) 
+void UpdateTitleScreen(void)
 {
-    RenderBackground(UIBackground.visual.texture);
-    UpdateMusicStream(Theme);
-    RenderTitle();
+    UpdateTitle();
     UpdateParty();
-    CreateTitlestars();
-    PutUIParticles();
     UpdatePlay();
+    UpdateUIParticles();
+    CreateTitlestars();
+
+}
+
+void RenderTitleScreen(void)
+{
+    UpdateMusicStream(Theme);
+
+    RenderBackground(UIBackground.visual.texture);
+    RenderUIParticles();
+    RenderUIElement(&UITitle);
     RenderUIElement(&UIParty);
     PutUIButton(&UIPlay);
     RenderUIText("Demo: 1", -0.95, 0.875,0.06, LEFTMOST, TitleScreenFont, WHITE);
     RenderUIText("Original Game By: Scott Cawthon", 0.9, 0.8,0.04, RIGHTMOST,TitleScreenFont, WHITE);
     RenderUIText("Remake By: SpyterDev", 0.9, 0.9,0.04, RIGHTMOST, TitleScreenFont, WHITE);
+}
+void PutTitleScreen(void) 
+{
+    if (!IsGameStateSwitching()) UpdateTitleScreen();
+    RenderTitleScreen();
 }
