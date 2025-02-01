@@ -49,6 +49,23 @@ typedef struct _RABITS_Bite
     int level: 12;
 } _RABITS_Bite;
 
+enum ATTACK_SUPPORTED_TYPES
+{
+    SINGLE_TARGET_BITE, MULTI_TARGET_BITE, // Bites or hitting
+    SINGLE_PROJECTILE, MULTI_PROJECTILES, // Projectiles
+    HEAL, SIPHON, // Healing and taking health from target(s)
+    AOE, // Area of Effect
+    TOXIC_BITE, TOXIC_SINGLE_PROJECTILE, TOXIC_MULTI_PROJECTILES, TOXIC_AOE, // Toxic Supersets
+    BUFF, // Buffs or Debuffs
+    SUMMON, // Summons Entities to fight for X amount of time
+    RELAY, // Pushes a new type of attack on execution (can be used for Prize Ball)
+    INSTAKILL, // Puts UIVisual at X,Y and runs instakill type update after X secs
+    ATTACK_CUSTOM /* DIRECT access to the Battle system to modify and update ANY values 
+                     (DO NOT USE THERE IS NO WAY TO IMPLEMENT AN ATTACK, 
+                     THIS IS CAN BE SKECTCHY AS FREDBEAR)
+                     YOU HAVE BEEN WARNED >:((((                                         */
+};  
+
 typedef struct _RABITS_Attack_Format
 {
     enum ATTACK_SUPPORTED_TYPES type;

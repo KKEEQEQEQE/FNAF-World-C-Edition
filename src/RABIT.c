@@ -23,7 +23,7 @@
 //   R. udimentary
 //   A. ttack
 //   B. attle
-//   I. nterface
+//   I. nterfacing
 //   T. yped
 //   S. ystem
 
@@ -32,7 +32,9 @@
 #include "RABIT.h"
 #include "Animation.h"
 #include "Battle_Rework.h"
+#include "Entity_Info.h"
 #include "rayclock.h"
+#include <stdbool.h>
 #include <stdint.h>
 
 // R.A.B.I.T System API Targets
@@ -157,3 +159,98 @@ uint32_t (* const DamageFunctions[NUMBER_OF_ATTACKS])(uint32_t, uint8_t) =
     DamageFormulaInitAssign(HIT),
     DamageFormulaInitAssign(MICTOSS)
 };
+
+enum ATTACK_SUPPORTED_TYPES AttackType[NUMBER_OF_ATTACKS] = 
+{
+    [HIT] = SINGLE_TARGET_BITE
+};
+
+uint8_t SetRABITTarget(uint8_t source)
+{
+    source %= 8;
+    _BattleParty * target = source < 4 ? &Party_Enemy : &Party_Player;
+
+    uint8_t size = target->size;
+    uint8_t alive = 0;
+    uint8_t potental_targets[size];
+    for (uint8_t i = 0; i < size; i++)
+    {
+        if (!target->member[i].remaining_health) continue;
+        potental_targets[alive] = i;
+        alive++;
+    }
+    return ~(source / 4) + potental_targets[GetRandomValue(0, alive - 1)];
+}
+
+typedef struct _RABITAttackPoolIndex 
+{
+    _Bool in_use;
+    _RABITS_Attack_Format attack;
+} _RABITAttackPoolIndex; 
+
+
+
+_RABITS_Attack_Format CreateAttack(enum ALL_ATTACKS ID, uint8_t source)
+{
+    source %= 8;
+    _RABITS_Attack_Format attack = {.type = AttackType[ID]};
+
+    switch (attack.type) 
+    {
+        case SINGLE_TARGET_BITE:
+        {
+            attack.bite = (_RABITS_Bite) 
+            {   .target = SetRABITTarget(source), 
+                .ID = ID, 
+                .level = GetEntityLevel(EntityIndexToPointer(source) -> ID)
+            };
+            break;
+        }
+        default:
+            break;
+    }
+    return attack;
+}
+
+#define MAX_ATTACKS_IN_QUEUE 100
+
+_RABITAttackPoolIndex attack_pool[MAX_ATTACKS_IN_QUEUE];
+
+uint16_t GetAvaliableAttackQueue(void)
+{
+    for (uint16_t i = 0; i < MAX_ATTACKS_IN_QUEUE; i++)
+    {
+        if (!attack_pool[i].in_use) return i;
+    }
+
+    return MAX_ATTACKS_IN_QUEUE;
+}
+
+uint16_t GetUnavaliableAttackQueue(void)
+{
+    for (uint16_t i = 0; i < MAX_ATTACKS_IN_QUEUE; i++)
+    {
+        if (attack_pool[i].in_use) return i;
+    }
+
+    return MAX_ATTACKS_IN_QUEUE;
+}
+
+void RABIT_Push(enum ALL_ATTACKS ID, uint8_t source)
+{
+    uint16_t target = GetAvaliableAttackQueue();
+    if (target == MAX_ATTACKS_IN_QUEUE) return;
+
+    attack_pool[target] = (_RABITAttackPoolIndex)
+    {
+        .in_use = true,
+        .attack = CreateAttack(ID, source)
+    };
+}
+
+void RABIT_Pop(uint16_t index)
+{
+    if (index == MAX_ATTACKS_IN_QUEUE) return;
+
+    attack_pool[index].in_use = false;
+}
