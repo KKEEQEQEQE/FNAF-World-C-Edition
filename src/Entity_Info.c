@@ -50,7 +50,7 @@ Vector2 EntitySize[NUMBER_OF_ENEMY_IDS] =
 };
 
 // A lookup table for the attacks of each ENTITY_ID in Battle Space
-enum ATTACKS_IDs EntityAttacks[NUMBER_OF_ENEMY_IDS][MAX_ATTACKS] = 
+enum ALL_ATTACKS EntityAttacks[NUMBER_OF_ENEMY_IDS][MAX_ATTACKS] = 
 { 
     [BOUNCEPOT]={HIT}, 
     [GEARRAT]={HIT},
@@ -63,13 +63,13 @@ enum ATTACKS_IDs EntityAttacks[NUMBER_OF_ENEMY_IDS][MAX_ATTACKS] =
 
 uint16_t EntityBaseHealth[NUMBER_OF_ENEMY_IDS] =
 {
-    [BOUNCEPOT]=15,
+    [BOUNCEPOT]=25,
     [GEARRAT]=55,
     [MECHRAB]=30,
     [FREDDY]=95,
     [BONNIE]=105,
     [CHICA]=110,
-    [FOXY]=115
+    [FOXY]=125
 };
 
 uint16_t GetEntityLevel(enum ENTITY_IDs id)
@@ -106,7 +106,7 @@ void LoadEntityVisuals(enum ENTITY_IDs ID)
         case BOUNCEPOT:
         {
             EntityVisual[BOUNCEPOT].idle = CreateAnimation_V2( "Assets/Battle/Entity_Sprites/Bouncepot/atlas.png", 
-                                                               30, 
+                                                               25, 
                                                                10, 
                                                                250, 250);
             break;
@@ -116,7 +116,7 @@ void LoadEntityVisuals(enum ENTITY_IDs ID)
         case GEARRAT:
         {
             EntityVisual[GEARRAT].idle = CreateAnimation_V2( "Assets/Battle/Entity_Sprites/Gearrat/atlas.png", 
-                                                             30, 
+                                                             25, 
                                                              10, 
                                                              200, 200);
             break;
@@ -126,7 +126,7 @@ void LoadEntityVisuals(enum ENTITY_IDs ID)
         case MECHRAB:
         {
             EntityVisual[MECHRAB].idle = CreateAnimation_V2( "Assets/Battle/Entity_Sprites/Mechrab/atlas.png", 
-                                                              30, 
+                                                              25, 
                                                               10, 
                                                               200, 200);
             break;
@@ -136,7 +136,7 @@ void LoadEntityVisuals(enum ENTITY_IDs ID)
         case FREDDY:
         {
             EntityVisual[FREDDY].idle = CreateAnimation_V2( "Assets/Battle/Entity_Sprites/Freddy/idle.png", 
-                                                            30, 
+                                                            25, 
                                                             10, 
                                                             250, 250);
             break;
@@ -148,7 +148,7 @@ void LoadEntityVisuals(enum ENTITY_IDs ID)
             // WHAT IS IT AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
             
             EntityVisual[ID].idle = CreateAnimation_V2( "OhNoes...png", 
-                                                        30, 
+                                                        25, 
                                                         1, 
                                                         250, 250);
             break;
@@ -196,7 +196,7 @@ void FlushEntityVisuals(void)
 
 char * GetEntityName(enum ENTITY_IDs ID)
 {
-    static char index[NUMBER_OF_ENEMY_IDS][100] = 
+    static char index[NUMBER_OF_ENEMY_IDS][32] = 
     {
         [UNKNOWN]="Oh noes something went wrong :(",
         [BOUNCEPOT]="Bouncepot",

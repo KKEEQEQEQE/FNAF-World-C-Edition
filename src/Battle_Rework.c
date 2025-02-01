@@ -191,10 +191,10 @@ void InitBattle(void)
 
     Party_Enemy.size = MAX_PARTY_MEMBERS;
 
-    LoadEntity(Party_Enemy.member, UNKNOWN, L_U);
-    LoadEntity(Party_Enemy.member + 1, UNKNOWN, L_L);
-    LoadEntity(Party_Enemy.member + 2, UNKNOWN, L_R);
-    LoadEntity(Party_Enemy.member + 3, UNKNOWN, L_D);
+    LoadEntity(Party_Enemy.member, MECHRAB, L_U);
+    LoadEntity(Party_Enemy.member + 1, MECHRAB, L_L);
+    LoadEntity(Party_Enemy.member + 2, MECHRAB, L_R);
+    LoadEntity(Party_Enemy.member + 3, MECHRAB, L_D);
 
     Party_Player.size = MAX_PARTY_MEMBERS;
     
@@ -251,39 +251,9 @@ enum ATTACK_MOVE_INDEX
     RANDOM = 3
 };
 
-typedef struct _AttackQueue 
-{
-    _Bool imminent;
-    clock_t start_time;
-    clock_t delay;
-    _Attack attack;
-    _BattleEntity * target;
-    _BattleEntity * source;
-} _AttackQueue;
 
 #define MAX_ATTACKS_IN_QUEUE 15
 #define ATTACK_QUEUE_FREE target = NULL
-_AttackQueue attack_queue[MAX_ATTACKS_IN_QUEUE] = {0};
-
-static uint8_t GetAvaliable_attack_queue(void)
-{
-    uint8_t i = 0;
-    for (; i < MAX_ATTACKS_IN_QUEUE; i++)
-    {
-        if (!attack_queue[i].target) break;
-    }
-    return i;
-}
-
-static uint8_t GetUnavaliable_attack_queue(void)
-{
-    uint8_t i = 0;
-    for (; i < MAX_ATTACKS_IN_QUEUE; i++)
-    {
-        if (attack_queue[i].target) break;
-    }
-    return i;
-}
 
 Vector2 BattleSpaceToUiSpace(Vector2 position)
 {
@@ -321,73 +291,6 @@ void CreateDamageEffect(Vector2 position)
                             Updater_DeleteAfterQuarterSecond);
     }
 }
-
-#define ATTACK_PARAMETERS _BattleParty * target_party, _BattleEntity * source, _Attack attack
-
-void RunAttackQueue(_AttackQueue * attack)
-{
-    if (!attack || 
-        !attack -> target) return;
-
-    if (!attack -> imminent && 
-        attack -> source -> remaining_health == 0)
-        {
-            attack -> ATTACK_QUEUE_FREE;
-            return;
-        }
-    
-    Rectangle hitbox = attack->target->hitbox;
-
-    hitbox.x += hitbox.width / 2;
-    hitbox.y += hitbox.height / 2;
-    
-    switch (attack -> attack.type)
-    {
-        case NONE:
-            CreateDamageEffect((Vector2) {hitbox.x, hitbox.y});
-            attack->target->remaining_health -= GetRandomValue(attack->attack.damage.min, attack->attack.damage.max);
-            break;
-        case HIT:
-            CreateDamageEffect((Vector2) {hitbox.x, hitbox.y});
-            attack->target->remaining_health -= GetRandomValue(attack->attack.damage.min, attack->attack.damage.max);
-            break;
-    }
-
-    if (attack -> target -> remaining_health > GetEntityFullHealth(attack->target->ID)) 
-    {
-        attack -> target -> remaining_health = 0;
-    }
-
-    attack -> ATTACK_QUEUE_FREE;
-}
-
-void UpdateAttackQueue(void)
-{
-    for (uint8_t i = 0; i < MAX_ATTACKS_IN_QUEUE; i++)
-    {
-        if (!attack_queue[i].start_time || 
-            Rayclock() < attack_queue[i].delay + attack_queue[i].start_time) continue;
-
-        RunAttackQueue(&attack_queue[i]);
-    }
-}
-void Print_AttackQueue_struct(_AttackQueue * queue)
-{
-    printf("{\n\timminent = %u,\n\tattack %u,\n\ttarget = %p,\n\tsource = %p\n}\n", queue->imminent, queue -> attack.type, queue -> target, queue->source);
-}
-
-void Print_All_Attack_Queue(void)
-{
-    printf("\n\n");
-
-    for (uint8_t i = 0; i < MAX_ATTACKS_IN_QUEUE; i++)
-    {
-        if (!attack_queue[i].target) continue;
-        printf("ID %u:\n", i);
-        Print_AttackQueue_struct(attack_queue + i);
-    }
-}
-
 
 void UninitBattle(void)
 {
@@ -539,9 +442,16 @@ float enemy_speed = 1;
 
 float player_speed = 1;
 
-
 UIButton attack_button[3] = {0};
 
+void DealDamage(uint32_t amount, uint8_t target)
+{
+    target %= 8;
+
+    _BattleEntity * entity = &(target < 4 ? Party_Enemy.member : Party_Player.member)[target];
+    entity -> remaining_health -= amount;
+    CreateDamageEffect(GetHitboxCentre(entity -> hitbox));
+}
 
 _Bool GetGameOver(void)
 {
@@ -567,8 +477,6 @@ void DisplayHUD(void)
 void PutBattle(void)
 {
     UpdateMusicStream(theme);
-
-    UpdateAttackQueue();
 
     RenderBattle();
 

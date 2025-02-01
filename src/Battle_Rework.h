@@ -24,15 +24,9 @@
 
 
 #include "Animation.h"
+#include "RABIT.h"
 #include <stdint.h>
 #include <time.h>
-
-enum ATTACKS_IDs
-{
-    NONE, 
-    HIT, // Any Enemy
-    MICTOSS, PIZZAWHEEL, BIRTHDAY // Freddy
-};
 
 typedef struct _Damage_Range
 {
@@ -48,32 +42,7 @@ typedef struct _Battle_Projectile
     Animation_V2 sprite;
 } _Battle_Projectile;
 
-typedef struct  _Attack_Bite
-{
-
-} _Attack_Bite;
-
-typedef struct  _Attack_Projectile
-{
-
-} _Attack_Projectile;
-
-typedef struct  _Attack_Heal
-{
-
-} _Attack_Heal;
-
-typedef struct  _Attack_Siphon
-{
-
-} _Attack_Siphon;
-
-typedef struct  _Attack_AOE
-{
-
-} _Attack_AOE;
-
-enum ATTACK_TYPES
+enum ATTACK_SUPPORTED_TYPES
 {
     SINGLE_TARGET_BITE, MULTI_TARGET_BITE, // Bites or hitting
     SINGLE_PROJECTILE, MULTI_PROJECTILES, // Projectiles
@@ -89,13 +58,6 @@ enum ATTACK_TYPES
                      THIS IS CAN BE SKECTCHY AS FREDBEAR)
                      YOU HAVE BEEN WARNED >:((((                                         */
 };  
-
-typedef struct _Attack 
-{
-    _Damage_Range damage;
-    enum ATTACK_TYPES type;
-    clock_t delay;
-} _Attack;
 
 enum ENTITY_IDs
 {
@@ -127,8 +89,7 @@ typedef struct _BattleParty
     _BattleEntity member[MAX_PARTY_MEMBERS];
 } _BattleParty;
 
-
-
 extern void InitBattle(void);
+extern void DealDamage(uint32_t amount, uint8_t target);
 extern void UninitBattle(void);
 extern void PutBattle(void);

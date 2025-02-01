@@ -20,33 +20,41 @@
     3. This notice may not be removed or altered from any source distribution.
 */
 
+//   R. udimentary
+//   A. ttack
+//   B. attle
+//   I. nterface
+//   T. yped
+//   S. ystem
+
+// I needed an acronym because the name was too long
+
 #pragma once
 
-#include <stdbool.h>
+#include <stdint.h>
 #include "Battle_Rework.h"
-#include "RABIT.h"
-#include "UI.h"
 
-extern Vector2 EntitySize[NUMBER_OF_ENEMY_IDS];
+enum ALL_ATTACKS
+{
+    NONE, 
+    HIT, // Any Enemy
+    MICTOSS, PIZZAWHEEL, BIRTHDAY, // Freddy
+    NUMBER_OF_ATTACKS
+};
 
-#define MAX_ATTACKS 3
+typedef struct _RABITS_Bite
+{
+    enum ALL_ATTACKS ID;
+    int target: 4;
+    int level: 12;
+} _RABITS_Bite;
 
-extern enum ALL_ATTACKS EntityAttacks[NUMBER_OF_ENEMY_IDS][MAX_ATTACKS];
-
-extern uint16_t EntityBaseHealth[NUMBER_OF_ENEMY_IDS];
-
-uint16_t GetEntityLevel(enum ENTITY_IDs id);
-
-uint16_t GetEntityFullHealth(enum ENTITY_IDs id);
-
-_Bool EntityHasAttackAnimation(enum ENTITY_IDs ID);
-
-void LoadEntityVisuals(enum ENTITY_IDs ID);
-
-Animation_V2 AccessEntityAnimation(enum ENTITY_IDs ID, _Bool is_attacking);
-
-void FreeEntityVisuals(enum ENTITY_IDs ID);
-
-void FlushEntityVisuals(void);
-
-char * GetEntityName(enum ENTITY_IDs ID);
+typedef struct _RABITS_Attack_Format
+{
+    enum ATTACK_SUPPORTED_TYPES type;
+    union
+    {
+        _RABITS_Bite bite;
+    };
+    uint32_t lifetime;
+} _RABITS_Attack_Format;
