@@ -360,7 +360,7 @@ WORLDTilemap * CreateTilemap(const char * jsonPath)
     // Gets map size to be potentially used for camera collisions (with the void)
 
     cJSON * SizeXJSON = cJSON_GetObjectItemCaseSensitive(MainJSON, "mapWidth");
-    cJSON * SizeYJSON = cJSON_GetObjectItemCaseSensitive(MainJSON, "mapWidth");
+    cJSON * SizeYJSON = cJSON_GetObjectItemCaseSensitive(MainJSON, "mapHeight");
 
     uint16_t mapWidth = SizeXJSON ? SizeXJSON -> valueint : UINT16_MAX;
     uint16_t mapHeight = SizeYJSON ? SizeYJSON -> valueint : UINT16_MAX;

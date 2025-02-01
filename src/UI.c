@@ -431,7 +431,6 @@ void DrawUITextureSpritesheetPro(Texture2D atlas, int16_t x, int16_t y, uint16_t
                             tileSize.y   };
     
     Rectangle dest = { x + tileSize.x * scale / 2., y + tileSize.y * scale / 2., tileSize.x * scale, tileSize.y * scale};
-
     DrawTexturePro(atlas, source, dest, (Vector2) {tileSize.x / 2 * scale, tileSize.y / 2 * scale}, rotation, tint);
 }
 

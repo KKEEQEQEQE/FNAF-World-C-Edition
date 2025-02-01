@@ -145,7 +145,7 @@ void UpdateParty(void)
 void UpdatePlay(void) 
 {
     register float timeSinceStart = (float)(clock() - StartTime) / CLOCKS_PER_SEC;
-    UIPlay.graphic.x = GetOutsideWindowX(UIPlay.graphic.visual.texture) + timeSinceStart * -(GetOutsideWindowX(UIPlay.graphic.visual.texture) / START_SECONDS_TO_CENTRE);
+    UIPlay.graphic.x = GetOutsideWindowX_u16(UIPlay.graphic.visual.animation_V2.TileSize_x) + timeSinceStart * -(GetOutsideWindowX_u16(UIPlay.graphic.visual.animation_V2.TileSize_x) / START_SECONDS_TO_CENTRE);
     UIPlay.graphic.x = UIPlay.graphic.x < 0 ? 0: UIPlay.graphic.x;
 }
 

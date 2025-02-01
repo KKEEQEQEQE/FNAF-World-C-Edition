@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include <time.h>
 
-enum _Battle_Attacks_Types
+enum ATTACKS_IDs
 {
     NONE, 
     HIT, // Any Enemy
@@ -48,41 +48,86 @@ typedef struct _Battle_Projectile
     Animation_V2 sprite;
 } _Battle_Projectile;
 
+typedef struct  _Attack_Bite
+{
+
+} _Attack_Bite;
+
+typedef struct  _Attack_Projectile
+{
+
+} _Attack_Projectile;
+
+typedef struct  _Attack_Heal
+{
+
+} _Attack_Heal;
+
+typedef struct  _Attack_Siphon
+{
+
+} _Attack_Siphon;
+
+typedef struct  _Attack_AOE
+{
+
+} _Attack_AOE;
+
+enum ATTACK_TYPES
+{
+    SINGLE_TARGET_BITE, MULTI_TARGET_BITE, // Bites or hitting
+    SINGLE_PROJECTILE, MULTI_PROJECTILES, // Projectiles
+    HEAL, SIPHON, // Healing and taking health from target(s)
+    AOE, // Area of Effect
+    TOXIC_BITE, TOXIC_SINGLE_PROJECTILE, TOXIC_MULTI_PROJECTILES, TOXIC_AOE, // Toxic Supersets
+    BUFF, // Buffs or Debuffs
+    SUMMON, // Summons Entities to fight for X amount of time
+    RELAY, // Pushes a new type of attack on execution (can be used for Prize Ball)
+    INSTAKILL, // Puts UIVisual at X,Y and runs instakill type update after X secs
+    ATTACK_CUSTOM /* DIRECT access to the Battle system to modify and update ANY values 
+                     (DO NOT USE THERE IS NO WAY TO IMPLEMENT AN ATTACK, 
+                     THIS IS CAN BE SKECTCHY AS FREDBEAR)
+                     YOU HAVE BEEN WARNED >:((((                                         */
+};  
+
 typedef struct _Attack 
 {
     _Damage_Range damage;
-    enum _Battle_Attacks_Types type;
+    enum ATTACK_TYPES type;
     clock_t delay;
 } _Attack;
 
 enum ENTITY_IDs
 {
     UNKNOWN,
+    BOUNCEPOT,
+    GEARRAT,
+    MECHRAB,
+    NUMBER_OF_ENEMIES,
     FREDDY,
     BONNIE,
     CHICA,
     FOXY,
-    BOUNCEPOT,
-    GEARRAT,
-    MECHRAB
+    NUMBER_OF_ENEMY_IDS
 };
+
 typedef struct _BattleEntity 
 {
-    uint8_t num_of_attacks; // Mostly for Enemies
-    uint32_t remaining_health, full_health;
-    char name[20];
-    clock_t last_attack;
-    Animation_V2 sprite_idle;
-    Animation_V2 sprite_attack;
-    Rectangle hitbox;
-    _Attack attacks[3];
+    uint32_t remaining_health, level; // Remaining health and level
+    enum ENTITY_IDs ID; // Animatronic or Enemy ID
+    _Bool is_attacking; // Whether or not to render attack animation or send an attack queue
+    Rectangle hitbox; // Position and size in Battle space
 } _BattleEntity;
+
+#define MAX_PARTY_MEMBERS 4
 
 typedef struct _BattleParty
 {
     uint8_t size;
-    _BattleEntity member[4];
+    _BattleEntity member[MAX_PARTY_MEMBERS];
 } _BattleParty;
+
+
 
 extern void InitBattle(void);
 extern void UninitBattle(void);

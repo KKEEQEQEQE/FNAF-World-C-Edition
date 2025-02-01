@@ -21,7 +21,7 @@
 */
 
 #include "Game_State.h"
-#include "Battle.h"
+#include "Battle_Rework.h"
 #include "Title_Screen.h"
 #include "World.h"
 #include <time.h>

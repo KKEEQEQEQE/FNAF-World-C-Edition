@@ -728,10 +728,10 @@ static Rectangle GetCameraView(void)
                                             WorldCamera.zoom * ((float)GetScreenWidth() / GetScreenHeight()) + 2, 
                                             WorldCamera.zoom + 2    };
 
-    //if (CameraView.x + (CameraView.width - 2) / 2 >= CurrentWorld -> mapWidth) CameraView.x = CurrentWorld -> mapWidth - (CameraView.width - 2) / 2;
+    if (CameraView.x + CameraView.width - 1 > CurrentWorld -> mapWidth) CameraView.x = CurrentWorld -> mapWidth - CameraView.width + 1;
     if (CameraView.x <= 0) CameraView.x = 0;
 
-    //if (CameraView.y + (CameraView.height - 2) / 2 >= CurrentWorld -> mapHeight) CameraView.y = CurrentWorld -> mapHeight - (CameraView.height - 2) / 2;
+    if (CameraView.y + CameraView.height - 2 > CurrentWorld -> mapHeight) CameraView.y = CurrentWorld -> mapHeight - CameraView.height + 2;
     if (CameraView.y <= 0) CameraView.y = 0;
 
     return CameraView;

@@ -20,25 +20,32 @@
     3. This notice may not be removed or altered from any source distribution.
 */
 
-
 #pragma once
 
-#include "Title_Screen.h"
+#include <stdbool.h>
+#include "Battle_Rework.h"
+#include "UI.h"
 
-enum GameStateTypes
-{
-    Disclamer, SpookyWarning, Title, Save, Party, World, Chips, Bytes, Battle
-};
+extern Vector2 EntitySize[NUMBER_OF_ENEMY_IDS];
 
-extern void SwapGameState(enum GameStateTypes state);
-extern enum GameStateTypes GetGameState(void);
+#define MAX_ATTACKS 3
 
-enum TransitionAnimationTypes
-{
-    NOCURRENT, FADE
-};
+extern enum ATTACKS_IDs EntityAttacks[NUMBER_OF_ENEMY_IDS][MAX_ATTACKS];
 
-extern void SwapGameState_Animated(enum TransitionAnimationTypes type, enum GameStateTypes state, float duration);
-extern void PutTransitionAnimation(void);
+extern uint16_t EntityBaseHealth[NUMBER_OF_ENEMY_IDS];
 
-extern _Bool IsGameStateSwitching(void);
+uint16_t GetEntityLevel(enum ENTITY_IDs id);
+
+uint16_t GetEntityFullHealth(enum ENTITY_IDs id);
+
+_Bool EntityHasAttackAnimation(enum ENTITY_IDs ID);
+
+void LoadEntityVisuals(enum ENTITY_IDs ID);
+
+Animation_V2 AccessEntityAnimation(enum ENTITY_IDs ID, _Bool is_attacking);
+
+void FreeEntityVisuals(enum ENTITY_IDs ID);
+
+void FlushEntityVisuals(void);
+
+char * GetEntityName(enum ENTITY_IDs ID);

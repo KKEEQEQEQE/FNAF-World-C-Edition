@@ -23,7 +23,7 @@
 
 #include "../Include/raylib.h"
 #include "Animation.h"
-#include "Battle.h"
+#include "Battle_Rework.h"
 #include "Particle.h"
 #include "Particle_Updaters.h"
 #include "Title_Screen.h"
@@ -35,6 +35,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
+#include "rayclock.h"
 #include "Save.h"
 
 // Well this is the main function and yup that's about what it is
@@ -46,7 +47,7 @@ int main(void)
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(1280, 720); 
 
-    InitAudioDevice();
+    //InitAudioDevice();
 
     // Loading important stuff
 
@@ -54,7 +55,7 @@ int main(void)
 
     LoadSave("Saves/save1.json");
 
-    SwapGameState(Title);    
+    SwapGameState(Disclamer);    
     SetTargetFPS(240);
     //ToggleBorderlessWindowed();
 
@@ -62,8 +63,7 @@ int main(void)
     uint8_t temp = CreateParticleIndexA_V2("Assets/Particles/titlestar.png", 3,8, (Vector2) {12, 12}, 2);
     while (!WindowShouldClose())
     {
-        
-
+        UpdateRayclock();
         BeginDrawing();
         ClearBackground(BLACK);
         switch (GetGameState()) 
@@ -76,6 +76,10 @@ int main(void)
                 break;
             case Battle:
                 PutBattle();
+                break;
+            case Disclamer:
+                RenderUIText("Note: This is a Fanmade recreation of FNaF World\n I do not own the assets, and music\nThis is a passion project\n The code will be 100% Free and Open Source\n(When the first public version comes out)", 0, 0, 0.06, CENTRE, (Font) {0}, WHITE);
+                if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SwapGameState(Title);
                 break;
             default:
                 

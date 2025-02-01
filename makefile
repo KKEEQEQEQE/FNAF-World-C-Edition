@@ -8,6 +8,7 @@ clean:
 
 compile: 
 	gcc $(cflags) -c src/*.c
+	rm Battle.o
 	ld -relocatable *.o -o FNAF_World_C.o
 	cp FNAF_World_C.o bin/FNAF_World_C.o
 	rm *.o
