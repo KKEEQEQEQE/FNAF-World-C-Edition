@@ -45,8 +45,8 @@ typedef struct Animatronic
 
 void AddAnimatronic(uint8_t id);
 void UpdateAnimatronic(uint8_t index, uint16_t level_surplus, uint32_t xp_surplus);
-Animatronic GetAnimatronic(uint8_t index);
-Animatronic GetAnimatronicById(enum ENTITY_IDs id);
+//Animatronic GetAnimatronic(uint8_t index);
+//Animatronic GetAnimatronicById(enum ENTITY_IDs id);
 
 void UpdateParty_1(uint8_t index, uint8_t id);
 void UpdateParty_2(uint8_t index, uint8_t id);

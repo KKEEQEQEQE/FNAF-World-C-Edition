@@ -36,7 +36,7 @@ static uint8_t chip_queue[MAX_CHIPS_IN_QUEUE] = {0};
 
 static uint8_t wait_queue = 0;
 static uint8_t current_queue = 0;
-static UIElement current_chip_banner = {{0}, 0, -0.8f, 1};
+static UIElement current_chip_banner = {{0}, 0, -0.5f, 1.4};
 static Sound note_sfx = {0};
 
 // Turns a Unsigned Long into a Stack Allocated String

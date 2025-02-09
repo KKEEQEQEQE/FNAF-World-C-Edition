@@ -121,13 +121,13 @@ void CreateSave(const char * path)
 
     ChipsJSON = cJSON_AddArrayToObject(SaveJSON, "Chips");
     BytesJSON = cJSON_AddArrayToObject(SaveJSON, "Bytes");
-    AnimatronicJSON = cJSON_AddArrayToObject(SaveJSON, "Animatronics");
+    /*AnimatronicJSON = cJSON_AddArrayToObject(SaveJSON, "Animatronics");
     cJSON * freddy = cJSON_CreateObject();
     cJSON * idJSON = cJSON_AddNumberToObject(freddy, "id", FREDDY);
     cJSON * levelJSON = cJSON_AddNumberToObject(freddy, "Level", 1);
     cJSON * xpJSON = cJSON_AddNumberToObject(freddy, "XP", 0);
 
-    cJSON_AddItemToArray(AnimatronicJSON, freddy);
+    cJSON_AddItemToArray(AnimatronicJSON, freddy);*/
 
     Selected_Chips = cJSON_AddArrayToObject(SaveJSON, "Selected_Chips");
     Selected_Bytes = cJSON_AddArrayToObject(SaveJSON, "Selected_Bytes");
@@ -174,7 +174,7 @@ void LoadSave(const char * path)
     BytesJSON = cJSON_GetObjectItem(SaveJSON, "Bytes");
     Selected_Bytes = cJSON_GetObjectItem(SaveJSON, "Selected_Bytes");
 
-    AnimatronicJSON = cJSON_GetObjectItem(SaveJSON, "Animatronics");
+    //AnimatronicJSON = cJSON_GetObjectItem(SaveJSON, "Animatronics");
     Party_1 = cJSON_GetObjectItem(SaveJSON, "Party_1");
     Party_2 = cJSON_GetObjectItem(SaveJSON, "Party_2");
 
@@ -190,14 +190,14 @@ void LoadSave(const char * path)
     if (!Selected_Chips) Selected_Chips = cJSON_AddArrayToObject(SaveJSON, "Selected_Chips");
     if (!BytesJSON) BytesJSON = cJSON_AddArrayToObject(SaveJSON, "Bytes");
     if (!Selected_Bytes) Selected_Bytes = cJSON_AddArrayToObject(SaveJSON, "Selected_Bytes");
-    if (!AnimatronicJSON) 
+    /*if (!AnimatronicJSON) 
     {
         AnimatronicJSON = cJSON_AddArrayToObject(SaveJSON, "Animatronics");
     }
     if (!cJSON_GetArraySize(AnimatronicJSON))
     {
         
-    }
+    }*/
     if (!Party_1) Party_1 = cJSON_AddArrayToObject(SaveJSON, "Party_1");
     if (!Party_2) Party_2 = cJSON_AddArrayToObject(SaveJSON, "Party_2");
     if (!Last_LocationJSON) Last_LocationJSON = cJSON_AddObjectToObject(SaveJSON, "Last_Location");
@@ -352,7 +352,7 @@ void UpdateAnimatronic(uint8_t index, uint16_t level_surplus, uint32_t xp_surplu
     cJSON_SetNumberHelper(xpJSON, xpJSON -> valueint + xp_surplus);
 }
 
-Animatronic GetAnimatronic(uint8_t index)
+/*Animatronic GetAnimatronic(uint8_t index)
 {
     if (index >= cJSON_GetArraySize(AnimatronicJSON)) return INVALID_ANIMATRONIC;
     
@@ -388,4 +388,4 @@ Animatronic GetAnimatronicById(enum ENTITY_IDs id)
     if (i == len) return INVALID_ANIMATRONIC;
 
     return GetAnimatronic(i);
-}
+}*/

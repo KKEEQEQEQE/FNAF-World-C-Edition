@@ -74,7 +74,7 @@ uint16_t EntityBaseHealth[NUMBER_OF_ENEMY_IDS] =
 
 uint16_t GetEntityLevel(enum ENTITY_IDs id)
 {
-    return id > NUMBER_OF_ENEMIES ? GetAnimatronicById(id).level : 0;
+    return id > NUMBER_OF_ENEMIES ? 0 : 0;
 }
 
 uint16_t GetEntityFullHealth(enum ENTITY_IDs id)

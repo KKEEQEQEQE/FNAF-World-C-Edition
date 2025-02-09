@@ -337,7 +337,7 @@ static void InitBoxes(void)
                                 0};
     
     ChipBoxes[5] = (WORLDBox) {{CHIP, .id=5 }, 
-                                CreateWorldEntity(  (Vector2) {33, 32},
+                                CreateWorldEntity(  (Vector2) {0, 0},
                                                     (Vector2) {1, 1},
                                                     (Vector2) {0, 0},
                                                     &grey_chip_chest, 
@@ -385,11 +385,11 @@ static void InitFreddy(void)
     FreddyWDown.animation_V2 = CreateAnimation_V2("Assets/Overworld/Freddy_Overworld/walking_down.png", 30, 15, 60, 60); 
     FreddyWDown.tint = WHITE;
 
-    SetTextureFilter(FreddyIdle.texture, TEXTURE_FILTER_BILINEAR);
+    /*SetTextureFilter(FreddyIdle.texture, TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(FreddyWUp.animation_V2.Atlas, TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(FreddyWLeft.animation_V2.Atlas, TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(FreddyWRight.animation_V2.Atlas, TEXTURE_FILTER_BILINEAR);
-    SetTextureFilter(FreddyWDown.animation_V2.Atlas, TEXTURE_FILTER_BILINEAR);
+    SetTextureFilter(FreddyWDown.animation_V2.Atlas, TEXTURE_FILTER_BILINEAR);*/
 
     Freddy.visual = &FreddyIdle;
     Freddy.scale = 0.95;
@@ -409,54 +409,14 @@ static void InitLolbit(void)
 
 static void InitBuildings_Pre(void)
 {
-    static UIVisual blue_castle = {0};
-    static UIVisual red_castle = {0};
-    static UIVisual gear_house = {0};
-    static UIVisual lumber_house = {0};
     static UIVisual chimney_freddy = {0};
 
-    blue_castle = CreateUIVisual_UITexture_P( "Assets/Overworld/Buildings/Blue_Castle.png", WHITE);
-    red_castle = CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Red_Castle.png", WHITE);
-    gear_house = CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Gear_House.png", WHITE);
-    lumber_house = CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Lumber_House.png", WHITE);
     chimney_freddy = CreateUIVisual_UIAnimation_V2( "Assets/Overworld/NPCs/chimney_freddy.png", 
                                                     15, 
                                                     31, 
                                                     (Vector2) {50, 50}, 
                                                     WHITE);
-
-    WorldBuildings_Pre[0] = CreateWorldEntity(  (Vector2) {33.8, 11}, 
-                                                (Vector2) {0,0}, 
-                                                (Vector2) {0,0}, 
-                                                &blue_castle, 
-                                                1, 
-                                                0, 
-                                                NULL, 3);
-
-    WorldBuildings_Pre[1] = CreateWorldEntity(  (Vector2) {37.5, 10.5},
-                                                (Vector2) {0,0}, 
-                                                (Vector2) {0,0}, 
-                                                &red_castle,
-                                                1, 
-                                                0, 
-                                                NULL, 3);
-
-    WorldBuildings_Pre[2] = CreateWorldEntity(  (Vector2) {36.5, 15.5}, 
-                                                (Vector2) {0,0},
-                                                (Vector2) {0,0}, 
-                                                &gear_house, 
-                                                1, 
-                                                0, 
-                                                NULL, 3);
-
-    WorldBuildings_Pre[3] = CreateWorldEntity(  (Vector2) {42, 12}, 
-                                                (Vector2) {0,0}, 
-                                                (Vector2) {0,0}, 
-                                                &lumber_house, 
-                                                1, 
-                                                0, 
-                                                NULL, 3);
-    WorldBuildings_Pre[4] = CreateWorldEntity(  (Vector2) {8, 19.25}, 
+    WorldBuildings_Pre[0] = CreateWorldEntity(  (Vector2) {8, 19.25}, 
                                                 (Vector2) {1,1}, 
                                                 (Vector2) {0,0}, 
                                                 &chimney_freddy, 
@@ -468,13 +428,15 @@ static void InitBuildings_Pre(void)
 static void InitBuildings_After(void)
 {
     static UIVisual turbine = {0};
+    static UIVisual windmill = {0};
 
     if (!turbine.type) turbine = CreateUIVisual_UIAnimation_V2("Assets/Overworld/Buildings/turbine_atlas.png", 30, 10, (Vector2) {50, 100}, WHITE);
+    if (!windmill.type) windmill = CreateUIVisual_UIAnimation_V2("Assets/Overworld/Buildings/windmill_atlas.png", 30, 20, (Vector2) {200, 200}, WHITE);
 
     WorldBuildings_After[0] = CreateWorldEntity((Vector2) {31.5, 17}, 
                                                 (Vector2) {0,0}, 
                                                 (Vector2) {0,0}, 
-                                                UIVisual_Heap(CreateUIVisual_UIAnimation_V2("Assets/Overworld/Buildings/windmill_atlas.png", 30, 20, (Vector2) {200, 200}, WHITE)),
+                                                &windmill,
                                                 1, 
                                                 0,
                                                 NULL,1);
@@ -567,14 +529,6 @@ void InitWorld(void)
     InitBuildings_Pre();
     InitBuildings_After();
     
-    WorldWheel = CreateWorldEntity(  (Vector2) {14.25, 15.25}, 
-                                                (Vector2) {5,5}, 
-                                                (Vector2) {0,0}, 
-                                                UIVisual_Heap(CreateUIVisual_UITexture_P("Assets/Overworld/Buildings/Wheel.png", 
-                                                                                                        WHITE)), 
-                                                1, 
-                                                0, 
-                                                NULL, 6);
     
     ItemAtlas = LoadTexture("Assets/Overworld/NPCs/items.png");
 
@@ -644,20 +598,25 @@ void InitWorld(void)
                                     .hover = NULL, 
                                     0};
 
-
     SaveButton =  (UIButton)    {   .graphic = CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Save.png", 
+                                                    WHITE), 
+                                                    -0.8, 0.9, 1.5),
+                                    .press = SaveButtonPress,
+                                    .hover = NULL, 
+                                    0};
+    /*SaveButton =  (UIButton)    {   .graphic = CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Save.png", 
                                                     WHITE), 
                                                     0.025, 0.9, 1.5),
                                     .press = SaveButtonPress,
                                     .hover = NULL, 
-                                    0};
+                                    0};*/
 
     SetTraceLogLevel(LOG_ALL);
 }
 
 void ResetWorld(void)
 {
-    SetWindowTitle("FNaF World: C Edition - Overworld");
+    SetWindowTitle("FNaF World: C Edition (Overworld Preview) - Overworld");
     Freddy.collisionTargets = LAYER_COLLIDABLE;
     Freddy.size = (Vector2) {0.7, 0.45};
     Freddy.scale = 0.95;
@@ -1081,6 +1040,7 @@ uint8_t GetZone(void)
     if (i == sizeof(ZoneIds) / 2) return 0xff;
     return i;
 }
+
 void RenderZoneEffect(void)
 {
     uint16_t zone = GetZone();
@@ -1202,10 +1162,11 @@ void RenderWorld(void)
 
         RenderWorldEntities(Ent_MinesTeleporters, i, FAST);
         RenderWorldEntities(Ex_MinesTeleporters, i, FAST);
-        if (i == 3) RenderWorldButtons();
+        if (i == 2) RenderWorldButtons();
         if (i == Freddy.depth) RenderChipBoxes(ChipBoxes, NUMBER_OF_CHIPS);
         if (i == Freddy.depth) RenderWorldEntity(&Freddy);
-        if (i == WorldWheel.depth) RenderWorldEntity(&WorldWheel);
+
+        //if (i == WorldWheel.depth) RenderWorldEntity(&WorldWheel);
 
         RenderWorldEntities(WorldBuildings_Pre, i, FAST);
         
@@ -1510,9 +1471,9 @@ void PutTouchUI(void)
 
     if (GetScreenRatio() <= 81/50.) SetUIScreenScaleMode(WIDTH);
 
-    PutUIButton(&PartyButton);
-    PutUIButton(&ChipsButton);
-    PutUIButton(&BytesButton);
+    //PutUIButton(&PartyButton);
+    //PutUIButton(&ChipsButton);
+    //PutUIButton(&BytesButton);
     PutUIButton(&SaveButton);
 
     PutTouchJoystick();
@@ -1528,9 +1489,9 @@ void PutPC_Original_UI(void)
 
     if (GetScreenRatio() <= 81/50.) SetUIScreenScaleMode(WIDTH);
 
-    PutUIButton(&PartyButton);
-    PutUIButton(&ChipsButton);
-    PutUIButton(&BytesButton);
+    //PutUIButton(&PartyButton);
+    //PutUIButton(&ChipsButton);
+    //PutUIButton(&BytesButton);
     PutUIButton(&SaveButton);
 
     SetUIScreenScaleMode(HEIGHT);
@@ -1646,7 +1607,7 @@ void PutWorld(void)
     HandleWorldButtonCollision();
     HandleBoxCollisions(ChipBoxes, NUMBER_OF_CHIPS);
     HandleMineCollision();
-    if (IsKeyPressed(KEY_F)) SwapGameState(Battle);
+    //if (IsKeyPressed(KEY_F)) SwapGameState(Battle);
     PutDefaultUI();
     RenderChipNoteBanner();
 }

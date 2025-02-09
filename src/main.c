@@ -43,17 +43,17 @@ int main(void)
 {
     // Init Window
 
-    InitWindow(1280, 720, "FNAF World: C Edition");
+    InitWindow(1280, 720, "FNAF World: C Edition (Overworld Preview 2)");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(1280, 720); 
 
-    //InitAudioDevice();
+    InitAudioDevice();
 
     // Loading important stuff
 
     clock_t start = clock();
 
-    LoadSave("Saves/save1.json");
+    LoadSave(NULL);
 
     SwapGameState(Disclamer);    
     SetTargetFPS(240);
@@ -61,6 +61,8 @@ int main(void)
 
     // Main Game Loop
     uint8_t temp = CreateParticleIndexA_V2("Assets/Particles/titlestar.png", 3,8, (Vector2) {12, 12}, 2);
+    
+    LoadWorldTilemap();
     while (!WindowShouldClose())
     {
         UpdateRayclock();
@@ -78,7 +80,7 @@ int main(void)
                 PutBattle();
                 break;
             case Disclamer:
-                RenderUIText("Note: This is a Fanmade recreation of FNaF World\n I do not own the assets, and music\nThis is a passion project\n The code will be 100% Free and Open Source\n(When the first public version comes out)", 0, 0, 0.06, CENTRE, (Font) {0}, WHITE);
+                RenderUIText("Note: This is a Fanmade recreation of FNaF World\n I do not own the assets, and music\nThis is a passion project\n The code will be 100% Free and Open Source\n(When the first demo comes out)", 0, 0, 0.06, CENTRE, (Font) {0}, WHITE);
                 if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) SwapGameState(Title);
                 break;
             default:

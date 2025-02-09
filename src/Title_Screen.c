@@ -104,7 +104,7 @@ void UninitTitleScreen(void)
 
 void ResetTitleScreen(void) 
 {
-    SetWindowTitle("FNaF World: C Edition - Title Screen");
+    SetWindowTitle("FNaF World: C Edition (Overworld Preview) - Title Screen");
 
     StartTime = clock();
     
@@ -179,9 +179,10 @@ void RenderTitleScreen(void)
     RenderUIElement(&UITitle);
     RenderUIElement(&UIParty);
     PutUIButton(&UIPlay);
-    RenderUIText("Demo: 1", -0.95, 0.875,0.06, LEFTMOST, TitleScreenFont, WHITE);
+    RenderUIText("", -0.95, 0.80,0.06, LEFTMOST, TitleScreenFont, WHITE);
     RenderUIText("Original Game By: Scott Cawthon", 0.9, 0.8,0.04, RIGHTMOST,TitleScreenFont, WHITE);
-    RenderUIText("Remake By: SpyterDev", 0.9, 0.9,0.04, RIGHTMOST, TitleScreenFont, WHITE);
+    RenderUIText("Recreation By: SpyterDev", 0.9, 0.9,0.04, RIGHTMOST, TitleScreenFont, WHITE);
+    RenderUIText("C Edition", -0.9, 0.9,0.04, LEFTMOST, TitleScreenFont, WHITE);
 }
 void PutTitleScreen(void) 
 {
