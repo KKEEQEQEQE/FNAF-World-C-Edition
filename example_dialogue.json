@@ -1,0 +1,19 @@
+{
+    "Character_1_Phase_1": 38,
+    "Character_1_Phase_2": 0,
+    "Character_2": 0,
+
+    "Phase_1_Dialogue":
+    [
+        {"Speaker": 1, "Line": "I know you may feel like going out and taking a stroll, but something seems very wrong today :(", "Chars_Per_Sec": 10},
+        {"Speaker": 1, "Line": "All is NOT well in Aninatronica! Uh... Animatronic Village? Village-tronica? (We're working on that.) The point is that something is horribly wrong!", "Chars_Per_Sec": 10},
+        {"Speaker": 1, "Line": "There's been a ton of bizarre creatures roaming around lately, even some that look like...*GULP* ...US!!!", "Chars_Per_Sec": 10},
+        {"Speaker": 1, "Line": "We aren't prepared to deal with situations like this. Something bad must have happened on the flipside.", "Chars_Per_Sec": 10},
+        {"Speaker": 1, "Line": "Go see what you can find. Be careful though, our wood-cutting Auto-Chipper has gone haywire! It's been jumpscaring me all day! We really gotta replace that piece of junk", "Chars_Per_Sec": 10},
+        {"Speaker": 1, "Line": "I think I dropped a key near him so good luck ;)"}
+    ],
+    "Phase_2_Dialogue_Delay": 0,
+    "Phase_2_Dialogue":
+    [
+    ]
+}

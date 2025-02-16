@@ -44,7 +44,7 @@ int main(void)
     // Init Window
 
     InitWindow(1280, 720, "FNAF World: C Edition (Overworld Preview 2)");
-    SetWindowState(FLAG_WINDOW_RESIZABLE);
+    SetWindowState(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_UNDECORATED);
     SetWindowMinSize(1280, 720); 
 
     InitAudioDevice();
@@ -67,7 +67,7 @@ int main(void)
     {
         UpdateRayclock();
         BeginDrawing();
-        ClearBackground(BLACK);
+        ClearBackground((Color){45,45,45,255});
         switch (GetGameState()) 
         {
             case Title:

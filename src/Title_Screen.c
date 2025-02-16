@@ -167,7 +167,6 @@ void UpdateTitleScreen(void)
     UpdatePlay();
     UpdateUIParticles();
     CreateTitlestars();
-
 }
 
 void RenderTitleScreen(void)

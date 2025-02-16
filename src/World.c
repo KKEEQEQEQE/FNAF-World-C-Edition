@@ -174,6 +174,7 @@ void SetWorldSpriteSheet(const char * path, uint16_t tileSize)
         UnloadTexture(CurrentWorldSpriteSheet);
     }
     CurrentWorldSpriteSheet = LoadTexture(path);
+    SetTextureFilter(CurrentWorldSpriteSheet, TEXTURE_FILTER_POINT);
 }
 
 static void WarpButton_1(UIButton * button)
@@ -604,6 +605,8 @@ void InitWorld(void)
                                     .press = SaveButtonPress,
                                     .hover = NULL, 
                                     0};
+
+    SetTextureFilter(SaveButton.graphic.visual.texture, TEXTURE_FILTER_BILINEAR);
     /*SaveButton =  (UIButton)    {   .graphic = CreateUIElement(CreateUIVisual_UITexture_P("Assets/Overworld/UI/Save.png", 
                                                     WHITE), 
                                                     0.025, 0.9, 1.5),
@@ -1367,7 +1370,7 @@ static void SwitchUI_MOBILE(void)
     BytesButton.graphic.x = 0;
     BytesButton.graphic.y = -0.9f;
 
-    SaveButton.graphic.x = -0.275f;
+    SaveButton.graphic.x = 0.55f;
     SaveButton.graphic.y = -0.9f;
 }
 
