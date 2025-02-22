@@ -53,7 +53,8 @@ enum ENTITY_IDs
     BONNIE,
     CHICA,
     FOXY,
-    NUMBER_OF_ENEMY_IDS
+    FREDBEAR=NUMBER_OF_ENEMIES+39,
+    NUMBER_OF_ENTITY_IDS
 };
 
 typedef struct _BattleEntity 

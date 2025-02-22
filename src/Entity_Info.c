@@ -38,7 +38,7 @@
 #define LARGE_SIZE (Vector2) {1.75, 2.75}
 
 // A lookup table for the hitbox sizes of each ENTITY_ID in Battle Space
-Vector2 EntitySize[NUMBER_OF_ENEMY_IDS] = 
+Vector2 EntitySize[NUMBER_OF_ENTITY_IDS] = 
 {   
     [BOUNCEPOT]=MEDIUM_SIZE, 
     [GEARRAT]=SMALL_SIZE,
@@ -50,7 +50,7 @@ Vector2 EntitySize[NUMBER_OF_ENEMY_IDS] =
 };
 
 // A lookup table for the attacks of each ENTITY_ID in Battle Space
-enum ALL_ATTACKS EntityAttacks[NUMBER_OF_ENEMY_IDS][MAX_ATTACKS] = 
+enum ALL_ATTACKS EntityAttacks[NUMBER_OF_ENTITY_IDS][MAX_ATTACKS] = 
 { 
     [BOUNCEPOT]={HIT}, 
     [GEARRAT]={HIT},
@@ -61,7 +61,7 @@ enum ALL_ATTACKS EntityAttacks[NUMBER_OF_ENEMY_IDS][MAX_ATTACKS] =
     [FOXY]={}  
 };
 
-uint16_t EntityBaseHealth[NUMBER_OF_ENEMY_IDS] =
+uint16_t EntityBaseHealth[NUMBER_OF_ENTITY_IDS] =
 {
     [BOUNCEPOT]=25,
     [GEARRAT]=55,
@@ -89,7 +89,7 @@ typedef struct _EntityVisualIndex
     Animation_V2 attack;
 } _EntityVisualIndex; 
 
-_EntityVisualIndex EntityVisual[NUMBER_OF_ENEMY_IDS] = {0};
+_EntityVisualIndex EntityVisual[NUMBER_OF_ENTITY_IDS] = {0};
 
 void LoadEntityVisuals(enum ENTITY_IDs ID)
 {
@@ -188,7 +188,7 @@ void FreeEntityVisuals(enum ENTITY_IDs ID)
 
 void FlushEntityVisuals(void)
 {
-    for (enum ENTITY_IDs entity = UNKNOWN; entity < NUMBER_OF_ENEMY_IDS; entity++)
+    for (enum ENTITY_IDs entity = UNKNOWN; entity < NUMBER_OF_ENTITY_IDS; entity++)
     {
         FreeEntityVisuals(entity);
     }
@@ -196,7 +196,7 @@ void FlushEntityVisuals(void)
 
 char * GetEntityName(enum ENTITY_IDs ID)
 {
-    static char index[NUMBER_OF_ENEMY_IDS][32] = 
+    static char index[NUMBER_OF_ENTITY_IDS][32] = 
     {
         [UNKNOWN]="Oh noes something went wrong :(",
         [BOUNCEPOT]="Bouncepot",
@@ -205,7 +205,8 @@ char * GetEntityName(enum ENTITY_IDs ID)
         [FREDDY]="Freddy",
         [BONNIE]="Bonnie",
         [CHICA]="Chica",
-        [FOXY]="Foxy"
+        [FOXY]="Foxy",
+        [FREDBEAR]="Fredbear"
     };
     return index[ID][0] ? &index[ID][0] : &index[UNKNOWN][0];
 }

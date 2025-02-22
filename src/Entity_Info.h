@@ -27,13 +27,13 @@
 #include "RABIT.h"
 #include "UI.h"
 
-extern Vector2 EntitySize[NUMBER_OF_ENEMY_IDS];
+extern Vector2 EntitySize[NUMBER_OF_ENTITY_IDS];
 
 #define MAX_ATTACKS 3
 
-extern enum ALL_ATTACKS EntityAttacks[NUMBER_OF_ENEMY_IDS][MAX_ATTACKS];
+extern enum ALL_ATTACKS EntityAttacks[NUMBER_OF_ENTITY_IDS][MAX_ATTACKS];
 
-extern uint16_t EntityBaseHealth[NUMBER_OF_ENEMY_IDS];
+extern uint16_t EntityBaseHealth[NUMBER_OF_ENTITY_IDS];
 
 uint16_t GetEntityLevel(enum ENTITY_IDs id);
 

@@ -37,7 +37,7 @@
 #include <time.h>
 #include "rayclock.h"
 #include "Save.h"
-
+#include "Dialogue.h"
 // Well this is the main function and yup that's about what it is
 int main(void)
 {
@@ -63,6 +63,10 @@ int main(void)
     uint8_t temp = CreateParticleIndexA_V2("Assets/Particles/titlestar.png", 3,8, (Vector2) {12, 12}, 2);
     
     LoadWorldTilemap();
+
+    LoadDialogue("example_dialogue.json");
+    PrintDialogue();
+    FreeDialougeLines();
     while (!WindowShouldClose())
     {
         UpdateRayclock();
