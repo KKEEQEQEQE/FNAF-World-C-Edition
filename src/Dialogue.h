@@ -26,4 +26,14 @@ void LoadDialogue(const char * path);
 
 void FreeDialougeLines(void);
 
+void InitDialogueScene(void);
+
+void FreeDialogueScene(void);
+
 void PrintDialogue(void);
+
+void RenderDialogue(void);
+
+void UpdateDialogue(void);
+
+void PutDialogue(void);

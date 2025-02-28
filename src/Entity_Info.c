@@ -147,7 +147,7 @@ void LoadEntityVisuals(enum ENTITY_IDs ID)
             // OH NOES WHAT IS THIS THING!!!!!!
             // WHAT IS IT AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
             
-            EntityVisual[ID].idle = CreateAnimation_V2( "OhNoes...png", 
+            EntityVisual[ID].idle = CreateAnimation_V2( "Assets/Battle/Entity_Sprites/OhNoes...png", 
                                                         25, 
                                                         1, 
                                                         250, 250);

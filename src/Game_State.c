@@ -24,10 +24,15 @@
 #include "Battle_Rework.h"
 #include "Title_Screen.h"
 #include "World.h"
+#include <stdint.h>
 #include <time.h>
 #include "Particle.h"
+#include "Dialogue.h"
+#include "rayclock.h"
 
 enum GameStateTypes GameState = 1000;
+
+_GameStateScene CurrentSceneSnapshot = {0};
 
 void SwapGameState(enum GameStateTypes state)
 {
@@ -36,11 +41,13 @@ void SwapGameState(enum GameStateTypes state)
         case Title:
             UninitTitleScreen();
             break;
+        case Dialogue:
+            FreeDialogueScene();
+            break;
         case SpookyWarning:
         case Save:
         case Party:
         case World:
-            break;
         case Chips:
         case Bytes:
         case Battle:
@@ -61,10 +68,26 @@ void SwapGameState(enum GameStateTypes state)
             break;
         case Battle:
             InitBattle();
+        case Dialogue:
+            SetWindowTitle("FNaF World: C Edition (Overworld Preview 2) - Dialogue");
+            InitDialogueScene();
+            break;
         default:
             break;
     }
     GameState = state;
+}
+
+void RunGameScene(_GameStateScene * scene)
+{
+    if (scene -> SceneClock) *scene -> SceneClock += GetFrameTime() * RAYCLOCKS_PER_SEC * scene -> TimeScale;
+    if (scene -> UpdateScene) scene -> UpdateScene();
+    if (scene -> RenderScene) scene -> RenderScene();
+
+    for (uint8_t i = 0; i < MAX_ADDITIONAL_UPDATERS_GS; i++)
+    {
+        if (scene -> AdditionalUpdaters[i]) scene -> AdditionalUpdaters[i](i);
+    }
 }
 
 enum TransitionAnimationTypes animation = NOCURRENT;

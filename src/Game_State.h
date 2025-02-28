@@ -24,10 +24,33 @@
 #pragma once
 
 #include "Title_Screen.h"
+#include "rayclock.h"
+#include <stdint.h>
+#include <time.h>
+
+typedef void (*_AdditionUpdater)(uint8_t);
+
+#define MAX_ADDITIONAL_UPDATERS_GS 10
+
+typedef struct _GameStateScene
+{
+    // Time
+    clock_t * SceneClock;
+    float TimeScale; // Scene Time Past = Time Past * TimeScale
+
+    // Init and Freeing
+    void (*InitScene)(void);
+    void (*FreeScene)(void);
+
+    // Rendering and Updating
+    void (*RenderScene)(void);
+    void (*UpdateScene)(void);
+    _AdditionUpdater AdditionalUpdaters[MAX_ADDITIONAL_UPDATERS_GS];
+} _GameStateScene;
 
 enum GameStateTypes
 {
-    Disclamer, SpookyWarning, Title, Save, Party, World, Chips, Bytes, Battle
+    Disclamer, SpookyWarning, Title, Save, Party, World, Chips, Bytes, Battle, Dialogue
 };
 
 extern void SwapGameState(enum GameStateTypes state);

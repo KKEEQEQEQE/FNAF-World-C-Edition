@@ -1,6 +1,8 @@
 bin/
 Saves/
-Assets/
+
+Assets/*
+
 *.exe
 .clangd
 *.png

@@ -44,7 +44,7 @@ int main(void)
     // Init Window
 
     InitWindow(1280, 720, "FNAF World: C Edition (Overworld Preview 2)");
-    SetWindowState(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_UNDECORATED);
+    SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(1280, 720); 
 
     InitAudioDevice();
@@ -55,7 +55,7 @@ int main(void)
 
     LoadSave(NULL);
 
-    SwapGameState(Disclamer);    
+    SwapGameState(Dialogue);    
     SetTargetFPS(240);
     //ToggleBorderlessWindowed();
 
@@ -67,11 +67,14 @@ int main(void)
     LoadDialogue("example_dialogue.json");
     PrintDialogue();
     FreeDialougeLines();
+    Texture2D Cursor = LoadTexture("Assets/Cursor.png");
+    SetTextureFilter(Cursor, TEXTURE_FILTER_BILINEAR);
+    HideCursor();
     while (!WindowShouldClose())
     {
         UpdateRayclock();
         BeginDrawing();
-        ClearBackground((Color){45,45,45,255});
+        ClearBackground((Color) {45,45,45,255});
         switch (GetGameState()) 
         {
             case Title:
@@ -82,6 +85,9 @@ int main(void)
                 break;
             case Battle:
                 PutBattle();
+                break;
+            case Dialogue:
+                PutDialogue();
                 break;
             case Disclamer:
                 RenderUIText("Note: This is a Fanmade recreation of FNaF World\n I do not own the assets, and music\nThis is a passion project\n The code will be 100% Free and Open Source\n(When the first demo comes out)", 0, 0, 0.06, CENTRE, (Font) {0}, WHITE);
@@ -115,6 +121,8 @@ int main(void)
         // Refreshes Touch Input
         RefreshInput();
         PutTransitionAnimation();
+
+        if (GetInputType() == KEYBOARD) DrawTextureEx(Cursor, GetMousePosition(), 0, GetWindowScaleDPI().y  * 0.75f, WHITE);
         EndDrawing();
     }
     
