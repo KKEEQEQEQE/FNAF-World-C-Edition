@@ -1,13 +1,8 @@
 bin/
 Saves/
 
-Assets/*
-
 *.exe
 .clangd
-*.png
-*.wav
-*.mp3
 
 # Prerequisites
 *.d
