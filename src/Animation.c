@@ -32,7 +32,21 @@
 #include <memory.h>
 #include <time.h>
 
-// Turns a Unsigned Long into a Stack Allocated String
+// Gets current animation frame from clock_t, entered frames, and entered FPS (used by UIanimationV2)
+uint16_t GetCurrentAnimationFrameC(clock_t startTime, uint16_t frames, uint8_t FPS)
+{
+    float currentFrame =  (float)(clock() - startTime) / CLOCKS_PER_SEC;
+    currentFrame /= 1. / FPS;
+    return (uint16_t) currentFrame % frames;
+}
+
+// All the UIanimationV1 (struct Animation) functions are horrible, deprecated and a war-crime, use the spritesheet-based UIanimationV2
+// If you use UIanimationV1 then :|
+// why... :(
+
+// Turns a Unsigned Long into a Stack Allocated String (this is a war crime and should never be used even though it works for some reason)
+// a void uintstr(char * dest, uint64_t number, size_t buff_size) would be better but this function is only used in the old UIanimation
+// so it's not like it's ever called and that's why it's still here
 static char * __fastcall uintstr(uint64_t number) 
 {
     uint64_t temp = number;
@@ -77,13 +91,7 @@ uint16_t GetCurrentAnimationFrame(const Animation * animation)
     return (uint16_t)currentFrame % animation -> Amount;
 }
 
-// Gets current animation frame from clock_t, entered frames, and entered FPS
-uint16_t GetCurrentAnimationFrameC(clock_t startTime, uint16_t frames, uint8_t FPS)
-{
-    float currentFrame =  (float)(clock() - startTime) / CLOCKS_PER_SEC;
-    currentFrame /= 1. / FPS;
-    return (uint16_t) currentFrame % frames;
-}
+
 
 // Returns created UIanimation struct on stack
 Animation CreateAnimation(const char * path, const uint8_t targetFPS) 
@@ -141,7 +149,7 @@ void RenderAnimation(const Animation * animation, float x, float y, float scale,
     RenderUITexture(animation -> Frames[(uint16_t)currentFrame], x, y, scale);
 }
 
-// Animation V2 functions
+// Animation V2 functions (These are all the functions you should use, everything above )
 
 // Returns created UIanimationV2 struct on stack
 Animation_V2 CreateAnimation_V2(const char * path, const uint8_t targetFPS, const uint16_t amount, const uint16_t tileSize_x, const uint16_t tileSize_y)

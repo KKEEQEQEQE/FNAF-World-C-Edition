@@ -45,7 +45,12 @@ typedef struct _GameStateScene
     // Rendering and Updating
     void (*RenderScene)(void);
     void (*UpdateScene)(void);
-    _AdditionUpdater AdditionalUpdaters[MAX_ADDITIONAL_UPDATERS_GS];
+    
+    /*
+        When GameStateStep is called, not only does it update the scene 
+        but all additional updaters are called
+    */
+    _AdditionUpdater *(AdditionalUpdaters[MAX_ADDITIONAL_UPDATERS_GS]); 
 } _GameStateScene;
 
 enum GameStateTypes
@@ -53,15 +58,15 @@ enum GameStateTypes
     Disclamer, SpookyWarning, Title, Save, Party, World, Chips, Bytes, Battle, Dialogue
 };
 
-extern void SwapGameState(enum GameStateTypes state);
-extern enum GameStateTypes GetGameState(void);
+void SwapGameState(enum GameStateTypes state);
+enum GameStateTypes GetGameState(void);
 
 enum TransitionAnimationTypes
 {
     NOCURRENT, FADE
 };
 
-extern void SwapGameState_Animated(enum TransitionAnimationTypes type, enum GameStateTypes state, float duration);
-extern void PutTransitionAnimation(void);
+void SwapGameState_Animated(enum TransitionAnimationTypes type, enum GameStateTypes state, float duration);
+void PutTransitionAnimation(void);
 
-extern _Bool IsGameStateSwitching(void);
+_Bool IsGameStateSwitching(void);

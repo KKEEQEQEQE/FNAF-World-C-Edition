@@ -55,7 +55,7 @@ int main(void)
 
     LoadSave(NULL);
 
-    SwapGameState(Dialogue);    
+    SwapGameState(10000);    
     SetTargetFPS(240);
     //ToggleBorderlessWindowed();
 

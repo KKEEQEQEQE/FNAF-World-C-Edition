@@ -67,6 +67,8 @@ enum ENTITY_IDs DialogueIdToEntityId(uint8_t id)
     return id ? id + NUMBER_OF_ENEMIES : UNKNOWN;
 }
 
+_AdditionUpdater dialogue_addition_updater[MAX_ADDITIONAL_UPDATERS_GS];
+
 // For freeing purposes
 static cJSON * dialogue_json = NULL;
 

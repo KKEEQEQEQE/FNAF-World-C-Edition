@@ -36,10 +36,7 @@
 #include "Background.h"
 
 
-enum UIType 
-{
-    UInotype, UIanimation, UItexture, UIanimationV2, UItextureSnippet
-};
+
 
 #include "Animation.h"
 
@@ -47,6 +44,11 @@ enum UIType
 enum UITextAlignment 
 {
     LEFTMOST, CENTRE, RIGHTMOST
+};
+
+enum UIType 
+{
+    UInotype, UIanimation, UItexture, UIanimationV2, UItextureSnippet
 };
 
 typedef Texture2D UITexture;
@@ -64,20 +66,12 @@ typedef struct UIVisual
     Color tint;
 } UIVisual;
 
-#include "Particle.h"
-
 typedef struct UIElement 
 {
     UIVisual visual;
     float x, y;
     float scale;
 } UIElement;
-
-typedef struct UIFont 
-{
-    Font font;
-    float averageRatio;
-} UIFont;
 
 typedef struct UIButton 
 {
@@ -91,128 +85,139 @@ typedef struct UIButton
     GamepadButton controllerBinding;
 } UIButton;
 
+#include "Particle.h"
+
+
+typedef struct UIFont 
+{
+    Font font;
+    float averageRatio;
+} UIFont;
+
+
+
 enum UI_SCREEN_SCALE_MODE
 {
     WIDTH, HEIGHT
 };
 
-extern void SetUIScreenScaleMode(enum UI_SCREEN_SCALE_MODE mode);
+void SetUIScreenScaleMode(enum UI_SCREEN_SCALE_MODE mode);
 
 // Gets the screen ratio
-extern float GetScreenRatio(void);
+float GetScreenRatio(void);
 
 // Gets the screen scale relative to the screen height
-extern float GetScreenScale(void);
+float GetScreenScale(void);
 
 // Gets the screen scale relative to the screen width
-extern float GetScreenScaleW(void);
+float GetScreenScaleW(void);
 
 // Gets the position x needed for a texture to not be visible in UI space
-extern float GetOutsideWindowX(Texture2D texture);
+float GetOutsideWindowX(Texture2D texture);
 
 // Gets the position y needed for a texture to not be visible in UI space
-extern float GetOutsideWindowY(Texture2D texture);
+float GetOutsideWindowY(Texture2D texture);
 
 // Gets the position x needed for a texture to not be visible in UI space
-extern float GetOutsideWindowX_u16(uint16_t width);
+float GetOutsideWindowX_u16(uint16_t width);
 
 // Gets the position y needed for a texture to not be visible in UI space
-extern float GetOutsideWindowY_u16(uint16_t height);
+float GetOutsideWindowY_u16(uint16_t height);
 
 // UItexture
 
     // Creates a UIVisual of type UItexture via path
-    extern UIVisual CreateUIVisual_UITexture(UITexture texture, Color tint);
+    UIVisual CreateUIVisual_UITexture(UITexture texture, Color tint);
 
     // Creates a UIVisual of type UItexture via path
-    extern UIVisual CreateUIVisual_UITexture_P(const char * path, Color tint);
+    UIVisual CreateUIVisual_UITexture_P(const char * path, Color tint);
 
 // UItextureSnippet
 
     // Creates a UIVisual of type UITextureSnippet via UItexture
-    extern UIVisual CreateUIVisual_UITextureSnippet(UITexture texture, Rectangle snippet, Color tint);
+    UIVisual CreateUIVisual_UITextureSnippet(UITexture texture, Rectangle snippet, Color tint);
 
     // Creates a UIVisual of type UITextureSnippet via path
-    extern UIVisual CreateUIVisual_UITextureSnippet_P(const char * path, Rectangle snippet, Color tint);
+    UIVisual CreateUIVisual_UITextureSnippet_P(const char * path, Rectangle snippet, Color tint);
 
 
 // Deprecated UIanimation
     // Creates a UIVisual of type UIanimation via path
-    extern UIVisual CreateUIVisual_UIAnimation(const char * path, const uint8_t targetFPS, const Color tint);
+    UIVisual CreateUIVisual_UIAnimation(const char * path, const uint8_t targetFPS, const Color tint);
 
 // UIanimationV2
     // Creates a UIVisual of type UIanimationV2 via path
-    extern UIVisual CreateUIVisual_UIAnimation_V2(const char * path, const uint8_t targetFPS, const uint8_t amount, Vector2 tileSize, Color tint);
+    UIVisual CreateUIVisual_UIAnimation_V2(const char * path, const uint8_t targetFPS, const uint8_t amount, Vector2 tileSize, Color tint);
 
 
 
-extern UIElement CreateUIElement(UIVisual visual, float x, float y, float scale);
+UIElement CreateUIElement(UIVisual visual, float x, float y, float scale);
 
 // Copies a UIVisual to the heap and returns the address
-extern UIVisual * UIVisual_Heap(UIVisual visual);
+UIVisual * UIVisual_Heap(UIVisual visual);
 
-extern void FreeUIVisual(UIVisual * visual);
+void FreeUIVisual(UIVisual * visual);
 
-extern void FreeUIElement(UIElement * element);
+void FreeUIElement(UIElement * element);
 
 // Scales and Renders a UITexture in UI Space
-extern void RenderUITexture(UITexture texture, float x, float y, float scale);
+void RenderUITexture(UITexture texture, float x, float y, float scale);
 
 // Scales and Renders a UITexture in UI Space with addition parameters
-extern void RenderUITextureEx(UITexture texture, float x, float y, float scale);
+void RenderUITextureEx(UITexture texture, float x, float y, float scale);
 
 // Scales and Renders a UITexture in UI Space with extra addition parameters
-extern void RenderUITexturePro(UITexture texture, float x, float y, float scale, float rotation);
+void RenderUITexturePro(UITexture texture, float x, float y, float scale, float rotation);
 
 // Draws a Sprite from a UITexture Spritesheet with extra addition parameters
-extern void DrawUITextureSpritesheetPro(Texture2D atlas, int16_t x, int16_t y, uint16_t index, Vector2 tileSize, float scale, float rotation, Color tint);
+void DrawUITextureSpritesheetPro(Texture2D atlas, int16_t x, int16_t y, uint16_t index, Vector2 tileSize, float scale, float rotation, Color tint);
 
 // Scales and Renders a UIElement
-extern void RenderUIElement(const UIElement * element);
+void RenderUIElement(const UIElement * element);
 
 // Scales and Renders a UIVisual at X, Y scaled
-extern void RenderUIVisual(float x, float y, UIVisual * visual, float scale);
+void RenderUIVisual(float x, float y, UIVisual * visual, float scale);
 
 // Scales and Renders text in UI space
-extern void RenderUIText(const char * text, float x, float y, float fontSize, enum UITextAlignment allignment, Font font, Color color);
+void RenderUIText(const char * text, float x, float y, float fontSize, enum UITextAlignment allignment, Font font, Color color);
 
 // Scales and Renders a UIButton
-extern void RenderUIButton(UIButton * button);
+void RenderUIButton(UIButton * button);
 
 // Checks and updates a button if it has been pressed
-extern void UpdateUIButton(UIButton * button);
+void UpdateUIButton(UIButton * button);
 
 // Updates and Renders a UIButton
-extern void PutUIButton(UIButton * button);
+void PutUIButton(UIButton * button);
 
 // Draws a Sprite from a UITexture Spritesheet
-extern void DrawUITextureSpritesheet(Texture2D atlas, int16_t x, int16_t y, uint16_t index, uint16_t tileSize);
+void DrawUITextureSpritesheet(Texture2D atlas, int16_t x, int16_t y, uint16_t index, uint16_t tileSize);
 
 // Draws a Sprite from a UITexture Spritesheet with addition parameters
-extern void DrawUITextureSpritesheetEx(Texture2D atlas, int16_t x, int16_t y, uint16_t index, Vector2 tileSize, float scale, Color tint);
+void DrawUITextureSpritesheetEx(Texture2D atlas, int16_t x, int16_t y, uint16_t index, Vector2 tileSize, float scale, Color tint);
 
 // Scales and Renders a Sprite from a UITexture Spritesheet in UI space
-extern void RenderUITextureSpritesheet(Texture2D atlas, float x, float y, uint16_t index, uint16_t tileSize);
+void RenderUITextureSpritesheet(Texture2D atlas, float x, float y, uint16_t index, uint16_t tileSize);
 
 // Scales and Renders a Sprite from a UITexture Spritesheet in UI space with addition parameters
-extern void RenderUITextureSpritesheetEx(Texture2D atlas, float x, float y, uint16_t index, Vector2 tileSize, float scale, Color tint);
+void RenderUITextureSpritesheetEx(Texture2D atlas, float x, float y, uint16_t index, Vector2 tileSize, float scale, Color tint);
 
 
 // UItextureSnippet
 
     // Draws a snippet from a UItexture
-    extern void DrawUITextureSnippet(Texture2D atlas, int16_t x, int16_t y, Rectangle snippet);
+    void DrawUITextureSnippet(Texture2D atlas, int16_t x, int16_t y, Rectangle snippet);
 
     // Draws a snippet from a UItexture with addition parameters
-    extern void DrawUITextureSnippetEx(Texture2D atlas, int16_t x, int16_t y, Rectangle snippet, float scale, Color tint);
+    void DrawUITextureSnippetEx(Texture2D atlas, int16_t x, int16_t y, Rectangle snippet, float scale, Color tint);
 
     // Scales and Renders a snippet from a UItextureSnippet in UI space
-    extern void RenderUITextureSnippet(Texture2D atlas, float x, float y, Rectangle snippet);
+    void RenderUITextureSnippet(Texture2D atlas, float x, float y, Rectangle snippet);
 
     // Scales and Renders a snippet from a UItextureSnippet in UI space with addition parameters
-    extern void RenderUITextureSnippetEx(Texture2D atlas, float x, float y, Rectangle snippet, float scale, Color tint);
+    void RenderUITextureSnippetEx(Texture2D atlas, float x, float y, Rectangle snippet, float scale, Color tint);
 
     // Scales and Renders a snippet from a UItextureSnippet in UI space with extra addition parameters
-    extern void RenderUITextureSnippetPro(Texture2D atlas, float x, float y, Rectangle snippet, float scale, float rotation, Color tint);
+    void RenderUITextureSnippetPro(Texture2D atlas, float x, float y, Rectangle snippet, float scale, float rotation, Color tint);
 
 #define RATIO_16_9 1.66666666667

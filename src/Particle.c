@@ -29,6 +29,9 @@
 #include <stdio.h>
 #include <time.h>
 
+// I should probably used linked-lists to improve the performence of allocations
+// but I'm too lazy :D
+
 UIParticleIndex ParticlesIndex[255] = {0};
 UIParticle AllParticles[MAX_PARTICLES] = {0};
 

@@ -86,7 +86,7 @@ void RunGameScene(_GameStateScene * scene)
 
     for (uint8_t i = 0; i < MAX_ADDITIONAL_UPDATERS_GS; i++)
     {
-        if (scene -> AdditionalUpdaters[i]) scene -> AdditionalUpdaters[i](i);
+        //if (scene -> AdditionalUpdaters[i]) scene->AdditionalUpdaters[i](i);
     }
 }
 
