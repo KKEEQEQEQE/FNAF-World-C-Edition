@@ -1,5 +1,5 @@
 ### Update 2025-03-15
-I'm no longer making any commits, HOWEVER, I will check and accept pull requests, and instead of this project being "solo"-ed by me, hopefully it will become a FNaF community project. I might also transfer ownership of this repo to someone else because I don't really know how to "maintain" a repo. If this project is successful I'll definately update the Gamejolt(https://gamejolt.com/games/fnaf-world-c-edition/963862) Page. The src right now as of me making this public is messy, unorganized and could use more comments to be honest (mostly because I'm a C noob). I didn't want the src and couple months I worked on this project to go down the drain and I still think that something like FNaF World C Edition should be a thing so I'm making what I have public. I've mostly just lost interest in the project because after working on the same thing for a couple of months, you want to try something new. I still might come back in the future with more commits from myself but probably not in the near future. Scott if you want me to remove the assets folders that's a ok (it has the textures from the original game so running the game is easier).
+I'm no longer making any commits, HOWEVER, I will check and accept pull requests, and instead of this project being "solo"-ed by me, hopefully it will become a FNaF community project. I might also transfer ownership of this repo to someone else because I don't really know how to "maintain" a repo. If this project is successful I'll definately update the Gamejolt Page (https://gamejolt.com/games/fnaf-world-c-edition/963862). The src right now as of me making this public is messy, unorganized and could use more comments to be honest (mostly because I'm a C noob). I didn't want the src and couple months I worked on this project to go down the drain and I still think that something like FNaF World C Edition should be a thing so I'm making what I have public. I've mostly just lost interest in the project because after working on the same thing for a couple of months, you want to try something new. I still might come back in the future with more commits from myself but probably not in the near future. Scott if you want me to remove the assets folders that's a ok (it has the textures from the original game so running the game is easier).
 
 DISCLAIMER: This is a free and open-source, fan-made passion project made by a FNaF Fan for the FNaF Fans. It is a recreation of FNaF World. I don't own the sprites, music, or original game, what I own is the code (which I put under the Zlib License), feel free-to-use it, you don't need any permission from me!
 
@@ -10,6 +10,9 @@ FNaF World: C Edition is a completely open-source recreation of FNaF World in C 
 
 Right now the src only supports Windows but it shouldn't be hard to port it
 
+## Gamejolt Page
+- https://gamejolt.com/games/fnaf-world-c-edition/963862
+  
 # Licenses
 
 FNaF World: C Edition:
@@ -72,5 +75,5 @@ THE SOFTWARE.
 
 # Credits
 - SpyterDev: Main developer and started the project
-- Raysan5 and the Raylib community: Created the absolutely goated Raylib(https://github.com/raysan5/raylib) library. Without this the project wouldn't be a thing! Definately check it out if you want to make a game in C or any other language.
-- DaveGamble and the cJSON community: Created cJSON, the library used to load and save json files. This is used to load the map, dialogue, and saves. A critical part of the game.
+- Raysan5, and the Raylib community and contributors: Created the absolutely goated Raylib (https://github.com/raysan5/raylib) library. Without this the project wouldn't be a thing! Definately check it out if you want to make a game in C or any other language.
+- DaveGamble and the cJSON contributors: Created cJSON, the library used to load and save json files. This is used to load the map, dialogue, and saves. A critical part of the game.
